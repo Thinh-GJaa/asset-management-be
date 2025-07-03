@@ -2,17 +2,20 @@ package com.concentrix.asset.service;
 
 import com.concentrix.asset.dto.request.CreateSiteRequest;
 import com.concentrix.asset.dto.response.SiteResponse;
-import com.concentrix.asset.entity.Site;
+import com.concentrix.asset.dto.request.UpdateSiteRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface SiteService {
 
-     Site getSiteById(Long id);
+     SiteResponse getSiteById(Integer id);
 
      SiteResponse createSite(CreateSiteRequest request);
 
-     Site updateSite(Long id, Site site);
+     SiteResponse updateSite(UpdateSiteRequest request);
 
-     void deleteSite(Long id);
+     void deleteSite(Integer id);
+
+     Page<SiteResponse> filterSite(Pageable pageable);
 
 }

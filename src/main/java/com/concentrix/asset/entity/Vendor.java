@@ -2,35 +2,42 @@ package com.concentrix.asset.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
-
+/**
+ * Entity lưu thông tin nhà cung cấp thiết bị (Vendor).
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "device_model")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class DeviceModel {
+public class Vendor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long modalId;
+     Integer vendorId;
 
-    @Column(nullable = false, length = 25)
-    String modelName;
+    @Column(nullable = false, unique = true)
+     String vendorName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
-    DeviceType deviceType;
+    @Column
+     String address;
 
-    @Column(nullable = false, length = 25)
-    String description;
+    @Column
+     String phoneNumber;
 
-    @Column(nullable = false, updatable = false)
+    @Column
+     String email;
+
+    @Column
     LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column
     LocalDateTime updatedAt;
 
     @PrePersist

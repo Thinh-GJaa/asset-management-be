@@ -8,34 +8,22 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 /**
- * Entity lưu thông tin người dùng/nhân viên sử dụng thiết bị.
+ * Entity lưu thông tin các sàn làm việc (floor), thuộc về một site cụ thể.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User {
+public class Floor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer EID;
-
-    @Column(nullable = false)
-    String fullName;
+    Integer floorId;
 
     @Column
-    String jobTitle;
+    String floorName;
 
-    @Column(unique = true)
-    String email;
-
-    @Column(unique = true)
-    String SSO;
-
-    @Column(unique = true)
-    String MSA;
-
-    @Column
-    String password;
-
+    @ManyToOne
+    @JoinColumn(name = "site_id")
+    Site site;
 }

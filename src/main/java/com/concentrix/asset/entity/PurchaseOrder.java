@@ -10,39 +10,26 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 
 /**
- * Entity lưu thông tin các site/cơ sở (tên, địa chỉ).
+ * Entity lưu thông tin phiếu đặt hàng (Purchase Order - P.O).
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Site {
+public class PurchaseOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer siteId;
+    Integer poId;
 
     @Column(unique = true)
-    String siteName;
+    String poNumber;
 
-    @Column
-    String siteLocation;
+    @ManyToOne
+    @JoinColumn(name = "vendor_id")
+    Vendor vendor;
 
-    @Column
     LocalDateTime createdAt;
-
-    @Column
-    LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
+    String createdBy;
+    String note;
 }

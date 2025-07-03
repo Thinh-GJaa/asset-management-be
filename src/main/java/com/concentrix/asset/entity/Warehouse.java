@@ -2,36 +2,37 @@ package com.concentrix.asset.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entity lưu thông tin các kho chứa thiết bị, thuộc về một site cụ thể.
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "account")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Account {
+public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long accountId;
+    Integer warehouseId;
 
-    @Column(nullable = false, length = 25)
-    String username;
+    @Column
+    String warehouseName;
 
-    @Column(nullable = false, length = 8)
-    String password;
+    @ManyToOne
+    @JoinColumn(name = "site_id")
+    Site site;
 
-    @Column(nullable = false, length = 25)
-    String email;
-
-    @Column(nullable = false)
-    String role;
-
-    @Column(nullable = false, updatable = false)
+    @Column
     LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column
     LocalDateTime updatedAt;
 
     @PrePersist

@@ -4,6 +4,7 @@ package com.concentrix.asset.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SiteResponse {
+public class SiteResponse implements Serializable{
 
     Long siteId;
     String siteName;

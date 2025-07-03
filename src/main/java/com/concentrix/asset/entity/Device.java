@@ -2,51 +2,45 @@ package com.concentrix.asset.entity;
 
 import com.concentrix.asset.enums.DeviceStatus;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
-
+/**
+ * Entity lưu thông tin từng thiết bị cụ thể (serial, trạng thái, model, vị trí
+ * hiện tại).
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "device")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Device {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long deviceId;
+    Integer deviceId;
 
-    @Column(nullable = false, length = 25)
-    String deviceName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
-    DeviceType deviceType;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_id", nullable = false)
-    DeviceModel deviceModel;
-
-    @Column(nullable = false, length = 25, unique = true)
+    @Column(unique = true)
     String serialNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 25)
-    DeviceStatus status;
+    DeviceStatus currentStatus;
 
-    @Column(nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    @ManyToOne
+    @JoinColumn(name = "model_id")
+    Model model;
 
-    @Column(nullable = false)
-    LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id")
+    Warehouse currentWarehouse;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+    @ManyToOne
+    @JoinColumn(name = "floor_id", nullable = true)
+    Floor currentFloor;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    @ManyToOne
+    @JoinColumn(name = "po_id")
+    PurchaseOrder purchaseOrder;
 }
