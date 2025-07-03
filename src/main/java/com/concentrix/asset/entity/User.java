@@ -1,11 +1,14 @@
 package com.concentrix.asset.entity;
 
+import com.concentrix.asset.enums.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
 
 /**
  * Entity lưu thông tin người dùng/nhân viên sử dụng thiết bị.
@@ -17,8 +20,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer EID;
+    String EID;
 
     @Column(nullable = false)
     String fullName;
@@ -37,5 +39,26 @@ public class User {
 
     @Column
     String password;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    Role role;
+
+    @Column
+    LocalDateTime createdAt;
+
+    @Column
+    LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
 }

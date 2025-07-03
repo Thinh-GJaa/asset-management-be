@@ -1,0 +1,63 @@
+package com.concentrix.asset.controller;
+
+import com.concentrix.asset.dto.ApiResponse;
+import com.concentrix.asset.dto.request.CreateUserRequest;
+import com.concentrix.asset.dto.request.UpdateUserRequest;
+import com.concentrix.asset.dto.response.UserResponse;
+import com.concentrix.asset.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@RequestMapping("/user")
+public class UserController {
+    UserService userService;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @Valid @RequestBody CreateUserRequest createUserRequest) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("User created successfully")
+                .data(userService.createUser(createUserRequest))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{eid}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String eid) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("Get user successfully")
+                .data(userService.getUserById(eid))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> filterUser(
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        ApiResponse<Page<UserResponse>> response = ApiResponse.<Page<UserResponse>>builder()
+                .message("Get all users successfully")
+                .data(userService.filterUser(pageable))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@Valid @RequestBody UpdateUserRequest request) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("Update user successfully")
+                .data(userService.updateUser(request))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+}

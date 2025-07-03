@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,6 +27,7 @@ public class SecurityConfig {
             "/warehouse/**",
             "/vendor/**",
             "/model/**",
+            "/user/**",
     };
 
     private final CustomJwtDecoder customJwtDecoder;
@@ -81,6 +84,13 @@ public class SecurityConfig {
         return Arrays.stream(PUBLIC_ENDPOINTS)
                 .anyMatch(pattern -> pattern.endsWith("/**") ? path.startsWith(pattern.replace("/**", ""))
                         : path.equals(pattern));
+    }
+
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        // Mã hóa mật khẩu với độ mạnh 10
+        return new BCryptPasswordEncoder(10);
     }
 
 }
