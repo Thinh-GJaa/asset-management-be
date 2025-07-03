@@ -15,11 +15,17 @@ public enum ErrorCode {
         UNAUTHORIZED(10403, HttpStatus.FORBIDDEN, "You do not have permission"),
         UNAUTHENTICATED(10404, HttpStatus.UNAUTHORIZED, "Unauthenticated"),
         ACCESS_DENIED(10405, HttpStatus.FORBIDDEN, "Access denied"),
+        EMAIL_NOT_FOUND(10406, HttpStatus.NOT_FOUND, "Email not found"),
+        INVALID_PASSWORD(10407, HttpStatus.UNAUTHORIZED, "Invalid password"),
+        LOGIN_FORBIDDEN(10408, HttpStatus.FORBIDDEN, "You do not have permission to login"),
 
         // Role-related errors
         ROLE_NOT_FOUND(10600, HttpStatus.NOT_FOUND, "Role with name '{}' not found"),
 
-        // Database-related errors
+    COOKIE_NOT_FOUND(12000, HttpStatus.UNAUTHORIZED, "Cookie '{}' not found"),
+
+
+    // Database-related errors
         DATABASE_CONNECTION_FAILED(10700, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to connect to the database"),
         DATA_INTEGRITY_VIOLATION(10701, HttpStatus.CONFLICT, "Data integrity violation"),
         RECORD_ALREADY_EXISTS(10702, HttpStatus.CONFLICT, "Record already exists"),

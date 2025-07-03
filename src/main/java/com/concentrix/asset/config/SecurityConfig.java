@@ -23,11 +23,11 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/site/**", // Public endpoints for the site
             "/warehouse/**",
             "/vendor/**",
             "/model/**",
             "/user/**",
+            "/auth/**",
     };
 
     private final CustomJwtDecoder customJwtDecoder;

@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Optional;
 
 @Slf4j
@@ -63,10 +64,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateUser(UpdateUserRequest request) {
 
-//        var context = SecurityContextHolder.getContext();
-//        String EID = context.getAuthentication().getName();
+        var context = SecurityContextHolder.getContext();
+        String EID = context.getAuthentication().getName();
 
-        String EID = "1";
+        log.info("[UserServiceImpl] Updating user with EID: {}", EID);
 
         User user = userRepository.findById(EID)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
