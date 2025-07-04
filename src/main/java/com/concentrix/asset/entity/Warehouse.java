@@ -1,10 +1,7 @@
 package com.concentrix.asset.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Warehouse {
@@ -34,6 +32,9 @@ public class Warehouse {
 
     @Column
     LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "warehouse")
+    java.util.Set<DeviceWarehouse> deviceWarehouses;
 
     @PrePersist
     protected void onCreate() {

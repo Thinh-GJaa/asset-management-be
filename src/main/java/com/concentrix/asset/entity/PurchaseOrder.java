@@ -1,13 +1,12 @@
 package com.concentrix.asset.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entity lưu thông tin phiếu đặt hàng (Purchase Order - P.O).
@@ -15,21 +14,49 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PurchaseOrder {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer poId;
 
-    @Column(unique = true)
-    String poNumber;
+    @Id
+    @Column(name = "po_id", unique = true, nullable = false)
+    String poId;
 
     @ManyToOne
     @JoinColumn(name = "vendor_id")
     Vendor vendor;
 
-    LocalDateTime createdAt;
-    String createdBy;
+    @ManyToOne
+    @JoinColumn(name = "warehouse_id")
+    Warehouse warehouse;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    User createdBy;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<PODetail> poDetails = new ArrayList<>();
+
+    @Column
     String note;
+
+    @Column
+    LocalDateTime createdAt;
+
+    @Column
+    LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
 }

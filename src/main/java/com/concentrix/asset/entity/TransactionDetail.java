@@ -1,10 +1,7 @@
 package com.concentrix.asset.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
@@ -17,6 +14,7 @@ import com.concentrix.asset.entity.AssetTransaction;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransactionDetail implements Serializable {
     @Id

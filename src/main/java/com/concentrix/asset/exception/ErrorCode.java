@@ -158,6 +158,14 @@ public enum ErrorCode {
         MODEL_UPDATE_FAILED(21403, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update model with ID '{}'"),
         MODEL_DELETE_FAILED(21404, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete model with ID '{}'"),
 
+
+        //Purchase Order entity errors
+        PO_NOT_FOUND(21501, HttpStatus.NOT_FOUND, "Purchase Order with ID '{}' not found"),
+        PO_ALREADY_EXISTS(21502, HttpStatus.CONFLICT, "Purchase Order with ID '{}' already exists"),
+
+
+        DUPLICATE_SERIAL_NUMBER(21601, HttpStatus.CONFLICT, "Duplicate serial number '{}'"),
+
         // New errors
         NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred");
 

@@ -2,10 +2,7 @@ package com.concentrix.asset.entity;
 
 import com.concentrix.asset.enums.DeviceStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 /**
@@ -16,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Device {
     @Id
@@ -24,6 +22,9 @@ public class Device {
 
     @Column(unique = true)
     String serialNumber;
+
+    @Column(nullable = false)
+    String deviceName;
 
     @Enumerated(EnumType.STRING)
     DeviceStatus currentStatus;
@@ -40,7 +41,6 @@ public class Device {
     @JoinColumn(name = "floor_id", nullable = true)
     Floor currentFloor;
 
-    @ManyToOne
-    @JoinColumn(name = "po_id")
-    PurchaseOrder purchaseOrder;
+    @OneToMany(mappedBy = "device")
+    java.util.Set<DeviceWarehouse> deviceWarehouses;
 }
