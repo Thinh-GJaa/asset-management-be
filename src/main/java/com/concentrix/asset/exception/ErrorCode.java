@@ -8,6 +8,8 @@ public enum ErrorCode {
 
         OPTIMISTIC_LOCK(10002, HttpStatus.CONFLICT, "OptimisticLock occurred"),
 
+    SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
+
         // Authentication and authorization errors
         PASSWORD_INCORRECT(10400, HttpStatus.UNAUTHORIZED, "Password incorrect"),
         CONFIRM_PASSWORD_NOT_MATCH(10401, HttpStatus.BAD_REQUEST, "Confirm password does not match"),

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,14 +44,14 @@ public class PurchaseOrder {
     String note;
 
     @Column
-    LocalDateTime createdAt;
+    LocalDate createdAt;
 
     @Column
     LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
         updatedAt = LocalDateTime.now();
     }
 
