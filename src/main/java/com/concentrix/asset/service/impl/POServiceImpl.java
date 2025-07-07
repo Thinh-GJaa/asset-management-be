@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.request.CreatePORequest;
 import com.concentrix.asset.dto.request.POItem;
 import com.concentrix.asset.dto.response.POResponse;
 import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.POMapper;
@@ -40,10 +41,12 @@ public class POServiceImpl implements POService {
     public POResponse createPO(CreatePORequest createPORequest) {
         log.info("[POServiceImpl] Creating purchase order with request: {}", createPORequest);
 
+        // Kiểm tra xem PO đã tồn tại hay chưa
         if (poRepository.existsById(createPORequest.getPoId())) {
             throw new CustomException(ErrorCode.PO_ALREADY_EXISTS, createPORequest.getPoId());
         }
 
+        // Kiểm tra trùng lặp số serial trong danh sách các thiết bị
         Set<String> serialSet = new HashSet<>();
         for (POItem item : createPORequest.getItems()) {
             String serial = item.getSerialNumber();
@@ -87,11 +90,6 @@ public class POServiceImpl implements POService {
                 .map(poMapper::toPOResponse);
     }
 
-
-
-
-
-
     private void handleDeviceWithSerial(POItem item, Model model, PurchaseOrder purchaseOrder) {
         if (deviceRepository.findBySerialNumber(item.getSerialNumber()).isPresent()) {
             throw new CustomException(ErrorCode.DEVICE_ALREADY_EXISTS, item.getSerialNumber());
@@ -110,13 +108,18 @@ public class POServiceImpl implements POService {
     }
 
     private void handleDeviceWithoutSerial(POItem item, Model model, PurchaseOrder purchaseOrder) {
-        Device device = Device.builder()
-                .model(model)
-                .deviceName(item.getDeviceName())
-                .currentWarehouse(purchaseOrder.getWarehouse())
-                .currentStatus(com.concentrix.asset.enums.DeviceStatus.AVAILABLE)
-                .build();
-        device = deviceRepository.save(device);
+        Device device = deviceRepository.findFirstByModel_ModelId(model.getModelId())
+                .orElseGet(() -> {
+                    Device newDevice = Device.builder()
+                            .model(model)
+                            .deviceName(item.getDeviceName())
+                            .currentWarehouse(purchaseOrder.getWarehouse())
+                            .currentStatus(DeviceStatus.AVAILABLE)
+                            .build();
+                    return deviceRepository.save(newDevice);
+                });
+
+        log.info("[POServiceImpl] Device found or created: {}", device.getDeviceId());
 
         createPODetail(purchaseOrder, device, item.getQuantity());
         createDeviceWarehouse(purchaseOrder.getWarehouse(), device, item.getQuantity(), false);

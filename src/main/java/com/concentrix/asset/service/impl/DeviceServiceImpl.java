@@ -62,9 +62,9 @@ public class DeviceServiceImpl implements DeviceService {
     public Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId, com.concentrix.asset.enums.DeviceType type) {
         Page<Device> devices;
         if (modelId != null) {
-            devices = deviceRepository.findByModel_ModelId(modelId, pageable);
+            devices = deviceRepository.findAllByModel_ModelId(modelId, pageable);
         } else if (type != null) {
-            devices = deviceRepository.findByModel_Type(type, pageable);
+            devices = deviceRepository.findAllByModel_Type(type, pageable);
         } else {
             devices = deviceRepository.findAll(pageable);
         }

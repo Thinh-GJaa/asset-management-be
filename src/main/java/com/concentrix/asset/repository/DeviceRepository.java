@@ -1,6 +1,7 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.Device;
+import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,8 +14,13 @@ public interface DeviceRepository extends JpaRepository<Device, Integer> {
     Optional<Device> findBySerialNumber(String serialNumber);
 
     // Lọc theo modelId
-    Page<Device> findByModel_ModelId(Integer modelId, Pageable pageable);
+    Page<Device> findAllByModel_ModelId(Integer modelId, Pageable pageable);
 
     // Lọc theo DeviceType (type của model)
-    Page<Device> findByModel_Type(com.concentrix.asset.enums.DeviceType type, Pageable pageable);
+    Page<Device> findAllByModel_Type(DeviceType type, Pageable pageable);
+
+    Optional<Device> findFirstByModel_ModelId(Integer modelId);
+
+
+
 }
