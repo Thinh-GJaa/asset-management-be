@@ -1,0 +1,26 @@
+package com.concentrix.asset.dto.request;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.io.Serializable;
+
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class TransactionItem implements Serializable {
+
+    @NotNull(message = "Device ID cannot be null")
+    Integer deviceId;
+
+    @NotNull(message = "Quantity cannot be null")
+    Integer quantity;
+
+}
+

@@ -1,0 +1,47 @@
+package com.concentrix.asset.controller;
+
+import com.concentrix.asset.dto.ApiResponse;
+import com.concentrix.asset.dto.request.CreateTransferRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import com.concentrix.asset.dto.response.TransferResponse;
+import com.concentrix.asset.service.TransferService;
+import org.springframework.http.ResponseEntity;
+
+@RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@RequestMapping("/transaction/transfer")
+public class TransferController {
+
+    TransferService transferService;
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<TransferResponse>> createTransfer(
+            @Valid @RequestBody CreateTransferRequest request){
+
+        ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
+                .message("Transaction transfer created successful")
+                .data(transferService.createTransfer(request))
+                .build();
+
+        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<TransferResponse>> getById(
+            @PathVariable Integer id){
+
+        ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
+                .message("Get transaction transfer successful")
+                .data(transferService.getTransferById(id))
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+}
