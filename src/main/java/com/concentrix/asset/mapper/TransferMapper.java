@@ -16,6 +16,8 @@ public interface TransferMapper {
     @Mappings({
             @Mapping(target = "toWarehouse", source = "toWarehouse"),
             @Mapping(target = "fromWarehouse", source = "fromWarehouse"),
+            @Mapping(target = "userUse", source = "userUse"),
+            @Mapping(target = "createdBy", source = "createdBy"),
             @Mapping(target = "items", source = "details", qualifiedByName = "mapItems")
     })
     TransferResponse toTransferResponse(AssetTransaction transaction);

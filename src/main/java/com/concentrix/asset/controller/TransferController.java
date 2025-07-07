@@ -5,6 +5,10 @@ import com.concentrix.asset.dto.request.CreateTransferRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.concentrix.asset.dto.response.TransferResponse;
@@ -43,5 +47,18 @@ public class TransferController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfer(
+            @PageableDefault(size = 10, page = 0, sort = "createdAt",
+                    direction = Sort.Direction.DESC) Pageable pageable){
+        ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
+                .message("Filter transaction transfer successful")
+                .data(transferService.filterTransfers(pageable))
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
 }

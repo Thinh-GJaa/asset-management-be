@@ -1,17 +1,17 @@
 package com.concentrix.asset.service.impl;
 
-import com.concentrix.asset.dto.request.CreateTransferRequest;
-import com.concentrix.asset.dto.response.TransferResponse;
+import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
-import com.concentrix.asset.mapper.TransferMapper;
-import com.concentrix.asset.repository.TransactionRepository;
-import com.concentrix.asset.repository.UserRepository;
+import com.concentrix.asset.mapper.AssignmentMapper;
 import com.concentrix.asset.repository.DeviceRepository;
 import com.concentrix.asset.repository.DeviceWarehouseRepository;
-import com.concentrix.asset.service.TransferService;
+import com.concentrix.asset.repository.TransactionRepository;
+import com.concentrix.asset.repository.UserRepository;
+import com.concentrix.asset.service.AssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,27 +29,32 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class TransferServiceImpl implements TransferService {
+public class AssignmentServiceImpl implements AssignmentService {
 
     TransactionRepository transactionRepository;
-    TransferMapper transferMapper;
+    AssignmentMapper assignmentMapper;
     UserRepository userRepository;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
 
     @Override
-    public TransferResponse getTransferById(Integer transferId) {
+    public AssignmentResponse getAssignmentById(Integer AssignmentId) {
 
-        AssetTransaction transaction = transactionRepository.findById(transferId).orElseThrow(
-                () -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transferId));
+        AssetTransaction transaction = transactionRepository.findById(AssignmentId).orElseThrow(
+                () -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, AssignmentId));
 
-        return transferMapper.toTransferResponse(transaction);
+        return assignmentMapper.toAssignmentResponse(transaction);
     }
 
     @Override
-    public TransferResponse createTransfer(CreateTransferRequest request) {
-        AssetTransaction transaction = transferMapper.toAssetTransaction(request);
+    public AssignmentResponse createAssignment(CreateAssignmentRequest request) {
+        AssetTransaction transaction = assignmentMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
+
+        // Gán UserUse từ eid trong request
+        User userUse = userRepository.findById(request.getEid())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
+        transaction.setUserUse(userUse);
 
         // Tạo danh sách TransactionDetail từ request.items
         AssetTransaction finalTransaction = transaction;
@@ -68,13 +74,13 @@ public class TransferServiceImpl implements TransferService {
         transaction = transactionRepository.save(transaction);
         updateWarehouses(transaction);
 
-        return transferMapper.toTransferResponse(transaction);
+        return assignmentMapper.toAssignmentResponse(transaction);
     }
 
     @Override
-    public Page<TransferResponse> filterTransfers(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.TRANSFER, pageable)
-                .map(transferMapper::toTransferResponse);
+    public Page<AssignmentResponse> filterAssignments(Pageable pageable) {
+        return transactionRepository.findALLByTransactionType(TransactionType.ASSIGNMENT, pageable)
+                .map(assignmentMapper::toAssignmentResponse);
     }
 
     private User getCurrentUser() {
@@ -85,55 +91,27 @@ public class TransferServiceImpl implements TransferService {
 
     private void updateWarehouses(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
+
             Integer deviceId = detail.getDevice().getDeviceId();
             Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
-            Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
             Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
 
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
 
+            DeviceWarehouse fromStock = deviceWarehouseRepository
+                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,deviceId, fromWarehouseId ));
             if (hasSerial) {
                 // Nếu thiết bị có serial, khi rời kho thì xóa khỏi warehouse
-                DeviceWarehouse fromStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,deviceId, fromWarehouseId ));
                 deviceWarehouseRepository.delete(fromStock);
-
-                // Thêm thiết bị vào kho đích (nếu chưa có)
-                DeviceWarehouse toStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElse(null);
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(1);
-                    deviceWarehouseRepository.save(toStock);
-                }
             } else {
-
                 // Xử lý theo số lượng
-                DeviceWarehouse fromStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId, fromWarehouseId));
                 if (fromStock.getQuantity() < qty) {
                     throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
-
-                DeviceWarehouse toStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElse(null);
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(0);
-                }
-                toStock.setQuantity(toStock.getQuantity() + qty);
-                deviceWarehouseRepository.save(toStock);
             }
         }
     }
