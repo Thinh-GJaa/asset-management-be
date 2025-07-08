@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
     @Id
-    String EID;
+    String eid;
 
     @Column(nullable = false)
     String fullName;

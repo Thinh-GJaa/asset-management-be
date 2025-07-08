@@ -8,10 +8,10 @@ public enum ErrorCode {
 
         OPTIMISTIC_LOCK(10002, HttpStatus.CONFLICT, "OptimisticLock occurred"),
 
-    SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
+        SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
 
-    STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}'"),
-    DEVICE_NOT_FOUND_IN_WAREHOUSE(10004, HttpStatus.NOT_FOUND, "Device '{}' not found in warehouse '{}'"),
+        STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}'"),
+        DEVICE_NOT_FOUND_IN_WAREHOUSE(10004, HttpStatus.NOT_FOUND, "Device '{}' not found in warehouse '{}'"),
         // Authentication and authorization errors
         PASSWORD_INCORRECT(10400, HttpStatus.UNAUTHORIZED, "Password incorrect"),
         CONFIRM_PASSWORD_NOT_MATCH(10401, HttpStatus.BAD_REQUEST, "Confirm password does not match"),
@@ -26,10 +26,9 @@ public enum ErrorCode {
         // Role-related errors
         ROLE_NOT_FOUND(10600, HttpStatus.NOT_FOUND, "Role with name '{}' not found"),
 
-    COOKIE_NOT_FOUND(12000, HttpStatus.UNAUTHORIZED, "Cookie '{}' not found"),
+        COOKIE_NOT_FOUND(12000, HttpStatus.UNAUTHORIZED, "Cookie '{}' not found"),
 
-
-    // Database-related errors
+        // Database-related errors
         DATABASE_CONNECTION_FAILED(10700, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to connect to the database"),
         DATA_INTEGRITY_VIOLATION(10701, HttpStatus.CONFLICT, "Data integrity violation"),
         RECORD_ALREADY_EXISTS(10702, HttpStatus.CONFLICT, "Record already exists"),
@@ -162,16 +161,20 @@ public enum ErrorCode {
         MODEL_UPDATE_FAILED(21403, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update model with ID '{}'"),
         MODEL_DELETE_FAILED(21404, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete model with ID '{}'"),
 
-
-        //Purchase Order entity errors
+        // Purchase Order entity errors
         PO_NOT_FOUND(21501, HttpStatus.NOT_FOUND, "Purchase Order with ID '{}' not found"),
         PO_ALREADY_EXISTS(21502, HttpStatus.CONFLICT, "Purchase Order with ID '{}' already exists"),
-
 
         DUPLICATE_SERIAL_NUMBER(21601, HttpStatus.CONFLICT, "Duplicate serial number '{}'"),
 
         // New errors
-        NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred");
+        NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred"),
+
+        // Repair entity errors
+        REPAIR_NOT_FOUND(22001, HttpStatus.NOT_FOUND, "Repair with ID '{}' not found"),
+        REPAIR_ALREADY_EXISTS(22002, HttpStatus.CONFLICT, "Repair with code '{}' already exists"),
+        REPAIR_UPDATE_FAILED(22003, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update repair with ID '{}'"),
+        REPAIR_DELETE_FAILED(22004, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete repair with ID '{}'");
 
         private final int code;
         private final HttpStatus status;

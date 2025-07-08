@@ -21,6 +21,8 @@ public class CreateTransferRequest {
     @NotNull(message = "From Warehouse ID type cannot be null")
     Integer fromWarehouseId;
 
+    String note;
+
     @Valid
             @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;

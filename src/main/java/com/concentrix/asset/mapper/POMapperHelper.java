@@ -69,7 +69,7 @@ public class POMapperHelper {
         if (user == null)
             return null;
         return POResponse.UserResponse.builder()
-                .EID(user.getEID())
+                .eid(user.getEid())
                 .fullName(user.getFullName())
                 .build();
     }

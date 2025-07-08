@@ -1,6 +1,5 @@
 package com.concentrix.asset.dto.response;
 
-import com.concentrix.asset.enums.TransferStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,14 +15,11 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransferResponse implements Serializable {
+public class RepairResponse implements Serializable {
 
     Integer transactionId;
-    WarehouseResponse toWarehouse;
     WarehouseResponse fromWarehouse;
     UserResponse createdBy;
-    UserResponse userUse;
-    TransferStatus status;
     LocalDate createdAt;
     LocalDate updatedAt;
     String note;
@@ -50,7 +46,5 @@ public class TransferResponse implements Serializable {
         String warehouseId;
         String warehouseName;
     }
-
-
 
 }

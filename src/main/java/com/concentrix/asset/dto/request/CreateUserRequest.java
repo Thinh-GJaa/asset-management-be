@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 public class CreateUserRequest {
 
     @NotBlank(message = "EID is required")
-    String EID;
+    String eid;
 
     @NotBlank(message = "Full name is required")
     String fullName;

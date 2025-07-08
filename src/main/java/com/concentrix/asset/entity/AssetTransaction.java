@@ -58,6 +58,9 @@ public class AssetTransaction {
     @JoinColumn(name = "create_by")
     User createdBy;
 
+    @Column
+    String note;
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TransactionDetail> details;
 

@@ -11,19 +11,15 @@ import java.util.List;
 
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class CreateAssignmentRequest {
+public class CreateRepairRequest {
 
     @NotNull(message = "From Warehouse ID type cannot be null")
     Integer fromWarehouseId;
-
-    @NotBlank(message = "Employee ID cannot be blank")
-    String eid;
 
     String note;
 
     @Valid
     @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;
-
 
 }

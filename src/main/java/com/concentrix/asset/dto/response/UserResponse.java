@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse implements Serializable {
-    String EID;
+    String eid;
     String fullName;
     String email;
     String SSO;

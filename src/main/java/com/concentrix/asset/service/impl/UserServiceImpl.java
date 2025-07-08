@@ -40,9 +40,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(CreateUserRequest request) {
 
-        userRepository.findById(request.getEID())
+        userRepository.findById(request.getEid())
                 .ifPresent(user -> {
-                    throw new CustomException(ErrorCode.USER_ALREADY_EXISTS, request.getEID());
+                    throw new CustomException(ErrorCode.USER_ALREADY_EXISTS, request.getEid());
                 });
 
         if (userRepository.findBySSO(request.getSSO()).isPresent()) {
@@ -73,12 +73,12 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
 
         Optional<User> existingEmail = userRepository.findByEmail(request.getEmail());
-        if (existingEmail.isPresent() && !existingEmail.get().getEID().equals(user.getEID())) {
+        if (existingEmail.isPresent() && !existingEmail.get().getEid().equals(user.getEid())) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
         Optional<User> existingSSO = userRepository.findBySSO(request.getSSO());
-        if (existingSSO.isPresent() && !existingSSO.get().getEID().equals(user.getEID())) {
+        if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(user.getEid())) {
             throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
         }
 

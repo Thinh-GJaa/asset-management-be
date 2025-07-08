@@ -19,9 +19,11 @@ public class AssignmentResponse implements Serializable {
 
     Integer transactionId;
     WarehouseResponse fromWarehouse;
-    UserResponse UserUse;
+    UserResponse userUse;
+    UserResponse createdBy;
     LocalDate createdAt;
     LocalDate updatedAt;
+    String note;
     List<TransferItemResponse> items;
 
     @Getter

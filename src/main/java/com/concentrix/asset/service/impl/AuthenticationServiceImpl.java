@@ -200,7 +200,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Date expiryTime = new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli());
 
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .subject(user.getEID())
+                    .subject(user.getEid())
                     .issuer(ISSUER)
                     .issueTime(new Date())
                     .expirationTime(expiryTime)
@@ -225,7 +225,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Date expiryTime = new Date(Instant.now().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli());
 
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .subject(user.getEID())
+                    .subject(user.getEid())
                     .issuer(ISSUER)
                     .issueTime(new Date())
                     .expirationTime(expiryTime)
@@ -236,7 +236,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             JWSObject jwsObject = new JWSObject(header, new Payload(claimsSet.toJSONObject()));
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
 
-            log.info("[AUTHENTICATION SERVICE][TOKEN] Refresh token generated for user: {}", user.getEID());
+            log.info("[AUTHENTICATION SERVICE][TOKEN] Refresh token generated for user: {}", user.getEid());
 
             return jwsObject.serialize();
         } catch (JOSEException e) {
