@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TransactionDetailRepository extends JpaRepository<TransactionDetail, TransactionDetailId> {
 
+    TransactionDetail findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(Integer deviceId);
 }

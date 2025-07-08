@@ -80,6 +80,8 @@ public enum ErrorCode {
         DEVICE_ALREADY_EXISTS(20202, HttpStatus.CONFLICT, "Device with serial number '{}' already exists"),
         DEVICE_UPDATE_FAILED(20203, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update device with ID '{}'"),
         DEVICE_DELETE_FAILED(20204, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete device with ID '{}'"),
+        INVALID_DEVICE_STATUS(20205, HttpStatus.BAD_REQUEST,
+                        "Device '{}' is not in valid status for return from repair"),
 
         // Stock entity errors
         STOCK_NOT_FOUND(20301, HttpStatus.NOT_FOUND, "Stock with ID '{}' not found"),

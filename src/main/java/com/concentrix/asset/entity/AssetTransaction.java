@@ -38,7 +38,7 @@ public class AssetTransaction {
 
     @ManyToOne
     @JoinColumn(name = "user_use_id")
-    User UserUse;
+    User userUse;
 
     @ManyToOne
     @JoinColumn(name = "to_floor_id")
