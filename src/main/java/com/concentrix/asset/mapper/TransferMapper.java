@@ -8,7 +8,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
 public interface TransferMapper {
 
-    @Mapping(target = "transactionType", constant = "TRANSFER")
+    @Mapping(target = "transactionType", constant = "TRANSFER_SITE")
     @Mapping(target = "toWarehouse", source = "toWarehouseId", qualifiedByName = "warehouseIdToWarehouse")
     @Mapping(target = "fromWarehouse", source = "fromWarehouseId", qualifiedByName = "warehouseIdToWarehouse")
     AssetTransaction toAssetTransaction(CreateTransferRequest request);
@@ -20,6 +20,5 @@ public interface TransferMapper {
             @Mapping(target = "items", source = "details", qualifiedByName = "mapItems")
     })
     TransferResponse toTransferResponse(AssetTransaction transaction);
-
 
 }

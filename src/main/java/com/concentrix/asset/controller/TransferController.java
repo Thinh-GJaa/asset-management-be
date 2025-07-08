@@ -18,47 +18,45 @@ import org.springframework.http.ResponseEntity;
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-@RequestMapping("/transaction/transfer")
+@RequestMapping("/transaction/transfer-site")
 public class TransferController {
 
-    TransferService transferService;
+        TransferService transferService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<TransferResponse>> createTransfer(
-            @Valid @RequestBody CreateTransferRequest request){
+        @PostMapping
+        public ResponseEntity<ApiResponse<TransferResponse>> createTransfer(
+                        @Valid @RequestBody CreateTransferRequest request) {
 
-        ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
-                .message("Transaction transfer created successful")
-                .data(transferService.createTransfer(request))
-                .build();
+                ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
+                                .message("Transaction transfer site created successful")
+                                .data(transferService.createTransfer(request))
+                                .build();
 
-        return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
+                return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
 
-    }
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<TransferResponse>> getById(
-            @PathVariable Integer id){
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<TransferResponse>> getById(
+                        @PathVariable Integer id) {
 
-        ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
-                .message("Get transaction transfer successful")
-                .data(transferService.getTransferById(id))
-                .build();
+                ApiResponse<TransferResponse> apiResponse = ApiResponse.<TransferResponse>builder()
+                                .message("Get transaction transfer site successful")
+                                .data(transferService.getTransferById(id))
+                                .build();
 
-        return ResponseEntity.ok(apiResponse);
-    }
+                return ResponseEntity.ok(apiResponse);
+        }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfer(
-            @PageableDefault(size = 10, page = 0, sort = "createdAt",
-                    direction = Sort.Direction.DESC) Pageable pageable){
-        ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
-                .message("Filter transaction transfer successful")
-                .data(transferService.filterTransfers(pageable))
-                .build();
+        @GetMapping("/filter")
+        public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfer(
+                        @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
+                                .message("Filter transaction transfer site successful")
+                                .data(transferService.filterTransfers(pageable))
+                                .build();
 
-        return ResponseEntity.ok(apiResponse);
-    }
-
+                return ResponseEntity.ok(apiResponse);
+        }
 
 }

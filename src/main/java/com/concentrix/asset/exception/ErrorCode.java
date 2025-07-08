@@ -176,7 +176,13 @@ public enum ErrorCode {
         REPAIR_NOT_FOUND(22001, HttpStatus.NOT_FOUND, "Repair with ID '{}' not found"),
         REPAIR_ALREADY_EXISTS(22002, HttpStatus.CONFLICT, "Repair with code '{}' already exists"),
         REPAIR_UPDATE_FAILED(22003, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update repair with ID '{}'"),
-        REPAIR_DELETE_FAILED(22004, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete repair with ID '{}'");
+        REPAIR_DELETE_FAILED(22004, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete repair with ID '{}'"),
+
+        // Floor entity errors
+        FLOOR_NOT_FOUND(21701, HttpStatus.NOT_FOUND, "Floor with ID '{}' not found"),
+        FLOOR_ALREADY_EXISTS(21702, HttpStatus.CONFLICT, "Floor with name '{}' already exists"),
+        FLOOR_UPDATE_FAILED(21703, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update floor with ID '{}'"),
+        FLOOR_DELETE_FAILED(21704, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete floor with ID '{}'");
 
         private final int code;
         private final HttpStatus status;

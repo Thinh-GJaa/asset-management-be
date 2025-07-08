@@ -73,7 +73,7 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public Page<TransferResponse> filterTransfers(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.TRANSFER, pageable)
+        return transactionRepository.findALLByTransactionType(TransactionType.TRANSFER_SITE, pageable)
                 .map(transferMapper::toTransferResponse);
     }
 
@@ -97,7 +97,8 @@ public class TransferServiceImpl implements TransferService {
                 // Nếu thiết bị có serial, khi rời kho thì xóa khỏi warehouse
                 DeviceWarehouse fromStock = deviceWarehouseRepository
                         .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,deviceId, fromWarehouseId ));
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId,
+                                fromWarehouseId));
                 deviceWarehouseRepository.delete(fromStock);
 
                 // Thêm thiết bị vào kho đích (nếu chưa có)
@@ -116,7 +117,8 @@ public class TransferServiceImpl implements TransferService {
                 // Xử lý theo số lượng
                 DeviceWarehouse fromStock = deviceWarehouseRepository
                         .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId, fromWarehouseId));
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId,
+                                fromWarehouseId));
                 if (fromStock.getQuantity() < qty) {
                     throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
                 }
