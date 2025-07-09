@@ -81,7 +81,10 @@ public enum ErrorCode {
         DEVICE_UPDATE_FAILED(20203, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update device with ID '{}'"),
         DEVICE_DELETE_FAILED(20204, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete device with ID '{}'"),
         INVALID_DEVICE_STATUS(20205, HttpStatus.BAD_REQUEST,
-                        "Device '{}' is not in valid status for return from repair"),
+                        "Device '{}' is not in valid status"),
+        INVALID_DEVICE_USER(20206, HttpStatus.BAD_REQUEST, "Device '{}' is not assigned to this user"),
+        RETURN_QUANTITY_EXCEEDS_BORROWED(20207, HttpStatus.BAD_REQUEST,
+                        "Return quantity exceeds borrowed amount for device '{}'"),
 
         // Stock entity errors
         STOCK_NOT_FOUND(20301, HttpStatus.NOT_FOUND, "Stock with ID '{}' not found"),
@@ -150,6 +153,9 @@ public enum ErrorCode {
         TRANSACTION_ALREADY_EXISTS(21102, HttpStatus.CONFLICT, "Transaction with code '{}' already exists"),
         TRANSACTION_UPDATE_FAILED(21103, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction with ID '{}'"),
         TRANSACTION_DELETE_FAILED(21104, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete transaction with ID '{}'"),
+        TRANSACTION_TYPE_INVALID(21105, HttpStatus.BAD_REQUEST, "Transaction type is invalid"),
+        TRANSACTION_STATUS_INVALID(21106, HttpStatus.BAD_REQUEST, "Transaction status is invalid"),
+        DUPLICATE_DEVICE_RETURN(21107, HttpStatus.BAD_REQUEST, "Duplicate device in return list: '{}'"),
 
         // Warehouse entity errors
         WAREHOUSE_NOT_FOUND(21201, HttpStatus.NOT_FOUND, "Warehouse with ID '{}' not found"),

@@ -94,27 +94,22 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
     // Cộng kho khi trả về (cả serial và không serial)
     private void updateWarehouses(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            DeviceWarehouse toStock = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                    .orElse(null);
             if (hasSerial) {
-                // Nếu thiết bị có serial, thêm mới vào kho nếu chưa có
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(1);
-                } else {
-                    toStock.setQuantity(toStock.getQuantity() + 1);
-                }
-                deviceWarehouseRepository.save(toStock);
+                // Chuẩn hóa: chỉ update Device, không động vào DeviceWarehouse
+                device.setStatus(com.concentrix.asset.enums.DeviceStatus.IN_STOCK);
+                device.setCurrentWarehouse(transaction.getToWarehouse());
+                device.setCurrentUser(null);
+                device.setCurrentFloor(null);
+                deviceRepository.save(device);
             } else {
-                // Nếu không có serial, cộng số lượng
+                Integer deviceId = device.getDeviceId();
+                Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse toStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
+                        .orElse(null);
                 if (toStock == null) {
                     toStock = new DeviceWarehouse();
                     toStock.setDevice(device);

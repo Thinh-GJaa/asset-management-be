@@ -44,7 +44,7 @@ public class Device {
     Floor currentFloor;
 
     @ManyToOne
-    @JoinColumn(name = "floor_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = true)
     User currentUser;
 
     @OneToMany(mappedBy = "device")

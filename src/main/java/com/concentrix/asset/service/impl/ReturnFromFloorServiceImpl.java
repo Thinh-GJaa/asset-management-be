@@ -3,6 +3,7 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateReturnFromFloorRequest;
 import com.concentrix.asset.dto.response.ReturnFromFloorResponse;
 import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -17,6 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,47 +50,38 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
         AssetTransaction transaction = returnFromFloorMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Hợp nhất các item trùng deviceId
-        java.util.Map<Integer, Integer> deviceQtyMap = new java.util.HashMap<>();
+        // Kiểm tra trùng lặp deviceId trong danh sách
+        Set<Integer> duplicateCheckSet = new HashSet<>();
         for (var item : request.getItems()) {
-            deviceQtyMap.merge(item.getDeviceId(), item.getQuantity(), Integer::sum);
+            if (!duplicateCheckSet.add(item.getDeviceId())) {
+                throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getDeviceId());
+            }
         }
 
-        AssetTransaction finalTransaction = transaction;
-        java.util.List<TransactionDetail> details = deviceQtyMap.entrySet().stream()
-                .map(entry -> {
-                    Device device = deviceRepository.findById(entry.getKey())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
-                    // Nếu có serial, kiểm tra transaction cuối cùng phải nằm trong fromFloor
-                    if (device.getSerialNumber() != null && !device.getSerialNumber().isEmpty()) {
-                        TransactionDetail lastDetail = transactionDetailRepository
-                                .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
-                        if (lastDetail == null || lastDetail.getTransaction() == null) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
-                        }
-                        AssetTransaction lastTrans = lastDetail.getTransaction();
-                        Integer lastFloorId = null;
-                        if (lastTrans.getToFloor() != null) {
-                            lastFloorId = lastTrans.getToFloor().getFloorId();
-                        } else if (lastTrans.getFromFloor() != null) {
-                            lastFloorId = lastTrans.getFromFloor().getFloorId();
-                        }
-                        if (lastFloorId == null || !lastFloorId.equals(request.getFromFloorId())) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
+        final AssetTransaction finalTransaction = transaction;
+        List<TransactionDetail> details = request.getItems().stream()
+                .map(item -> {
+                    Device device = deviceRepository.findById(item.getDeviceId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId()));
+                    boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
+                    if (hasSerial) {
+                        // Serial: chỉ cho phép trả về kho nếu đang IN_FLOOR
+                        if (device.getStatus() != DeviceStatus.IN_FLOOR) {
+                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
                         }
                     }
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
-                    detail.setQuantity(entry.getValue());
+                    detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateWarehouses(transaction);
+        updateStockForReturnFromFloor(transaction);
 
         return returnFromFloorMapper.toReturnFromFloorResponse(transaction);
     }
@@ -101,28 +98,34 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
     }
 
-    // Cộng kho vào toWarehouse (cả serial và không serial)
-    private void updateWarehouses(AssetTransaction transaction) {
+    private void updateStockForReturnFromFloor(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            DeviceWarehouse toStock = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                    .orElse(null);
             if (hasSerial) {
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(1);
-                } else {
-                    toStock.setQuantity(toStock.getQuantity() + 1);
-                }
-                deviceWarehouseRepository.save(toStock);
+                // Serial: chỉ update Device, không động vào DeviceWarehouse
+                device.setStatus(DeviceStatus.IN_STOCK);
+                device.setCurrentWarehouse(transaction.getToWarehouse());
+                device.setCurrentFloor(null);
+                deviceRepository.save(device);
             } else {
+                Integer deviceId = device.getDeviceId();
+                Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse fromStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                                device.getModel().getModelName(),
+                                transaction.getFromFloor().getFloorName()));
+                if (fromStock.getQuantity() < qty) {
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+                }
+                fromStock.setQuantity(fromStock.getQuantity() - qty);
+                deviceWarehouseRepository.save(fromStock);
+                // Cộng về kho
+                DeviceWarehouse toStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
+                        .orElse(null);
                 if (toStock == null) {
                     toStock = new DeviceWarehouse();
                     toStock.setDevice(device);

@@ -3,6 +3,7 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateDisposalRequest;
 import com.concentrix.asset.dto.response.DisposalResponse;
 import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -21,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,28 +51,50 @@ public class DisposalServiceImpl implements DisposalService {
         AssetTransaction transaction = disposalMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Hợp nhất các item trùng deviceId
-        java.util.Map<Integer, Integer> deviceQtyMap = new java.util.HashMap<>();
+        // Kiểm tra trùng lặp deviceId trong danh sách
+        Set<Integer> duplicateCheckSet = new HashSet<>();
         for (var item : request.getItems()) {
-            deviceQtyMap.merge(item.getDeviceId(), item.getQuantity(), Integer::sum);
+            if (!duplicateCheckSet.add(item.getDeviceId())) {
+                throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getDeviceId());
+            }
         }
 
-        AssetTransaction finalTransaction = transaction;
-        java.util.List<TransactionDetail> details = deviceQtyMap.entrySet().stream()
-                .map(entry -> {
+        final AssetTransaction finalTransaction = transaction;
+        List<TransactionDetail> details = request.getItems().stream()
+                .map(item -> {
+                    Device device = deviceRepository.findById(item.getDeviceId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId()));
+                    boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
+                    if (hasSerial) {
+                        // Serial: chỉ cho phép disposal nếu đang IN_STOCK
+                        if (device.getStatus() != DeviceStatus.IN_STOCK) {
+                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                        }
+                    } else {
+                        // Non-serial: kiểm tra tồn kho trước khi disposal
+                        Integer fromWarehouseId = finalTransaction.getFromWarehouse().getWarehouseId();
+                        Integer qty = item.getQuantity();
+                        DeviceWarehouse fromStock = deviceWarehouseRepository
+                                .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, device.getDeviceId())
+                                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                                        device.getModel().getModelName(),
+                                        finalTransaction.getFromWarehouse().getWarehouseName()));
+                        if (fromStock.getQuantity() < qty) {
+                            throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+                        }
+                    }
                     TransactionDetail detail = new TransactionDetail();
-                    detail.setDevice(deviceRepository.findById(entry.getKey())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey())));
-                    detail.setQuantity(entry.getValue());
+                    detail.setDevice(device);
+                    detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateWarehouses(transaction);
+        updateStockForDisposal(transaction);
 
         return disposalMapper.toDisposalResponse(transaction);
     }
@@ -86,22 +111,29 @@ public class DisposalServiceImpl implements DisposalService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
     }
 
-    private void updateWarehouses(AssetTransaction transaction) {
+    private void updateStockForDisposal(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
+
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            DeviceWarehouse fromStock = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId,
-                            fromWarehouseId));
+
             if (hasSerial) {
-                deviceWarehouseRepository.delete(fromStock);
+                device.setStatus(DeviceStatus.DISPOSED);
+                device.setCurrentWarehouse(null);
+                device.setCurrentUser(null);
+                device.setCurrentFloor(null);
+                deviceRepository.save(device);
             } else {
+                Integer deviceId = device.getDeviceId();
+                Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse fromStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                                device.getModel().getModelName(),
+                                transaction.getFromWarehouse().getWarehouseName()));
                 if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);

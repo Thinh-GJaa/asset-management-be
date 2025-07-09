@@ -59,4 +59,15 @@ public class TransferController {
                 return ResponseEntity.ok(apiResponse);
         }
 
+        @PostMapping("/{id}/confirm")
+        public ResponseEntity<ApiResponse<TransferResponse>> confirmTransfer(@PathVariable Integer id) {
+
+                transferService.confirmTransfer(id);
+
+                ApiResponse<TransferResponse> response = ApiResponse.<TransferResponse>builder()
+                                .message("Transfer confirmed successfully")
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
 }

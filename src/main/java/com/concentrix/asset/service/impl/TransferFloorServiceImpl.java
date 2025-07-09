@@ -3,6 +3,7 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateTransferFloorRequest;
 import com.concentrix.asset.dto.response.TransferFloorResponse;
 import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -17,6 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,48 +50,39 @@ public class TransferFloorServiceImpl implements TransferFloorService {
         AssetTransaction transaction = transferFloorMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Hợp nhất các item trùng deviceId
-        java.util.Map<Integer, Integer> deviceQtyMap = new java.util.HashMap<>();
+        // Kiểm tra trùng lặp deviceId trong danh sách
+        Set<Integer> duplicateCheckSet = new HashSet<>();
         for (var item : request.getItems()) {
-            deviceQtyMap.merge(item.getDeviceId(), item.getQuantity(), Integer::sum);
+            if (!duplicateCheckSet.add(item.getDeviceId())) {
+                throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getDeviceId());
+            }
         }
 
-        AssetTransaction finalTransaction = transaction;
-        java.util.List<TransactionDetail> details = deviceQtyMap.entrySet().stream()
-                .map(entry -> {
-                    Device device = deviceRepository.findById(entry.getKey())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
-                    // Nếu có serial, kiểm tra device phải nằm trong fromFloor dựa trên transaction
-                    // cuối cùng
-                    if (device.getSerialNumber() != null && !device.getSerialNumber().isEmpty()) {
-                        TransactionDetail lastDetail = transactionDetailRepository
-                                .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
-                        if (lastDetail == null || lastDetail.getTransaction() == null) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
-                        }
-                        AssetTransaction lastTrans = lastDetail.getTransaction();
-                        Integer lastFloorId = null;
-                        if (lastTrans.getToFloor() != null) {
-                            lastFloorId = lastTrans.getToFloor().getFloorId();
-                        } else if (lastTrans.getFromFloor() != null) {
-                            lastFloorId = lastTrans.getFromFloor().getFloorId();
-                        }
-                        if (lastFloorId == null || !lastFloorId.equals(request.getFromFloorId())) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
+        final AssetTransaction finalTransaction = transaction;
+        List<TransactionDetail> details = request.getItems().stream()
+                .map(item -> {
+                    Device device = deviceRepository.findById(item.getDeviceId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId()));
+                    boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
+                    if (hasSerial) {
+                        // Serial: chỉ cho phép chuyển sàn nếu đang IN_FLOOR, chưa có kiểm tra là đúng floor hay không
+                        if (device.getStatus() != DeviceStatus.IN_FLOOR) {
+                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
                         }
                     }
+                    // Non-serial: không kiểm tra tồn kho theo floor, chỉ update trạng thái nếu cần
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
-                    detail.setQuantity(entry.getValue());
+                    detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateWarehouses(transaction);
+        updateStockForTransferFloor(transaction);
 
         return transferFloorMapper.toTransferFloorResponse(transaction);
     }
@@ -102,21 +99,15 @@ public class TransferFloorServiceImpl implements TransferFloorService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
     }
 
-    // Trừ kho khỏi fromFloor (cả serial và không serial)
-    private void updateWarehouses(AssetTransaction transaction) {
+    // Cập nhật trạng thái thiết bị sau khi chuyển sàn
+    private void updateStockForTransferFloor(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer fromFloorId = transaction.getFromFloor().getFloorId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            // Giả sử có DeviceFloorRepository để quản lý tồn kho trên từng sàn
-            // DeviceFloor fromStock =
-            // deviceFloorRepository.findByFloor_FloorIdAndDevice_DeviceId(fromFloorId,
-            // deviceId).orElseThrow(...);
-            // if (hasSerial) { ... } else { ... }
-            // (Tùy vào thiết kế thực tế, bạn cần bổ sung DeviceFloor entity/repository nếu
-            // muốn quản lý tồn kho trên sàn)
+            if (hasSerial) {
+                device.setCurrentFloor(transaction.getToFloor());
+                deviceRepository.save(device);
+            }
         }
     }
 }

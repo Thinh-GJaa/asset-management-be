@@ -13,5 +13,7 @@ public interface TransferService {
 
     Page<TransferResponse> filterTransfers(Pageable pageable);
 
+    void confirmTransfer(Integer transferId);
+
 }
 

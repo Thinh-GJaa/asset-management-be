@@ -4,6 +4,8 @@ import com.concentrix.asset.dto.request.CreateTransferRequest;
 import com.concentrix.asset.dto.response.TransferResponse;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.TransactionType;
+import com.concentrix.asset.enums.TransactionStatus;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransferMapper;
@@ -49,6 +51,9 @@ public class TransferServiceImpl implements TransferService {
     public TransferResponse createTransfer(CreateTransferRequest request) {
         AssetTransaction transaction = transferMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
+        transaction.setTransactionStatus(TransactionStatus.PENDING);
+
+
 
         // Tạo danh sách TransactionDetail từ request.items
         AssetTransaction finalTransaction = transaction;
@@ -66,9 +71,50 @@ public class TransferServiceImpl implements TransferService {
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateWarehouses(transaction);
+        updateDeviceAndWarehousesForTransfer(transaction);
 
         return transferMapper.toTransferResponse(transaction);
+    }
+
+    public void confirmTransfer(Integer transactionId) {
+        AssetTransaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId));
+
+        if (transaction.getTransactionType() != TransactionType.TRANSFER_SITE) {
+            throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID, transactionId);
+        }
+
+        if (transaction.getTransactionStatus() != TransactionStatus.PENDING) {
+            throw new CustomException(ErrorCode.TRANSACTION_STATUS_INVALID, transactionId);
+        }
+
+        transaction.setTransactionStatus(TransactionStatus.CONFIRMED);
+
+        for (TransactionDetail detail : transaction.getDetails()) {
+            Device device = detail.getDevice();
+            if (device.getSerialNumber() != null && !device.getSerialNumber().isEmpty()) {
+                device.setStatus(DeviceStatus.IN_STOCK);
+                device.setCurrentWarehouse(transaction.getToWarehouse());
+                deviceRepository.save(device);
+            } else {
+                // Cộng vào toWarehouse khi xác nhận đối với non-serial device
+                Integer deviceId = device.getDeviceId();
+                Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse toStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
+                        .orElse(null);
+                if (toStock == null) {
+                    toStock = new DeviceWarehouse();
+                    toStock.setDevice(device);
+                    toStock.setWarehouse(transaction.getToWarehouse());
+                    toStock.setQuantity(0);
+                }
+                toStock.setQuantity(toStock.getQuantity() + qty);
+                deviceWarehouseRepository.save(toStock);
+            }
+        }
+        transactionRepository.save(transaction);
     }
 
     @Override
@@ -83,59 +129,29 @@ public class TransferServiceImpl implements TransferService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
     }
 
-    private void updateWarehouses(AssetTransaction transaction) {
+    private void updateDeviceAndWarehousesForTransfer(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
-            Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
-
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-
             if (hasSerial) {
-                // Nếu thiết bị có serial, khi rời kho thì xóa khỏi warehouse
-                DeviceWarehouse fromStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId,
-                                fromWarehouseId));
-                deviceWarehouseRepository.delete(fromStock);
-
-                // Thêm thiết bị vào kho đích (nếu chưa có)
-                DeviceWarehouse toStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElse(null);
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(1);
-                    deviceWarehouseRepository.save(toStock);
-                }
+                device.setStatus(DeviceStatus.ON_THE_MOVE);
+                device.setCurrentWarehouse(null);
+                deviceRepository.save(device);
             } else {
-
-                // Xử lý theo số lượng
+                Integer deviceId = device.getDeviceId();
+                Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
                 DeviceWarehouse fromStock = deviceWarehouseRepository
                         .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, deviceId,
-                                fromWarehouseId));
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                                device.getModel().getModelName(),
+                                transaction.getFromWarehouse().getWarehouseName()));
                 if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
-
-                DeviceWarehouse toStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElse(null);
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(0);
-                }
-                toStock.setQuantity(toStock.getQuantity() + qty);
-                deviceWarehouseRepository.save(toStock);
+                // Không cộng vào toWarehouse ở bước tạo transfer
             }
         }
     }

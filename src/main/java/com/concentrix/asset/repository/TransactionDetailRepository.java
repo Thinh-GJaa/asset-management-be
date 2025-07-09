@@ -13,4 +13,6 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
     TransactionDetail findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(Integer deviceId);
 
     List<TransactionDetail> findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(Integer deviceId);
+
+    List<TransactionDetail> findAllByDevice_DeviceIdAndTransaction_UserUse_Eid(Integer deviceId, String eid);
 }

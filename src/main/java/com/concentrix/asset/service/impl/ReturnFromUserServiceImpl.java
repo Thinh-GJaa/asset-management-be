@@ -3,6 +3,8 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateReturnFromUserRequest;
 import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import com.concentrix.asset.entity.*;
+
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -17,6 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,35 +50,58 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
         AssetTransaction transaction = returnFromUserMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Hợp nhất các item trùng deviceId
-        java.util.Map<Integer, Integer> deviceQtyMap = new java.util.HashMap<>();
+        // Kiểm tra trùng lặp deviceId trong danh sách trả về
+        Set<Integer> deviceIdSet = new HashSet<>();
         for (var item : request.getItems()) {
-            deviceQtyMap.merge(item.getDeviceId(), item.getQuantity(), Integer::sum);
+            if (!deviceIdSet.add(item.getDeviceId())) {
+                throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getDeviceId());
+            }
         }
 
         AssetTransaction finalTransaction = transaction;
-        java.util.List<TransactionDetail> details = deviceQtyMap.entrySet().stream()
-                .map(entry -> {
-                    Device device = deviceRepository.findById(entry.getKey())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
-                    // Nếu có serial, kiểm tra transaction cuối cùng phải là ASSIGNMENT cho user đó
-                    if (device.getSerialNumber() != null && !device.getSerialNumber().isEmpty()) {
-                        TransactionDetail lastDetail = transactionDetailRepository
-                                .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
-                        if (lastDetail == null || lastDetail.getTransaction() == null
-                                || lastDetail.getTransaction().getTransactionType() != TransactionType.ASSIGNMENT
-                                || lastDetail.getTransaction().getUserUse() == null
-                                || !lastDetail.getTransaction().getUserUse().getEid().equals(request.getEid())) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
+        List<TransactionDetail> details = request.getItems().stream()
+                .map(item -> {
+                    Device device = deviceRepository.findById(item.getDeviceId())
+                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId()));
+
+                    boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
+                    if (hasSerial) {
+                        // Serial: chỉ cho phép trả nếu đang ASSIGNED cho đúng user
+                        if (device.getStatus() != DeviceStatus.ASSIGNED) {
+                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                        }
+                        if (device.getCurrentUser() == null
+                                || !device.getCurrentUser().getEid().equals(request.getEid())) {
+                            throw new CustomException(ErrorCode.INVALID_DEVICE_USER, device.getSerialNumber());
+                        }
+                    } else {
+                        // Non-serial: kiểm tra tổng số lượng user đang mượn
+                        List<TransactionDetail> allDetails = transactionDetailRepository
+                                .findAllByDevice_DeviceIdAndTransaction_UserUse_Eid(device.getDeviceId(),
+                                        request.getEid());
+                        int totalAssigned = allDetails.stream()
+                                .filter(d -> d.getTransaction()
+                                        .getTransactionType() == TransactionType.ASSIGNMENT)
+                                .mapToInt(TransactionDetail::getQuantity).sum();
+                        int totalReturned = allDetails.stream()
+                                .filter(d -> d.getTransaction()
+                                        .getTransactionType() == TransactionType.RETURN_FROM_USER)
+                                .mapToInt(TransactionDetail::getQuantity).sum();
+
+                        // Tính số lượng hiện tại đang mượn
+                        int currentlyBorrowed = totalAssigned - totalReturned;
+
+                        if (item.getQuantity() > currentlyBorrowed) {
+                            throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED, device.getModel().getModelName());
                         }
                     }
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
-                    detail.setQuantity(entry.getValue());
+                    detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         transaction.setDetails(details);
 
@@ -101,25 +131,23 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     // Cộng kho khi trả về (cả serial và không serial)
     private void updateWarehouses(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            DeviceWarehouse toStock = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                    .orElse(null);
             if (hasSerial) {
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(1);
-                } else {
-                    toStock.setQuantity(toStock.getQuantity() + 1);
-                }
-                deviceWarehouseRepository.save(toStock);
+                // Serial: update Device về IN_STOCK, clear user, set warehouse
+                device.setStatus(DeviceStatus.IN_STOCK);
+                device.setCurrentUser(null);
+                device.setCurrentWarehouse(transaction.getToWarehouse());
+                device.setCurrentFloor(null);
+                deviceRepository.save(device);
             } else {
+                // Non-serial: cộng kho về warehouse
+                Integer deviceId = device.getDeviceId();
+                Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse toStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
+                        .orElse(null);
                 if (toStock == null) {
                     toStock = new DeviceWarehouse();
                     toStock.setDevice(device);

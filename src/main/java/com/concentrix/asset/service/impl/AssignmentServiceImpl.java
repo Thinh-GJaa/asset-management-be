@@ -91,22 +91,26 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     private void updateWarehouses(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
-
-            Integer deviceId = detail.getDevice().getDeviceId();
-            Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
-            Integer qty = detail.getQuantity();
             Device device = detail.getDevice();
-
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-
-            DeviceWarehouse fromStock = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,deviceId, fromWarehouseId ));
             if (hasSerial) {
-                // Nếu thiết bị có serial, khi rời kho thì xóa khỏi warehouse
-                deviceWarehouseRepository.delete(fromStock);
+                // Kiểm tra trạng thái device phải là IN_STOCK mới được cấp phát
+                if (device.getStatus() != com.concentrix.asset.enums.DeviceStatus.IN_STOCK) {
+                    throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                }
+                device.setStatus(com.concentrix.asset.enums.DeviceStatus.ASSIGNED);
+                device.setCurrentUser(transaction.getUserUse());
+                device.setCurrentWarehouse(null);
+                device.setCurrentFloor(null);
+                deviceRepository.save(device);
             } else {
-                // Xử lý theo số lượng
+                Integer deviceId = device.getDeviceId();
+                Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
+                Integer qty = detail.getQuantity();
+                DeviceWarehouse fromStock = deviceWarehouseRepository
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getModel().getModelName(),
+                                transaction.getFromWarehouse().getWarehouseName()  ));
                 if (fromStock.getQuantity() < qty) {
                     throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
                 }
