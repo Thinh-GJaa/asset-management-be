@@ -11,7 +11,7 @@ import org.mapstruct.Mappings;
 public interface UseFloorMapper {
     @Mapping(target = "transactionType", expression = "java(com.concentrix.asset.enums.TransactionType.USE_FLOOR)")
     @Mapping(target = "fromWarehouse", source = "fromWarehouseId", qualifiedByName = "warehouseIdToWarehouse")
-    @Mapping(target = "toFloor.floorId", source = "toFloorId")
+    @Mapping(target = "toFloor", source = "toFloorId", qualifiedByName = "floorIdToFloor")
     AssetTransaction toAssetTransaction(CreateUseFloorRequest request);
 
     @Mappings({

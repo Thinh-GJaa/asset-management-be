@@ -10,15 +10,12 @@ import java.util.List;
 
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class CreateUseFloorRequest {
-    @NotNull(message = "From Warehouse ID cannot be null")
-    Integer fromWarehouseId;
-
+public class CreateTransferFloorRequest {
+    @NotNull(message = "From Floor ID cannot be null")
+    Integer fromFloorId;
     @NotNull(message = "To Floor ID cannot be null")
     Integer toFloorId;
-
     String note;
-
     @Valid
     @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;

@@ -3,6 +3,7 @@ package com.concentrix.asset.controller;
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
+import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.service.DeviceService;
 import jakarta.validation.Valid;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,6 +43,17 @@ public class DeviceController {
         ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
                 .message("Filter device successfully")
                 .data(deviceService.filterDevices(pageable, modelId, type))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/movement-history/{serialNumber}")
+    public ResponseEntity<ApiResponse<List<DeviceMovementHistoryResponse>>> getDeviceMovementHistory(
+            @PathVariable String serialNumber) {
+        ApiResponse<List<DeviceMovementHistoryResponse>> response = ApiResponse
+                .<List<DeviceMovementHistoryResponse>>builder()
+                .message("Get device movement history successfully")
+                .data(deviceService.getDeviceMovementHistoryBySerial(serialNumber))
                 .build();
         return ResponseEntity.ok(response);
     }

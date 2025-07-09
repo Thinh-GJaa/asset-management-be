@@ -3,6 +3,7 @@ package com.concentrix.asset.mapper;
 import com.concentrix.asset.dto.response.POItemResponse;
 import com.concentrix.asset.dto.response.TransferItemResponse;
 import com.concentrix.asset.dto.response.TransferResponse;
+import com.concentrix.asset.entity.Floor;
 import com.concentrix.asset.entity.TransactionDetail;
 import com.concentrix.asset.entity.Warehouse;
 import com.concentrix.asset.exception.CustomException;
@@ -22,11 +23,17 @@ import java.util.stream.Collectors;
 public class TransactionMapperHelper {
 
     WarehouseRepository warehouseRepository;
+    FloorRepository floorRepository;
 
     @Named("warehouseIdToWarehouse")
     public Warehouse warehouseIdToWarehouse(Integer warehouseId){
         return warehouseRepository.findById(warehouseId)
                 .orElseThrow(()-> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, warehouseId));
+    }
+    @Named("floorIdToFloor")
+    public Floor floorIdToFloor(Integer floorId){
+        return floorRepository.findById(floorId)
+                .orElseThrow(()-> new CustomException(ErrorCode.FLOOR_NOT_FOUND, floorId));
     }
 
     @Named("mapItems")

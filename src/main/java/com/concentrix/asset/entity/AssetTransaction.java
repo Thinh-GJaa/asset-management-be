@@ -41,6 +41,11 @@ public class AssetTransaction {
     User userUse;
 
     @ManyToOne
+    @JoinColumn(name = "from_floor_id")
+    Floor fromFloor;
+
+
+    @ManyToOne
     @JoinColumn(name = "to_floor_id")
     Floor toFloor;
 

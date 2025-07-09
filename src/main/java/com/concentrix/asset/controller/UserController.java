@@ -4,7 +4,9 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
 import com.concentrix.asset.dto.response.UserResponse;
+import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.service.UserService;
+import com.concentrix.asset.service.DeviceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,12 +18,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/user")
 public class UserController {
     UserService userService;
+    DeviceService deviceService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
@@ -57,6 +62,26 @@ public class UserController {
         ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
                 .message("Update user successfully")
                 .data(userService.updateUser(request))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/borrowing-devices")
+    public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getAllUserBorrowingDevices() {
+        ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse
+                .<List<DeviceBorrowingInfoResponse>>builder()
+                .message("Get all user borrowing devices successfully")
+                .data(deviceService.getAllUserBorrowingDevices())
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{eid}/borrowing-devices")
+    public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>>> getBorrowingDevicesByUser(
+            @PathVariable String eid) {
+        ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>> response = ApiResponse.<List<DeviceBorrowingInfoResponse.DeviceInfo>>builder()
+                .message("Get borrowing devices by user successfully")
+                .data(deviceService.getBorrowingDevicesByUser(eid))
                 .build();
         return ResponseEntity.ok(response);
     }
