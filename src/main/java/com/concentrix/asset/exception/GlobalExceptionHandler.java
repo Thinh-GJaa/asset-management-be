@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.Objects;
@@ -243,6 +244,16 @@ public class GlobalExceptionHandler {
                                 "500",
                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                 "An unexpected error occurred. Please contact support if the issue persists.",
+                                null);
+        }
+
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+                log.error("NoResourceFoundException: {}", ex.getMessage(), ex);
+                return buildErrorResponse(
+                                "404",
+                                HttpStatus.NOT_FOUND,
+                                "NoResourceFoundException",
                                 null);
         }
 }

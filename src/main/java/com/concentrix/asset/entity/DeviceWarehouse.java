@@ -27,14 +27,4 @@ public class DeviceWarehouse {
     @Column
     Integer quantity;
 
-    @Column
-    String status;
-
-    @Column
-    LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

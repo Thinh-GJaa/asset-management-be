@@ -1,21 +1,15 @@
 package com.concentrix.asset.enums;
 
 public enum TransactionType {
-    IMPORT("Nhập kho"),
-    EXPORT("Xuất kho"),
-    TRANSFER("Chuyển kho"),
-    ADJUSTMENT("Điều chỉnh"),
-    MAINTENANCE_EXPORT("Xuất bảo trì"),
-    DISPOSAL_EXPORT("Xuất thanh lý"),
-    RETURN("Trả về");
+    TRANSFER_SITE,            // chuyển tài sản
+    DISPOSAL,            // thanh lý
+    ASSIGNMENT,          // cấp phát
+    REPAIR,              // bảo hành
+    USE_FLOOR,           // sử dụng tại sàn làm việc
+    TRANSFER_FLOOR,       //Chuyển giữa các
+    E_WASTE,             // rác điện tử
 
-    private final String description;
-
-    TransactionType(String description) {
-        this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-} 
+    RETURN_FROM_USER,         // trả về sau khi sử dụng
+    RETURN_FROM_REPAIR,      // trả về sau bảo hành/sửa chữa
+    RETURN_FROM_FLOOR        // trả về từ sàn làm việc
+}

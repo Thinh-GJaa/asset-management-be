@@ -1,0 +1,16 @@
+package com.concentrix.asset.service;
+
+import com.concentrix.asset.dto.request.CreateRepairRequest;
+import com.concentrix.asset.dto.response.RepairResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+public interface RepairService {
+
+    RepairResponse getRepairById(Integer repairId);
+
+    RepairResponse createRepair(CreateRepairRequest request);
+
+    Page<RepairResponse> filterRepairs(Pageable pageable);
+
+}

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 /**
  * Entity lưu thông tin các sàn làm việc (floor), thuộc về một site cụ thể.
  */
@@ -24,4 +26,26 @@ public class Floor {
     @ManyToOne
     @JoinColumn(name = "site_id")
     Site site;
+
+    @Column
+    String description;
+
+    @Column
+    LocalDateTime createdAt;
+
+    @Column
+    LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+
 }

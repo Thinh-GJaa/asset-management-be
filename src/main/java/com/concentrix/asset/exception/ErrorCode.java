@@ -8,8 +8,10 @@ public enum ErrorCode {
 
         OPTIMISTIC_LOCK(10002, HttpStatus.CONFLICT, "OptimisticLock occurred"),
 
-    SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
+        SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
 
+        STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}'"),
+        DEVICE_NOT_FOUND_IN_WAREHOUSE(10004, HttpStatus.NOT_FOUND, "Device '{}' not found in warehouse '{}'"),
         // Authentication and authorization errors
         PASSWORD_INCORRECT(10400, HttpStatus.UNAUTHORIZED, "Password incorrect"),
         CONFIRM_PASSWORD_NOT_MATCH(10401, HttpStatus.BAD_REQUEST, "Confirm password does not match"),
@@ -24,10 +26,9 @@ public enum ErrorCode {
         // Role-related errors
         ROLE_NOT_FOUND(10600, HttpStatus.NOT_FOUND, "Role with name '{}' not found"),
 
-    COOKIE_NOT_FOUND(12000, HttpStatus.UNAUTHORIZED, "Cookie '{}' not found"),
+        COOKIE_NOT_FOUND(12000, HttpStatus.UNAUTHORIZED, "Cookie '{}' not found"),
 
-
-    // Database-related errors
+        // Database-related errors
         DATABASE_CONNECTION_FAILED(10700, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to connect to the database"),
         DATA_INTEGRITY_VIOLATION(10701, HttpStatus.CONFLICT, "Data integrity violation"),
         RECORD_ALREADY_EXISTS(10702, HttpStatus.CONFLICT, "Record already exists"),
@@ -75,10 +76,15 @@ public enum ErrorCode {
         EMAIL_ALREADY_EXISTS(20107, HttpStatus.CONFLICT, "User with email '{}' already exists"),
 
         // Device entity errors
-        DEVICE_NOT_FOUND(20201, HttpStatus.NOT_FOUND, "Device with ID '{}' not found"),
+        DEVICE_NOT_FOUND(20201, HttpStatus.NOT_FOUND, "Device '{}' not found"),
         DEVICE_ALREADY_EXISTS(20202, HttpStatus.CONFLICT, "Device with serial number '{}' already exists"),
         DEVICE_UPDATE_FAILED(20203, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update device with ID '{}'"),
         DEVICE_DELETE_FAILED(20204, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete device with ID '{}'"),
+        INVALID_DEVICE_STATUS(20205, HttpStatus.BAD_REQUEST,
+                        "Device '{}' is not in valid status"),
+        INVALID_DEVICE_USER(20206, HttpStatus.BAD_REQUEST, "Device '{}' is not assigned to this user"),
+        RETURN_QUANTITY_EXCEEDS_BORROWED(20207, HttpStatus.BAD_REQUEST,
+                        "Return quantity exceeds borrowed amount for device '{}'"),
 
         // Stock entity errors
         STOCK_NOT_FOUND(20301, HttpStatus.NOT_FOUND, "Stock with ID '{}' not found"),
@@ -147,6 +153,9 @@ public enum ErrorCode {
         TRANSACTION_ALREADY_EXISTS(21102, HttpStatus.CONFLICT, "Transaction with code '{}' already exists"),
         TRANSACTION_UPDATE_FAILED(21103, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction with ID '{}'"),
         TRANSACTION_DELETE_FAILED(21104, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete transaction with ID '{}'"),
+        TRANSACTION_TYPE_INVALID(21105, HttpStatus.BAD_REQUEST, "Transaction type is invalid"),
+        TRANSACTION_STATUS_INVALID(21106, HttpStatus.BAD_REQUEST, "Transaction status is invalid"),
+        DUPLICATE_DEVICE_RETURN(21107, HttpStatus.BAD_REQUEST, "Duplicate device in return list: '{}'"),
 
         // Warehouse entity errors
         WAREHOUSE_NOT_FOUND(21201, HttpStatus.NOT_FOUND, "Warehouse with ID '{}' not found"),
@@ -160,16 +169,26 @@ public enum ErrorCode {
         MODEL_UPDATE_FAILED(21403, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update model with ID '{}'"),
         MODEL_DELETE_FAILED(21404, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete model with ID '{}'"),
 
-
-        //Purchase Order entity errors
+        // Purchase Order entity errors
         PO_NOT_FOUND(21501, HttpStatus.NOT_FOUND, "Purchase Order with ID '{}' not found"),
         PO_ALREADY_EXISTS(21502, HttpStatus.CONFLICT, "Purchase Order with ID '{}' already exists"),
-
 
         DUPLICATE_SERIAL_NUMBER(21601, HttpStatus.CONFLICT, "Duplicate serial number '{}'"),
 
         // New errors
-        NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred");
+        NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred"),
+
+        // Repair entity errors
+        REPAIR_NOT_FOUND(22001, HttpStatus.NOT_FOUND, "Repair with ID '{}' not found"),
+        REPAIR_ALREADY_EXISTS(22002, HttpStatus.CONFLICT, "Repair with code '{}' already exists"),
+        REPAIR_UPDATE_FAILED(22003, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update repair with ID '{}'"),
+        REPAIR_DELETE_FAILED(22004, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete repair with ID '{}'"),
+
+        // Floor entity errors
+        FLOOR_NOT_FOUND(21701, HttpStatus.NOT_FOUND, "Floor with ID '{}' not found"),
+        FLOOR_ALREADY_EXISTS(21702, HttpStatus.CONFLICT, "Floor with name '{}' already exists"),
+        FLOOR_UPDATE_FAILED(21703, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update floor with ID '{}'"),
+        FLOOR_DELETE_FAILED(21704, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete floor with ID '{}'");
 
         private final int code;
         private final HttpStatus status;

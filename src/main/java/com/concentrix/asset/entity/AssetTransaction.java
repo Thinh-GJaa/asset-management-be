@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entity đại diện cho phiếu giao dịch (transaction slip/header).
@@ -32,25 +33,41 @@ public class AssetTransaction {
     Warehouse toWarehouse;
 
     @ManyToOne
+    @JoinColumn(name = "from_warehouse_id")
+    Warehouse fromWarehouse;
+
+    @ManyToOne
     @JoinColumn(name = "user_use_id")
-    User UserUse;
+    User userUse;
+
+    @ManyToOne
+    @JoinColumn(name = "from_floor_id")
+    Floor fromFloor;
+
 
     @ManyToOne
     @JoinColumn(name = "to_floor_id")
     Floor toFloor;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     TransactionStatus transactionStatus;
 
-    @Column(nullable = false)
+    @Column
     LocalDateTime createdAt;
 
     @Column
     LocalDateTime updatedAt;
 
-    @Column(nullable = false)
-    String createdBy;
+    @ManyToOne
+    @JoinColumn(name = "create_by")
+    User createdBy;
+
+    @Column
+    String note;
+
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<TransactionDetail> details;
 
     @PrePersist
     private void prePersist() {

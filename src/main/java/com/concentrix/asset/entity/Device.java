@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 /**
  * Entity lưu thông tin từng thiết bị cụ thể (serial, trạng thái, model, vị trí
  * hiện tại).
@@ -13,6 +15,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_device_serial_number", columnList = "serialNumber")
+})
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Device {
@@ -27,7 +32,7 @@ public class Device {
     String deviceName;
 
     @Enumerated(EnumType.STRING)
-    DeviceStatus currentStatus;
+    DeviceStatus status;
 
     @ManyToOne
     @JoinColumn(name = "model_id")
@@ -41,6 +46,10 @@ public class Device {
     @JoinColumn(name = "floor_id", nullable = true)
     Floor currentFloor;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true)
+    User currentUser;
+
     @OneToMany(mappedBy = "device")
-    java.util.Set<DeviceWarehouse> deviceWarehouses;
+    Set<DeviceWarehouse> deviceWarehouses;
 }

@@ -54,7 +54,7 @@ public class POResponse implements Serializable{
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class UserResponse implements Serializable{
-        String EID;
+        String eid;
         String fullName;
     }
 

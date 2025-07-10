@@ -99,12 +99,11 @@ public class POServiceImpl implements POService {
                 .model(model)
                 .deviceName(item.getDeviceName())
                 .currentWarehouse(purchaseOrder.getWarehouse())
-                .currentStatus(com.concentrix.asset.enums.DeviceStatus.AVAILABLE)
+                .status(DeviceStatus.IN_STOCK)
                 .build();
         device = deviceRepository.save(device);
 
         createPODetail(purchaseOrder, device, 1);
-        createDeviceWarehouse(purchaseOrder.getWarehouse(), device, 1, true);
     }
 
     private void handleDeviceWithoutSerial(POItem item, Model model, PurchaseOrder purchaseOrder) {
@@ -113,8 +112,7 @@ public class POServiceImpl implements POService {
                     Device newDevice = Device.builder()
                             .model(model)
                             .deviceName(item.getDeviceName())
-                            .currentWarehouse(purchaseOrder.getWarehouse())
-                            .currentStatus(DeviceStatus.AVAILABLE)
+                            .status(DeviceStatus.IN_STOCK)
                             .build();
                     return deviceRepository.save(newDevice);
                 });
@@ -122,7 +120,7 @@ public class POServiceImpl implements POService {
         log.info("[POServiceImpl] Device found or created: {}", device.getDeviceId());
 
         createPODetail(purchaseOrder, device, item.getQuantity());
-        createDeviceWarehouse(purchaseOrder.getWarehouse(), device, item.getQuantity(), false);
+        createDeviceWarehouse(purchaseOrder.getWarehouse(), device, item.getQuantity());
     }
 
     private void createPODetail(PurchaseOrder purchaseOrder, Device device, Integer quantity) {
@@ -134,32 +132,22 @@ public class POServiceImpl implements POService {
         purchaseOrder.getPoDetails().add(poDetail);
     }
 
-    private void createDeviceWarehouse(Warehouse warehouse, Device device, Integer quantity,
-            boolean withSerial) {
-        if (withSerial) {
-            DeviceWarehouse deviceWarehouse = DeviceWarehouse.builder()
+    private void createDeviceWarehouse(Warehouse warehouse, Device device, Integer quantity) {
+        Integer warehouseId = warehouse.getWarehouseId();
+        Integer deviceId = device.getDeviceId();
+        DeviceWarehouse deviceWarehouse = deviceWarehouseRepository
+                .findByWarehouse_WarehouseIdAndDevice_DeviceId(warehouseId, deviceId)
+                .orElse(null);
+        if (deviceWarehouse != null) {
+            deviceWarehouse.setQuantity(deviceWarehouse.getQuantity() + quantity);
+            deviceWarehouseRepository.save(deviceWarehouse);
+        } else {
+            deviceWarehouse = DeviceWarehouse.builder()
                     .warehouse(warehouse)
                     .device(device)
                     .quantity(quantity)
                     .build();
             deviceWarehouseRepository.save(deviceWarehouse);
-        } else {
-            Integer warehouseId = warehouse.getWarehouseId();
-            Integer deviceId = device.getDeviceId();
-            DeviceWarehouse deviceWarehouse = deviceWarehouseRepository
-                    .findByWarehouse_WarehouseIdAndDevice_DeviceId(warehouseId, deviceId)
-                    .orElse(null);
-            if (deviceWarehouse != null) {
-                deviceWarehouse.setQuantity(deviceWarehouse.getQuantity() + quantity);
-                deviceWarehouseRepository.save(deviceWarehouse);
-            } else {
-                deviceWarehouse = DeviceWarehouse.builder()
-                        .warehouse(warehouse)
-                        .device(device)
-                        .quantity(quantity)
-                        .build();
-                deviceWarehouseRepository.save(deviceWarehouse);
-            }
         }
     }
 
