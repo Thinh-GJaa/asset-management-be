@@ -53,15 +53,30 @@ public class TransferServiceImpl implements TransferService {
         transaction.setCreatedBy(getCurrentUser());
         transaction.setTransactionStatus(TransactionStatus.PENDING);
 
-
-
         // Tạo danh sách TransactionDetail từ request.items
         AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
+                    // Tìm device dựa trên serialNumber hoặc modelId
+                    final Device device;
+                    if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
+                        // Tìm device theo serial number - đây là thiết bị cụ thể
+                        device = deviceRepository.findBySerialNumber(item.getSerialNumber())
+                                .orElseThrow(
+                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                    } else if (item.getModelId() != null) {
+                        // Tìm device theo modelId - đây là thiết bị không có serial
+                        // Lấy device đầu tiên của model đó
+                        device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
+                                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
+                                        "Model ID: " + item.getModelId()));
+                    } else {
+                        throw new CustomException(ErrorCode.DEVICE_NOT_FOUND,
+                                "Either serialNumber or modelId must be provided");
+                    }
+
                     TransactionDetail detail = new TransactionDetail();
-                    detail.setDevice(deviceRepository.findById(item.getDeviceId())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId())));
+                    detail.setDevice(device);
                     detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction); // liên kết ngược
                     return detail;

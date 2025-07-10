@@ -79,12 +79,24 @@ public class POMapperHelper {
         if (poDetails == null)
             return null;
         return poDetails.stream()
-                .map(detail -> POItemResponse.builder()
-                        .deviceId(detail.getDevice().getDeviceId())
-                        .deviceName(detail.getDevice().getDeviceName())
-                        .quantity(detail.getQuantity())
-                        .serialNumber(detail.getDevice().getSerialNumber())
-                        .build())
+                .map(detail -> {
+                    String deviceName;
+                    if (detail.getDevice().getSerialNumber() != null
+                            && !detail.getDevice().getSerialNumber().isEmpty()) {
+                        // Có serial: sử dụng tên thiết bị cụ thể
+                        deviceName = detail.getDevice().getDeviceName();
+                    } else {
+                        // Không có serial: sử dụng tên model
+                        deviceName = detail.getDevice().getModel().getModelName();
+                    }
+
+                    return POItemResponse.builder()
+                            .deviceId(detail.getDevice().getDeviceId())
+                            .serialNumber(detail.getDevice().getSerialNumber())
+                            .deviceName(deviceName)
+                            .quantity(detail.getQuantity())
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 }

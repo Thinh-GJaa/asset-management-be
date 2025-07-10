@@ -76,7 +76,7 @@ public enum ErrorCode {
         EMAIL_ALREADY_EXISTS(20107, HttpStatus.CONFLICT, "User with email '{}' already exists"),
 
         // Device entity errors
-        DEVICE_NOT_FOUND(20201, HttpStatus.NOT_FOUND, "Device with ID '{}' not found"),
+        DEVICE_NOT_FOUND(20201, HttpStatus.NOT_FOUND, "Device '{}' not found"),
         DEVICE_ALREADY_EXISTS(20202, HttpStatus.CONFLICT, "Device with serial number '{}' already exists"),
         DEVICE_UPDATE_FAILED(20203, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update device with ID '{}'"),
         DEVICE_DELETE_FAILED(20204, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete device with ID '{}'"),

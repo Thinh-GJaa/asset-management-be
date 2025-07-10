@@ -15,6 +15,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_device_serial_number", columnList = "serialNumber")
+})
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Device {

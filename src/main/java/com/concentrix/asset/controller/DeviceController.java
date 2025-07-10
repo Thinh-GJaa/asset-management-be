@@ -47,7 +47,7 @@ public class DeviceController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/movement-history/{serialNumber}")
+    @GetMapping("/{serialNumber}/history")
     public ResponseEntity<ApiResponse<List<DeviceMovementHistoryResponse>>> getDeviceMovementHistory(
             @PathVariable String serialNumber) {
         ApiResponse<List<DeviceMovementHistoryResponse>> response = ApiResponse

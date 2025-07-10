@@ -16,8 +16,11 @@ import java.io.Serializable;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransactionItem implements Serializable {
 
-    @NotNull(message = "Device ID cannot be null")
-    Integer deviceId;
+    @NotNull(message = "Serial number cannot be null")
+    String serialNumber;
+
+    @NotNull(message = "Model ID cannot be null")
+    Integer modelId;
 
     @NotNull(message = "Quantity cannot be null")
     Integer quantity;

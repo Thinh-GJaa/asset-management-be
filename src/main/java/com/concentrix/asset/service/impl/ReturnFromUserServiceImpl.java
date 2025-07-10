@@ -50,19 +50,41 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
         AssetTransaction transaction = returnFromUserMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Kiểm tra trùng lặp deviceId trong danh sách trả về
-        Set<Integer> deviceIdSet = new HashSet<>();
+        // Kiểm tra trùng lặp serialNumber hoặc modelId trong danh sách trả về
+        Set<String> duplicateSerialCheckSet = new HashSet<>();
+        Set<Integer> duplicateModelCheckSet = new HashSet<>();
         for (var item : request.getItems()) {
-            if (!deviceIdSet.add(item.getDeviceId())) {
-                throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getDeviceId());
+            if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
+                if (!duplicateSerialCheckSet.add(item.getSerialNumber())) {
+                    throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, item.getSerialNumber());
+                }
+            } else if (item.getModelId() != null) {
+                if (!duplicateModelCheckSet.add(item.getModelId())) {
+                    throw new CustomException(ErrorCode.DUPLICATE_SERIAL_NUMBER, "Model ID: " + item.getModelId());
+                }
             }
         }
 
         AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    Device device = deviceRepository.findById(item.getDeviceId())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getDeviceId()));
+                    // Tìm device dựa trên serialNumber hoặc modelId
+                    final Device device;
+                    if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
+                        // Tìm device theo serial number - đây là thiết bị cụ thể
+                        device = deviceRepository.findBySerialNumber(item.getSerialNumber())
+                                .orElseThrow(
+                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                    } else if (item.getModelId() != null) {
+                        // Tìm device theo modelId - đây là thiết bị không có serial
+                        // Lấy device đầu tiên của model đó
+                        device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
+                                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
+                                        "Model ID: " + item.getModelId()));
+                    } else {
+                        throw new CustomException(ErrorCode.DEVICE_NOT_FOUND,
+                                "Either serialNumber or modelId must be provided");
+                    }
 
                     boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
                     if (hasSerial) {
@@ -92,7 +114,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                         int currentlyBorrowed = totalAssigned - totalReturned;
 
                         if (item.getQuantity() > currentlyBorrowed) {
-                            throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED, device.getModel().getModelName());
+                            throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED,
+                                    device.getModel().getModelName());
                         }
                     }
                     TransactionDetail detail = new TransactionDetail();

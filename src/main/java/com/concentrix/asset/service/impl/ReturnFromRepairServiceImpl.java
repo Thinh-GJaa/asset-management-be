@@ -43,33 +43,52 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
         AssetTransaction transaction = returnFromRepairMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        // Hợp nhất các item trùng deviceId
-        java.util.Map<Integer, Integer> deviceQtyMap = new java.util.HashMap<>();
+        // Hợp nhất các item trùng serialNumber hoặc modelId
+        java.util.Map<String, Integer> serialQtyMap = new java.util.HashMap<>();
+        java.util.Map<Integer, Integer> modelQtyMap = new java.util.HashMap<>();
+
         for (var item : request.getItems()) {
-            deviceQtyMap.merge(item.getDeviceId(), item.getQuantity(), Integer::sum);
+            if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
+                serialQtyMap.merge(item.getSerialNumber(), item.getQuantity(), Integer::sum);
+            } else if (item.getModelId() != null) {
+                modelQtyMap.merge(item.getModelId(), item.getQuantity(), Integer::sum);
+            }
         }
 
         AssetTransaction finalTransaction = transaction;
-        java.util.List<TransactionDetail> details = deviceQtyMap.entrySet().stream()
-                .map(entry -> {
-                    Device device = deviceRepository.findById(entry.getKey())
-                            .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
-                    // Nếu có serial, kiểm tra transaction cuối cùng phải là REPAIR
-                    if (device.getSerialNumber() != null && !device.getSerialNumber().isEmpty()) {
-                        TransactionDetail lastDetail = transactionDetailRepository
-                                .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
-                        if (lastDetail == null || lastDetail.getTransaction() == null || lastDetail.getTransaction()
-                                .getTransactionType() != com.concentrix.asset.enums.TransactionType.REPAIR) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
-                        }
-                    }
-                    TransactionDetail detail = new TransactionDetail();
-                    detail.setDevice(device);
-                    detail.setQuantity(entry.getValue());
-                    detail.setTransaction(finalTransaction);
-                    return detail;
-                })
-                .collect(java.util.stream.Collectors.toList());
+        java.util.List<TransactionDetail> details = new java.util.ArrayList<>();
+
+        // Xử lý các device có serial number
+        for (java.util.Map.Entry<String, Integer> entry : serialQtyMap.entrySet()) {
+            Device device = deviceRepository.findBySerialNumber(entry.getKey())
+                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
+
+            // Nếu có serial, kiểm tra transaction cuối cùng phải là REPAIR
+            TransactionDetail lastDetail = transactionDetailRepository
+                    .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
+            if (lastDetail == null || lastDetail.getTransaction() == null || lastDetail.getTransaction()
+                    .getTransactionType() != com.concentrix.asset.enums.TransactionType.REPAIR) {
+                throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
+            }
+
+            TransactionDetail detail = new TransactionDetail();
+            detail.setDevice(device);
+            detail.setQuantity(entry.getValue());
+            detail.setTransaction(finalTransaction);
+            details.add(detail);
+        }
+
+        // Xử lý các device theo modelId
+        for (java.util.Map.Entry<Integer, Integer> entry : modelQtyMap.entrySet()) {
+            Device device = deviceRepository.findFirstByModel_ModelId(entry.getKey())
+                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, "Model ID: " + entry.getKey()));
+
+            TransactionDetail detail = new TransactionDetail();
+            detail.setDevice(device);
+            detail.setQuantity(entry.getValue());
+            detail.setTransaction(finalTransaction);
+            details.add(detail);
+        }
 
         transaction.setDetails(details);
 

@@ -26,27 +26,28 @@ public class TransactionMapperHelper {
     FloorRepository floorRepository;
 
     @Named("warehouseIdToWarehouse")
-    public Warehouse warehouseIdToWarehouse(Integer warehouseId){
+    public Warehouse warehouseIdToWarehouse(Integer warehouseId) {
         return warehouseRepository.findById(warehouseId)
-                .orElseThrow(()-> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, warehouseId));
+                .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, warehouseId));
     }
+
     @Named("floorIdToFloor")
-    public Floor floorIdToFloor(Integer floorId){
+    public Floor floorIdToFloor(Integer floorId) {
         return floorRepository.findById(floorId)
-                .orElseThrow(()-> new CustomException(ErrorCode.FLOOR_NOT_FOUND, floorId));
+                .orElseThrow(() -> new CustomException(ErrorCode.FLOOR_NOT_FOUND, floorId));
     }
 
     @Named("mapItems")
-    public List<TransferItemResponse> mapItems(List<TransactionDetail> details){
+    public List<TransferItemResponse> mapItems(List<TransactionDetail> details) {
         if (details == null)
             return null;
 
         return details.stream()
                 .map(detail -> TransferItemResponse.builder()
                         .deviceId(detail.getDevice().getDeviceId())
+                        .serialNumber(detail.getDevice().getSerialNumber())
                         .deviceName(detail.getDevice().getDeviceName())
                         .quantity(detail.getQuantity())
-                        .serialNumber(detail.getDevice().getSerialNumber())
                         .build())
                 .collect(Collectors.toList());
     }
