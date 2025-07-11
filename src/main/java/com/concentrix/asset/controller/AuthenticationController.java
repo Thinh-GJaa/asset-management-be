@@ -7,6 +7,7 @@ import com.concentrix.asset.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,25 +32,41 @@ public class AuthenticationController {
 
         @PostMapping("/login")
         public ResponseEntity<ApiResponse<LoginResponse>> login(
-                @Valid @RequestBody LoginRequest loginRequest,
-                HttpServletResponse httpServletResponse) {
+                        @Valid @RequestBody LoginRequest loginRequest,
+                        HttpServletResponse httpServletResponse) {
+
+                LoginResponse loginResponse = authenticationService.login(loginRequest, httpServletResponse);
+                // Set token vào cookie
+                String token = loginResponse.getToken();
+                if (token != null) {
+                        token = token.trim();
+                        if (token.startsWith("Bearer ")) {
+                                token = token.substring(7);
+                        }
+                        Cookie cookie = new Cookie("access_token", token);
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        cookie.setMaxAge(24 * 60 * 60);
+                        cookie.setSecure(true);
+                        httpServletResponse.addCookie(cookie);
+                }
 
                 ApiResponse<LoginResponse> response = ApiResponse.<LoginResponse>builder()
-                        .message("Login successful")
-                        .data(authenticationService.login(loginRequest, httpServletResponse))
-                        .build();
+                                .message("Login successful")
+                                .data(loginResponse)
+                                .build();
                 return ResponseEntity.ok(response);
         }
 
         @PostMapping("/logout")
-        public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest)
-                                                                        throws ParseException, JOSEException {
+        public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse httpServletResponse,
+                        HttpServletRequest httpServletRequest)
+                        throws ParseException, JOSEException {
                 authenticationService.logout(httpServletRequest, httpServletResponse);
                 ApiResponse<Void> response = ApiResponse.<Void>builder()
-                        .message("Logout successful")
-                        .build();
+                                .message("Logout successful")
+                                .build();
                 return ResponseEntity.ok(response);
         }
-
 
 }

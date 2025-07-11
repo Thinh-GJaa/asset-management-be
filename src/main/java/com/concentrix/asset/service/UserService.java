@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 public interface UserService {
     UserResponse getUserById(String eid);
 
+    UserResponse getUserByEmail(String email);
+
     UserResponse createUser(CreateUserRequest request);
 
     UserResponse updateUser(UpdateUserRequest request);

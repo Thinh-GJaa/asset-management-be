@@ -17,7 +17,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import com.concentrix.asset.enums.DeviceType;
 
 @Service
 @RequiredArgsConstructor
@@ -51,12 +54,11 @@ public class ModelServiceImpl implements ModelService {
         Model model = modelRepository.findById(request.getModelId())
                 .orElseThrow(() -> new CustomException(ErrorCode.MODEL_NOT_FOUND, request.getModelId()));
 
-
         Optional<Model> existingOpt = modelRepository.findByModelName(request.getModelName());
         if (existingOpt.isPresent() && !existingOpt.get().getModelId().equals(model.getModelId())) {
             throw new CustomException(ErrorCode.MODEL_ALREADY_EXISTS, request.getModelName());
         }
-        
+
         modelMapper.updateModel(model, request);
         model = modelRepository.save(model);
         return modelMapper.toModelResponse(model);
@@ -65,5 +67,11 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Page<ModelResponse> filterModel(Pageable pageable) {
         return modelRepository.findAll(pageable).map(modelMapper::toModelResponse);
+    }
+
+    @Override
+    public List<ModelResponse> getModelsByType(DeviceType type) {
+        List<Model> models = modelRepository.findByType(type);
+        return models.stream().map(modelMapper::toModelResponse).collect(Collectors.toList());
     }
 }

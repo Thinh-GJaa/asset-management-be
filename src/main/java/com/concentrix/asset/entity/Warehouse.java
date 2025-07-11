@@ -28,6 +28,9 @@ public class Warehouse {
     Site site;
 
     @Column
+    String description;
+
+    @Column
     LocalDateTime createdAt;
 
     @Column

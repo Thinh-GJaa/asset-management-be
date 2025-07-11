@@ -98,8 +98,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> filterUser( Pageable pageable) {
+    public Page<UserResponse> filterUser(Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
         return userPage.map(userMapper::toUserResponse);
+    }
+
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, email));
+        return userMapper.toUserResponse(user);
     }
 }
