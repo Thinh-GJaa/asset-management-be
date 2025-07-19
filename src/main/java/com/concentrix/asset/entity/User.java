@@ -30,10 +30,28 @@ public class User {
     String email;
 
     @Column(unique = true)
-    String SSO;
+    String sso;
 
     @Column(unique = true)
-    String MSA;
+    String msa;
+
+    @Column
+    String location;
+
+    @Column
+    String company;
+
+    @Column
+    String costCenter;
+
+    @Column
+    String msaClient;
+
+    @Column
+    String managerEmail;
+
+    @Column
+    boolean isActive;
 
     @Column
     String password;

@@ -60,4 +60,15 @@ public class FloorController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/site/{siteId}")
+    public ResponseEntity<ApiResponse<Page<FloorResponse>>> getFloorsBySiteId(
+            @PathVariable Integer siteId,
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        ApiResponse<Page<FloorResponse>> apiResponse = ApiResponse.<Page<FloorResponse>>builder()
+                .message("Get floors by site ID successfully")
+                .data(floorService.getFloorsBySiteId(siteId, pageable))
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 }

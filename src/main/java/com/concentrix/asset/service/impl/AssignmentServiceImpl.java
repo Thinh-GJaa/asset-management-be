@@ -115,6 +115,12 @@ public class AssignmentServiceImpl implements AssignmentService {
                 if (device.getStatus() != com.concentrix.asset.enums.DeviceStatus.IN_STOCK) {
                     throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
                 }
+                // Bổ sung kiểm tra device có đúng ở warehouse không
+                if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
+                        .equals(transaction.getFromWarehouse().getWarehouseId())) {
+                    throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getSerialNumber(),
+                            transaction.getFromWarehouse().getWarehouseName());
+                }
                 device.setStatus(com.concentrix.asset.enums.DeviceStatus.ASSIGNED);
                 device.setCurrentUser(transaction.getUserUse());
                 device.setCurrentWarehouse(null);

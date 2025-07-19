@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -20,8 +21,8 @@ public class RepairResponse implements Serializable {
     Integer transactionId;
     WarehouseResponse fromWarehouse;
     UserResponse createdBy;
-    LocalDate createdAt;
-    LocalDate updatedAt;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
     String note;
     List<TransferItemResponse> items;
 

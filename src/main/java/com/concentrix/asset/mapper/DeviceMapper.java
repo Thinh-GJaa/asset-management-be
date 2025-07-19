@@ -8,13 +8,13 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring", uses = DeviceMapperHelper.class)
 public interface DeviceMapper {
 
-
     @Mapping(target = "model", source = "model", qualifiedByName = "mapModel")
     @Mapping(target = "poId", source = "deviceId", qualifiedByName = "mapPoId")
     @Mapping(target = "purchaseDate", source = "deviceId", qualifiedByName = "mapPurchaseDate")
     @Mapping(target = "user", source = "currentUser")
     @Mapping(target = "floor", source = "currentFloor")
     @Mapping(target = "warehouse", source = "currentWarehouse")
+    @Mapping(target = "site", source = "device", qualifiedByName = "mapSite")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     DeviceResponse toDeviceResponse(Device device);
 

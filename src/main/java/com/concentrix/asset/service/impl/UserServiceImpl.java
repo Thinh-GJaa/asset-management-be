@@ -45,14 +45,14 @@ public class UserServiceImpl implements UserService {
                     throw new CustomException(ErrorCode.USER_ALREADY_EXISTS, request.getEid());
                 });
 
-        if (userRepository.findBySSO(request.getSSO()).isPresent()) {
+        if (userRepository.findBySso(request.getSSO()).isPresent()) {
             throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
         }
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        if (userRepository.findByMSA(request.getMSA()).isPresent()) {
+        if (userRepository.findByMsa(request.getMSA()).isPresent()) {
             throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getMSA());
         }
         User user = userMapper.toUser(request);
@@ -77,13 +77,13 @@ public class UserServiceImpl implements UserService {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        Optional<User> existingSSO = userRepository.findBySSO(request.getSSO());
+        Optional<User> existingSSO = userRepository.findBySso(request.getSSO());
         if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(user.getEid())) {
             throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
         }
 
-        Optional<User> existingMSA = userRepository.findByMSA(request.getMSA());
-        if (existingMSA.isPresent() && !existingMSA.get().getMSA().equals(user.getMSA())) {
+        Optional<User> existingMSA = userRepository.findByMsa(request.getMSA());
+        if (existingMSA.isPresent() && !existingMSA.get().getMsa().equals(user.getMsa())) {
             throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getSSO());
         }
 

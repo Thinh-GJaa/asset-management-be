@@ -188,7 +188,10 @@ public enum ErrorCode {
         FLOOR_NOT_FOUND(21701, HttpStatus.NOT_FOUND, "Floor with ID '{}' not found"),
         FLOOR_ALREADY_EXISTS(21702, HttpStatus.CONFLICT, "Floor with name '{}' already exists"),
         FLOOR_UPDATE_FAILED(21703, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update floor with ID '{}'"),
-        FLOOR_DELETE_FAILED(21704, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete floor with ID '{}'");
+        FLOOR_DELETE_FAILED(21704, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete floor with ID '{}'"),
+
+        // Custom: Device not found in floor
+        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
 
         private final int code;
         private final HttpStatus status;

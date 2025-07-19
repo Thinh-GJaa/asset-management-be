@@ -2,17 +2,16 @@ package com.concentrix.asset.service.impl;
 
 import com.concentrix.asset.dto.response.*;
 import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.Model;
 import com.concentrix.asset.entity.User;
+import com.concentrix.asset.mapper.DeviceMapper;
+import com.concentrix.asset.mapper.UserMapper;
 import com.concentrix.asset.repository.DeviceRepository;
-import com.concentrix.asset.repository.ModelRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,87 +19,59 @@ import java.util.stream.Collectors;
 public class SearchServiceImpl implements SearchService {
     UserRepository userRepository;
     DeviceRepository deviceRepository;
-    ModelRepository modelRepository;
+    UserMapper userMapper;
+    DeviceMapper deviceMapper;
 
+    /**
+     * Global search for both User and Device.
+     * - Tìm kiếm theo từ khóa (query) trên các trường: email, eid, fullName, sso, msa (User) và serialNumber (Device).
+     * - Trả về danh sách user và device phù hợp, map sang DTO chuẩn cho FE.
+     * - Kết quả trả về gồm: tổng số kết quả, danh sách UserResponse, danh sách DeviceResponse.
+     *
+     * @param query Từ khóa tìm kiếm (có thể là email, eid, serial, tên thiết bị, model, ...)
+     * @return SearchResultResponse gồm users và devices phù hợp
+     */
     @Override
     public SearchResultResponse search(String query) {
         if (query == null || query.trim().isEmpty()) {
-            return SearchResultResponse.builder().results(Collections.emptyList()).build();
+            return SearchResultResponse.builder()
+                    .total(0)
+                    .users(List.of())
+                    .devices(List.of())
+                    .build();
         }
         String q = query.trim().toLowerCase();
-        // Ưu tiên tìm user trước
+
+        // 1. Tìm kiếm user theo các trường: email, eid, fullName, sso, msa
         List<User> users = userRepository.findAll().stream()
                 .filter(u -> (u.getEmail() != null && u.getEmail().toLowerCase().contains(q)) ||
                         (u.getEid() != null && u.getEid().toLowerCase().contains(q)) ||
-                        (u.getMSA() != null && u.getMSA().toLowerCase().contains(q)) ||
-                        (u.getSSO() != null && u.getSSO().toLowerCase().contains(q)) ||
-                        (u.getFullName() != null && u.getFullName().toLowerCase().contains(q)))
-                .collect(Collectors.toList());
-        if (users.size() == 1) {
-            User u = users.get(0);
-            return SearchResultResponse.builder()
-                    .userDetail(UserDetailResponse.builder()
-                            .eid(u.getEid())
-                            .fullName(u.getFullName())
-                            .email(u.getEmail())
-                            .msa(u.getMSA())
-                            .sso(u.getSSO())
-                            .position(u.getJobTitle())
-                            .build())
-                    .build();
-        } else if (users.size() > 1) {
-            List<SearchResultResponse.ResultItem> results = users.stream()
-                    .map(u -> SearchResultResponse.ResultItem.builder()
-                            .type("USER")
-                            .eid(u.getEid())
-                            .fullName(u.getFullName())
-                            .email(u.getEmail())
-                            .msa(u.getMSA())
-                            .sso(u.getSSO())
-                            .build())
-                    .collect(Collectors.toList());
-            return SearchResultResponse.builder().results(results).build();
-        }
-        // Nếu không có user, tìm device
-        List<Device> devices = deviceRepository
-                .findAll().stream().filter(
-                        d -> (d.getSerialNumber() != null && d.getSerialNumber().toLowerCase().contains(q)) ||
-                                (d.getDeviceName() != null && d.getDeviceName().toLowerCase().contains(q)) ||
-                                (d.getModel() != null && d.getModel().getModelName() != null
-                                        && d.getModel().getModelName().toLowerCase().contains(q)))
-                .collect(Collectors.toList());
-        if (devices.size() == 1) {
-            Device d = devices.get(0);
-            Model m = d.getModel();
-            return SearchResultResponse.builder()
-                    .deviceDetail(DeviceDetailResponse.builder()
-                            .deviceId(d.getDeviceId())
-                            .deviceName(d.getDeviceName())
-                            .serialNumber(d.getSerialNumber())
-                            .modelName(m != null ? m.getModelName() : null)
-                            .status(d.getStatus() != null ? d.getStatus().name() : null)
-                            .warehouseName(
-                                    d.getCurrentWarehouse() != null ? d.getCurrentWarehouse().getWarehouseName() : null)
-                            .floorName(d.getCurrentFloor() != null ? d.getCurrentFloor().getFloorName() : null)
-                            .assignedUserEid(d.getCurrentUser() != null ? d.getCurrentUser().getEid() : null)
-                            .assignedUserName(d.getCurrentUser() != null ? d.getCurrentUser().getFullName() : null)
-                            .note(null)
-                            .build())
-                    .build();
-        } else if (devices.size() > 1) {
-            List<SearchResultResponse.ResultItem> results = devices.stream()
-                    .map(d -> SearchResultResponse.ResultItem.builder()
-                            .type("DEVICE")
-                            .deviceId(d.getDeviceId())
-                            .deviceName(d.getDeviceName())
-                            .serialNumber(d.getSerialNumber())
-                            .modelName(d.getModel() != null ? d.getModel().getModelName() : null)
-                            .status(d.getStatus() != null ? d.getStatus().name() : null)
-                            .build())
-                    .collect(Collectors.toList());
-            return SearchResultResponse.builder().results(results).build();
-        }
-        // Không tìm thấy
-        return SearchResultResponse.builder().results(Collections.emptyList()).build();
+                        (u.getFullName() != null && u.getFullName().toLowerCase().contains(q)) ||
+                        (u.getSso() != null && u.getSso().toLowerCase().contains(q)) ||
+                        (u.getMsa() != null && u.getMsa().toLowerCase().contains(q)))
+                .toList();
+
+        // 2. Tìm kiếm device theo các trường: serialNumber, deviceName, modelName
+        List<Device> devices = deviceRepository.findAll().stream()
+                .filter(d ->
+                        (d.getSerialNumber() != null &&
+                                d.getSerialNumber().toLowerCase().contains(q)))
+                .toList();
+
+        // 3. Map kết quả sang DTO chuẩn cho FE
+        List<UserResponse> userResponses = users.stream()
+                .map(userMapper::toUserResponse)
+                .toList();
+
+        List<DeviceResponse> deviceResponses = devices.stream()
+                .map(deviceMapper::toDeviceResponse)
+                .toList();
+
+        // 4. Trả về kết quả tổng hợp
+        return SearchResultResponse.builder()
+                .total(userResponses.size() + deviceResponses.size())
+                .users(userResponses)
+                .devices(deviceResponses)
+                .build();
     }
 }

@@ -13,6 +13,8 @@ import com.concentrix.asset.repository.DeviceRepository;
 import com.concentrix.asset.repository.ModelRepository;
 import com.concentrix.asset.repository.TransactionDetailRepository;
 import com.concentrix.asset.repository.PODetailRepository;
+import com.concentrix.asset.repository.SiteRepository;
+import com.concentrix.asset.repository.DeviceWarehouseRepository;
 import com.concentrix.asset.service.DeviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,6 +48,8 @@ public class DeviceServiceImpl implements DeviceService {
     ModelRepository modelRepository;
     TransactionDetailRepository transactionDetailRepository;
     PODetailRepository poDetailRepository;
+    SiteRepository siteRepository;
+    DeviceWarehouseRepository deviceWarehouseRepository;
 
     @Override
     public DeviceResponse getDeviceById(Integer deviceId) {
@@ -96,7 +100,7 @@ public class DeviceServiceImpl implements DeviceService {
         Device device = deviceRepository.findBySerialNumber(serialNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, serialNumber));
         final LocalDate purchaseDate;
-        PODetail poDetail = poDetailRepository.findByDeviceDeviceId(device.getDeviceId());
+        PODetail poDetail = poDetailRepository.findByDevice_DeviceIdAndDevice_SerialNumberNotNull(device.getDeviceId());
         if (poDetail != null && poDetail.getPurchaseOrder() != null) {
             purchaseDate = poDetail.getPurchaseOrder().getCreatedAt();
         } else {
@@ -173,6 +177,11 @@ public class DeviceServiceImpl implements DeviceService {
                                 .deviceName(device.getDeviceName())
                                 .assignedAt(lastTx.getCreatedAt())
                                 .quantity(1)
+                                .modelId(
+                                        device.getModel() != null
+                                                ? device.getModel().getModelId()
+                                                : null)
+                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
                                 .build();
                         DeviceBorrowingInfoResponse info = userMap.get(eid);
                         if (info == null) {
@@ -219,6 +228,12 @@ public class DeviceServiceImpl implements DeviceService {
                                 .deviceName(device.getDeviceName())
                                 .assignedAt(assignTimeMap.get(eid))
                                 .quantity(entry.getValue())
+                                .modelId(
+                                        device.getModel() != null
+                                                ? device.getModel().getModelId() == null ? null
+                                                        : device.getModel().getModelId()
+                                                : null)
+                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
                                 .build();
                         DeviceBorrowingInfoResponse info = userMap.get(eid);
                         if (info == null) {
@@ -272,6 +287,12 @@ public class DeviceServiceImpl implements DeviceService {
                                 .deviceName(device.getDeviceName())
                                 .assignedAt(lastTx.getCreatedAt())
                                 .quantity(1)
+                                .modelId(
+                                        device.getModel() != null
+                                                ? device.getModel().getModelId() == null ? null
+                                                        : device.getModel().getModelId()
+                                                : null)
+                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
                                 .build();
                         result.add(deviceInfo);
                     }
@@ -297,12 +318,32 @@ public class DeviceServiceImpl implements DeviceService {
                             .deviceName(device.getDeviceName())
                             .assignedAt(lastAssignTime)
                             .quantity(total)
+                            .modelId(
+                                    device.getModel() != null
+                                            ? device.getModel().getModelId() == null ? null
+                                                    : device.getModel().getModelId()
+                                            : null)
+                            .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
                             .build();
                     result.add(deviceInfo);
                 }
             }
         }
         return result;
+    }
+
+    @Override
+    public List<String> getAllDeviceTypes() {
+        return java.util.Arrays.stream(com.concentrix.asset.enums.DeviceType.values())
+                .map(Enum::name)
+                .toList();
+    }
+
+    @Override
+    public List<String> getDeviceStatuses() {
+        return java.util.Arrays.stream(com.concentrix.asset.enums.DeviceStatus.values())
+                .map(Enum::name)
+                .toList();
     }
 
     private String buildTransactionDescription(AssetTransaction tx) {

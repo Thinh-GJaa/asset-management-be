@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class POResponse implements Serializable{
     WarehouseResponse warehouse;
     UserResponse createdBy;
     String note;
-    LocalDateTime createdAt;
+    LocalDate createdAt;
     LocalDateTime updatedAt;
     List<POItemResponse> poItems;
 

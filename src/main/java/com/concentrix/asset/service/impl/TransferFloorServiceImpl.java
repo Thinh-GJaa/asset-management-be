@@ -88,10 +88,15 @@ public class TransferFloorServiceImpl implements TransferFloorService {
 
                     boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
                     if (hasSerial) {
-                        // Serial: chỉ cho phép chuyển sàn nếu đang IN_FLOOR, chưa có kiểm tra là đúng
-                        // floor hay không
+                        // Serial: chỉ cho phép chuyển sàn nếu đang IN_FLOOR
                         if (device.getStatus() != DeviceStatus.IN_FLOOR) {
                             throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                        }
+                        // Bổ sung kiểm tra device có đúng ở floor không
+                        if (device.getCurrentFloor() == null || !device.getCurrentFloor().getFloorId()
+                                .equals(finalTransaction.getFromFloor().getFloorId())) {
+                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getSerialNumber(),
+                                    finalTransaction.getFromFloor().getFloorName());
                         }
                     }
                     // Non-serial: không kiểm tra tồn kho theo floor, chỉ update trạng thái nếu cần

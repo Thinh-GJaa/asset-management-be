@@ -37,5 +37,7 @@ public class DeviceBorrowingInfoResponse implements Serializable {
         String deviceName;
         LocalDateTime assignedAt;
         Integer quantity; // null hoặc 1 với serial, >1 với không serial
+        Integer modelId; // Thêm trường này
+        String modelName; // Thêm trường này
     }
 }
