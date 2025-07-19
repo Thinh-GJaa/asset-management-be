@@ -32,7 +32,7 @@ public class User {
     @Column(unique = true)
     String sso;
 
-    @Column(unique = true)
+    @Column
     String msa;
 
     @Column

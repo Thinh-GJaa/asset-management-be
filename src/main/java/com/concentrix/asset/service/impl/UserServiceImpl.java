@@ -2,6 +2,7 @@ package com.concentrix.asset.service.impl;
 
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
+import com.concentrix.asset.dto.request.UserImportRequest;
 import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.Role;
@@ -19,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 @Slf4j
@@ -108,5 +112,62 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, email));
         return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    public Map<String, Object> importUsers(List<UserImportRequest> importRequests) {
+        int created = 0;
+        int updated = 0;
+        List<String> emailErrors = new java.util.ArrayList<>();
+        for (UserImportRequest req : importRequests) {
+            if (req.getEmail() == null || req.getEid() == null) continue;
+            // Check email trùng với user khác eid
+            var emailUserOpt = userRepository.findByEmail(req.getEmail());
+            if (emailUserOpt.isPresent() && !emailUserOpt.get().getEid().equals(req.getEid())) {
+                emailErrors.add(req.getEmail());
+                continue;
+            }
+            // Nếu eid đã tồn tại: cập nhật các trường ánh xạ
+            var userOpt = userRepository.findById(req.getEid());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setFullName(req.getFullName());
+                user.setJobTitle(req.getJobTitle());
+                user.setEmail(req.getEmail());
+                user.setSso(req.getSso());
+                user.setMsa(req.getMsa());
+                user.setLocation(req.getLocation());
+                user.setCompany(req.getCompany());
+                user.setCostCenter(req.getCostCenter());
+                user.setMsaClient(req.getMsaClient());
+                user.setManagerEmail(req.getManagerEmail());
+                if (req.getIsActive() != null) user.setActive(req.getIsActive());
+                userRepository.save(user);
+                updated++;
+            } else {
+                // Tạo mới user
+                User user = User.builder()
+                        .eid(req.getEid())
+                        .fullName(req.getFullName())
+                        .jobTitle(req.getJobTitle())
+                        .email(req.getEmail())
+                        .sso(req.getSso())
+                        .msa(req.getMsa())
+                        .location(req.getLocation())
+                        .company(req.getCompany())
+                        .costCenter(req.getCostCenter())
+                        .msaClient(req.getMsaClient())
+                        .managerEmail(req.getManagerEmail())
+                        .isActive(req.getIsActive() != null ? req.getIsActive() : true)
+                        .build();
+                userRepository.save(user);
+                created++;
+            }
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("created", created);
+        result.put("updated", updated);
+        result.put("emailErrors", emailErrors);
+        return result;
     }
 }

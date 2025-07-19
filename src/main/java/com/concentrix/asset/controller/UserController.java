@@ -23,6 +23,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
+import com.concentrix.asset.dto.request.UserImportRequest;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,6 +43,16 @@ public class UserController {
                                 .data(userService.createUser(createUserRequest))
                                 .build();
                 return new ResponseEntity<>(response, HttpStatus.CREATED);
+        }
+
+        @PostMapping("/import")
+        public ResponseEntity<ApiResponse<Map<String, Object>>> importUsers(@RequestBody List<UserImportRequest> importRequests) {
+                Map<String, Object> result = userService.importUsers(importRequests);
+                ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+                                .message("Import users completed")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
         }
 
         @GetMapping("/{eid}")
