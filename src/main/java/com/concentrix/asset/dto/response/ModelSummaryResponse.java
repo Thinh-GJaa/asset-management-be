@@ -1,12 +1,18 @@
 package com.concentrix.asset.dto.response;
 
-import lombok.Data;
-import java.util.List;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Data
+import java.util.List;
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModelSummaryResponse {
-    private Integer modelId;
-    private String modelName;
-    private int total;
-    private List<SiteSummaryResponse> sites;
+    Integer modelId;
+    String modelName;
+    int total;
+    List<SiteSummaryResponse> sites;
 }

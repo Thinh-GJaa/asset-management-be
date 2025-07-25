@@ -89,4 +89,29 @@ public class ReportController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/with-serial/status/{status}")
+    public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStautsWithSerialSummary(
+            @PathVariable DeviceStatus status) {
+        StatusSummaryResponse data = reportService.getStatusSummaryWithSerial(status);
+        ApiResponse<StatusSummaryResponse> response = ApiResponse
+                .<StatusSummaryResponse>builder()
+                .message("Get with serial summary status successfully")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    
+    @GetMapping("/without-serial/status/{status}")
+    public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStatusWithoutSerialSummary(
+            @PathVariable DeviceStatus status) {
+        StatusSummaryResponse data = reportService.getStatusSummaryWithoutSerial(status);
+        ApiResponse<StatusSummaryResponse> response = ApiResponse
+                .<StatusSummaryResponse>builder()
+                .message("Get without serial summary status successfully")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 }

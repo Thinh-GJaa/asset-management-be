@@ -256,80 +256,47 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public List<DeviceBorrowingInfoResponse.DeviceInfo> getBorrowingDevicesByUser(String eid) {
-        List<Device> allDevices = deviceRepository.findAll();
+
         List<DeviceBorrowingInfoResponse.DeviceInfo> result = new java.util.ArrayList<>();
-        for (Device device : allDevices) {
-            boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            List<TransactionDetail> allDetails = transactionDetailRepository
-                    .findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(device.getDeviceId());
-            if (hasSerial) {
-                TransactionDetail lastDetail = allDetails.isEmpty() ? null : allDetails.get(allDetails.size() - 1);
-                if (lastDetail == null)
-                    continue;
-                AssetTransaction lastTx = lastDetail.getTransaction();
-                if (lastTx == null)
-                    continue;
-                if (lastTx.getTransactionType() == TransactionType.ASSIGNMENT && lastTx.getUserUse() != null
-                        && lastTx.getUserUse().getEid().equals(eid)) {
-                    boolean returned = false;
-                    for (TransactionDetail detail : allDetails) {
-                        AssetTransaction tx = detail.getTransaction();
-                        if (tx.getTransactionId() > lastTx.getTransactionId()
-                                && tx.getTransactionType() == TransactionType.RETURN_FROM_USER) {
-                            returned = true;
-                            break;
-                        }
-                    }
-                    if (!returned) {
-                        DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo
-                                .builder()
-                                .serialNumber(device.getSerialNumber())
-                                .deviceName(device.getDeviceName())
-                                .assignedAt(lastTx.getCreatedAt())
-                                .quantity(1)
-                                .modelId(
-                                        device.getModel() != null
-                                                ? device.getModel().getModelId() == null ? null
-                                                        : device.getModel().getModelId()
-                                                : null)
-                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
-                                .build();
-                        result.add(deviceInfo);
-                    }
-                }
-            } else {
-                // Gom theo user, tính tổng ASSIGNMENT - RETURN_FROM_USER
-                int total = 0;
-                LocalDateTime lastAssignTime = null;
-                for (TransactionDetail detail : allDetails) {
-                    AssetTransaction tx = detail.getTransaction();
-                    if (tx.getUserUse() == null || !tx.getUserUse().getEid().equals(eid))
-                        continue;
-                    if (tx.getTransactionType() == TransactionType.ASSIGNMENT) {
-                        total += detail.getQuantity();
-                        lastAssignTime = tx.getCreatedAt();
-                    } else if (tx.getTransactionType() == TransactionType.RETURN_FROM_USER) {
-                        total -= detail.getQuantity();
-                    }
-                }
-                if (total > 0) {
-                    DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
-                            .serialNumber(device.getSerialNumber())
-                            .deviceName(device.getDeviceName())
-                            .assignedAt(lastAssignTime)
-                            .quantity(total)
-                            .modelId(
-                                    device.getModel() != null
-                                            ? device.getModel().getModelId() == null ? null
-                                                    : device.getModel().getModelId()
-                                            : null)
-                            .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
-                            .build();
-                    result.add(deviceInfo);
-                }
+
+        List<Device> devicesByEid = deviceRepository.findAllByCurrentUser_Eid(eid);
+
+        for(Device dv : devicesByEid){
+            if (dv.getSerialNumber() != null && !dv.getSerialNumber().isEmpty()) {
+                DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
+                        .serialNumber(dv.getSerialNumber())
+                        .deviceName(dv.getDeviceName())
+                        .quantity(1)
+                        .modelId(
+                                dv.getModel() != null
+                                        ? dv.getModel().getModelId() == null ? null
+                                                : dv.getModel().getModelId()
+                                        : null)
+                        .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
+                        .build();
+                result.add(deviceInfo);
+            }
+        }
+
+        List<Object[]> devicesWithoutSerial = transactionDetailRepository.getDeviceAndQuantityByEid(eid);
+        log.info("[DeviceServiceImpl] Found {}  serial for user {}", devicesWithoutSerial, eid);
+        for (Object[] obj : devicesWithoutSerial) {
+            Device dv = (Device) obj[0];
+            Integer quantity = ((Long) obj[1]).intValue();
+
+            if(quantity != 0){
+                DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
+                        .serialNumber(dv.getSerialNumber())
+                        .deviceName(dv.getDeviceName())
+                        .modelId(dv.getModel().getModelId())
+                        .modelName(dv.getModel().getModelName())
+                        .quantity(quantity)
+                        .build();
+                result.add(deviceInfo);
             }
         }
         return result;
+
     }
 
     @Override

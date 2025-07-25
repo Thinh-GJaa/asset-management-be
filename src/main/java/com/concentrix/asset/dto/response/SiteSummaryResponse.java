@@ -1,10 +1,16 @@
 package com.concentrix.asset.dto.response;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Data
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SiteSummaryResponse {
-    private Integer siteId;
-    private String siteName;
-    private int total;
+    Integer siteId;
+    String siteName;
+    int total;
 }

@@ -138,6 +138,13 @@ public class TransferServiceImpl implements TransferService {
                 .map(transferMapper::toTransferResponse);
     }
 
+    @Override
+    public Page<TransferResponse> filterTransfersSitePending(Pageable pageable) {
+        return transactionRepository.findAllByTransactionTypeAndTransactionStatus(
+                TransactionType.TRANSFER_SITE, TransactionStatus.PENDING, pageable)
+                .map(transferMapper::toTransferResponse);
+    }
+
     private User getCurrentUser() {
         String EID = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findById(EID)

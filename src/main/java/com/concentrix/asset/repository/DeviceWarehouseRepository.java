@@ -2,8 +2,6 @@ package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.DeviceWarehouse;
 import com.concentrix.asset.entity.DeviceWarehouseId;
-import com.concentrix.asset.entity.Model;
-import com.concentrix.asset.entity.Site;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +24,7 @@ public interface DeviceWarehouseRepository extends JpaRepository<DeviceWarehouse
                               AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
                         """)
         Integer sumQuantityInStockBySite(
-                        @Param("type") com.concentrix.asset.enums.DeviceType type,
+                        @Param("type") DeviceType type,
                         @Param("modelId") Integer modelId,
                         @Param("siteId") Integer siteId);
 
@@ -40,7 +38,7 @@ public interface DeviceWarehouseRepository extends JpaRepository<DeviceWarehouse
                             AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
                             AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
                         """)
-        Integer sumQuantityInStockWithSerialBySite(@Param("type") com.concentrix.asset.enums.DeviceType type,
+        Integer sumQuantityInStockWithSerialBySite(@Param("type") DeviceType type,
                         @Param("modelId") Integer modelId,
                         @Param("siteId") Integer siteId);
 

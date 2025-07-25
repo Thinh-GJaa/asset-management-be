@@ -1,12 +1,19 @@
 package com.concentrix.asset.dto.response;
 
 import com.concentrix.asset.enums.DeviceType;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.util.List;
 
-@Data
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TypeSummaryResponse {
-    private DeviceType type;
-    private int total;
-    private List<ModelSummaryResponse> models;
+    DeviceType type;
+    int total;
+    List<ModelSummaryResponse> models;
 }

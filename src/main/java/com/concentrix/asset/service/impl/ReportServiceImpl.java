@@ -3,6 +3,7 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.response.ReportSummaryResponse;
 import com.concentrix.asset.dto.response.ReportDetailResponse;
 import com.concentrix.asset.dto.response.StatusReportResponse;
+import com.concentrix.asset.dto.response.StatusSummaryResponse;
 import com.concentrix.asset.dto.response.SiteDeviceWithoutSerialSummaryResponse;
 import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
 import com.concentrix.asset.dto.response.DeviceResponse;
@@ -194,40 +195,24 @@ public class ReportServiceImpl implements ReportService {
 
                 for (DeviceStatus status : DeviceStatus.values()) {
                         int withSerial = deviceRepository.countByStatusAndSerialNumberIsNotNull(status);
-                        int withoutSerial = 0;
-                        switch (status) {
-                                case IN_STOCK:
-                                        withoutSerial = deviceWarehouseRepository.sumAllStock();
-                                        break;
-                                case IN_FLOOR:
-                                        int in = transactionDetailRepository.sumAllUseFloor();
-                                        int out = transactionDetailRepository.sumAllReturnFromFloor();
-                                        withoutSerial = in - out;
-                                        break;
-                                case ON_THE_MOVE:
-                                        withoutSerial = transactionDetailRepository.sumAllOnTheMove();
-                                        break;
-                                case DISPOSED:
-                                        withoutSerial = transactionDetailRepository.sumAllDisposal();
-                                        ;
-                                        break;
-                                case E_WASTE:
-                                        withoutSerial = transactionDetailRepository.sumAllEWaste();
-                                        ;
-                                        break;
-                                case REPAIR:
-                                        int repairIn = transactionDetailRepository.sumAllRepair();
-                                        int repairOut = transactionDetailRepository.sumAllReturnFromRepair();
-                                        withoutSerial = repairIn - repairOut;
-                                        break;
-                                case ASSIGNED:
-                                        int assignment = transactionDetailRepository.sumAllAssignment();
-                                        int returnFromAssignment = transactionDetailRepository.sumAllReturnFromUser();
-                                        withoutSerial = assignment - returnFromAssignment;
-                                        break;
-                                default:
-                                        withoutSerial = 0;
-                        }
+
+                        int withoutSerial = switch (status) {
+                                case IN_STOCK -> deviceWarehouseRepository.sumAllStock();
+
+                                case IN_FLOOR -> transactionDetailRepository.sumAllUseFloor()
+                                                - transactionDetailRepository.sumAllReturnFromFloor();
+                                case ON_THE_MOVE -> transactionDetailRepository.sumAllOnTheMove();
+
+                                case DISPOSED -> transactionDetailRepository.sumAllDisposal();
+
+                                case E_WASTE -> transactionDetailRepository.sumAllEWaste();
+
+                                case REPAIR -> transactionDetailRepository.sumAllRepair()
+                                                - transactionDetailRepository.sumAllReturnFromRepair();
+                                case ASSIGNED -> transactionDetailRepository.sumAllAssignment()
+                                                - transactionDetailRepository.sumAllReturnFromUser();
+                                default -> 0;
+                        };
                         Map<String, Integer> statusMap = new HashMap<>();
                         statusMap.put("withSerial", withSerial);
                         statusMap.put("withoutSerial", withoutSerial);
@@ -261,9 +246,18 @@ public class ReportServiceImpl implements ReportService {
                                                 case IN_FLOOR:
                                                         int in = transactionDetailRepository.sumFloorInBySite(
                                                                         t, model.getModelId(), site.getSiteId());
-                                                        int out = transactionDetailRepository.sumFloorOutSite(
+                                                        int out = transactionDetailRepository.sumFloorOutBySite(
                                                                         t, model.getModelId(), site.getSiteId());
                                                         quantity = in - out;
+                                                        break;
+
+                                                case ASSIGNED:
+                                                        int assignment = transactionDetailRepository.sumAssignment(
+                                                                        t, model.getModelId());
+                                                        int returnFromUser = transactionDetailRepository
+                                                                        .sumReturnFromUser(t,
+                                                                                        model.getModelId());
+                                                        quantity = assignment - returnFromUser;
                                                         break;
                                                 case ON_THE_MOVE:
                                                         quantity = transactionDetailRepository.sumOnTheMove(
@@ -278,7 +272,6 @@ public class ReportServiceImpl implements ReportService {
                                                                         t, model.getModelId(), site.getSiteId());
                                                         break;
                                                 default:
-                                                        quantity = 0;
                                         }
                                         if (quantity > 0) {
                                                 DeviceWithoutSerialSummaryResponse.ModelQuantity mq = new DeviceWithoutSerialSummaryResponse.ModelQuantity();
@@ -313,7 +306,7 @@ public class ReportServiceImpl implements ReportService {
                         Integer floorId, DeviceType type, Integer modelId) {
                 List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
                 List<Site> sites = (siteId == null) ? siteRepository.findAll()
-                        : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
+                                : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
                 List<TypeSummaryResponse> typeSummaries = new ArrayList<>();
 
                 for (DeviceType t : types) {
@@ -328,8 +321,10 @@ public class ReportServiceImpl implements ReportService {
                                 switch (status) {
                                         case IN_STOCK -> {
                                                 for (Site site : sites) {
-                                                        if (site == null) continue;
-                                                        int quantity = deviceRepository.countAssetInStock(site.getSiteId(), t, model.getModelId());
+                                                        if (site == null)
+                                                                continue;
+                                                        int quantity = deviceRepository.countAssetInStock(
+                                                                        site.getSiteId(), t, model.getModelId());
                                                         if (quantity > 0) {
                                                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                                                 siteSummary.setSiteId(site.getSiteId());
@@ -342,9 +337,13 @@ public class ReportServiceImpl implements ReportService {
                                         }
                                         case IN_FLOOR -> {
                                                 for (Site site : sites) {
-                                                        if (site == null) continue;
-                                                        for (Floor floor : floorRepository.findAllBySite_SiteId(site.getSiteId())) {
-                                                                int quantity = deviceRepository.countAssetInFloor(site.getSiteId(), floor.getFloorId(), t, model.getModelId());
+                                                        if (site == null)
+                                                                continue;
+                                                        for (Floor floor : floorRepository
+                                                                        .findAllBySite_SiteId(site.getSiteId())) {
+                                                                int quantity = deviceRepository.countAssetInFloor(
+                                                                                site.getSiteId(), floor.getFloorId(), t,
+                                                                                model.getModelId());
                                                                 if (quantity > 0) {
                                                                         SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                                                         siteSummary.setSiteId(site.getSiteId());
@@ -357,13 +356,15 @@ public class ReportServiceImpl implements ReportService {
                                                 }
                                         }
                                         case ON_THE_MOVE -> {
-                                                int quantity = deviceRepository.countAssetOnTheMove(t, model.getModelId());
+                                                int quantity = deviceRepository.countAssetOnTheMove(t,
+                                                                model.getModelId());
                                                 if (quantity > 0) {
                                                         modelTotal += quantity;
                                                 }
                                         }
                                         default -> {
-                                                int quantity = deviceRepository.countAssetByStatus(status, t, model.getModelId());
+                                                int quantity = deviceRepository.countAssetByStatus(status, t,
+                                                                model.getModelId());
                                                 if (quantity > 0) {
                                                         modelTotal += quantity;
                                                 }
@@ -396,25 +397,20 @@ public class ReportServiceImpl implements ReportService {
         @Override
         public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
                         DeviceType type, Integer modelId) {
-                log.info("[ReportServiceImpl][getDeviceListForReport]: siteId={}, status={}, floorId={}, type={}, modelId={}",
-                                siteId, status, floorId, type, modelId);
+
                 List<Device> devices = new ArrayList<>();
                 switch (status) {
                         case IN_STOCK -> {
                                 devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId);
-                                break;
                         }
                         case IN_FLOOR -> {
                                 devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, type, modelId);
-                                break;
                         }
                         case ON_THE_MOVE -> {
                                 devices = deviceRepository.findDevicesOnTheMoveForReport(type, modelId);
-                                break;
                         }
                         case DISPOSED, E_WASTE, REPAIR, ASSIGNED -> {
                                 devices = deviceRepository.findDevicesStatusForReport(status, type, modelId);
-                                break;
                         }
                         default -> {
                                 devices = null;
@@ -422,7 +418,195 @@ public class ReportServiceImpl implements ReportService {
 
                 }
 
-                return devices.stream().map(deviceMapper::toDeviceResponse).collect(Collectors.toList());
+                return devices.stream().map(deviceMapper::toDeviceResponse).toList();
+        }
+
+        @Override
+        public StatusSummaryResponse getStatusSummaryWithSerial(DeviceStatus status) {
+                List<Device> devices = deviceRepository.findAll().stream()
+                                .filter(d -> d.getStatus() == status && d.getSerialNumber() != null)
+                                .toList();
+
+                // By Type
+                List<TypeSummaryResponse> typeList = devices.stream()
+                                .collect(Collectors.groupingBy(d -> d.getModel().getType()))
+                                .entrySet().stream()
+                                .map(e -> {
+                                        TypeSummaryResponse t = new TypeSummaryResponse();
+                                        t.setType(e.getKey());
+                                        t.setTotal(e.getValue().size());
+                                        t.setModels(null);
+                                        return t;
+                                }).collect(Collectors.toList());
+
+                // By Model
+                List<ModelSummaryResponse> modelList = devices.stream()
+                                .collect(Collectors.groupingBy(Device::getModel))
+                                .entrySet().stream()
+                                .map(e -> {
+                                        ModelSummaryResponse m = new ModelSummaryResponse();
+                                        m.setModelId(e.getKey().getModelId());
+                                        m.setModelName(e.getKey().getModelName());
+                                        m.setTotal(e.getValue().size());
+                                        m.setSites(null);
+                                        return m;
+                                }).collect(Collectors.toList());
+
+                // By Site
+                List<SiteSummaryResponse> siteList = new ArrayList<>();
+                switch (status) {
+                        case IN_STOCK, E_WASTE:
+                                siteList = devices.stream()
+                                                .filter(d -> d.getCurrentWarehouse() != null
+                                                                && d.getCurrentWarehouse().getSite() != null)
+                                                .collect(Collectors.groupingBy(d -> d.getCurrentWarehouse().getSite()))
+                                                .entrySet().stream()
+                                                .map(e -> {
+                                                        SiteSummaryResponse s = new SiteSummaryResponse();
+                                                        s.setSiteId(e.getKey().getSiteId());
+                                                        s.setSiteName(e.getKey().getSiteName());
+                                                        s.setTotal(e.getValue().size());
+                                                        return s;
+                                                }).toList();
+                                break;
+                        case IN_FLOOR:
+                                siteList = devices.stream()
+                                                .filter(d -> d.getCurrentFloor() != null
+                                                                && d.getCurrentFloor().getSite() != null)
+                                                .collect(Collectors.groupingBy(d -> d.getCurrentFloor().getSite()))
+                                                .entrySet().stream()
+                                                .map(e -> {
+                                                        SiteSummaryResponse s = new SiteSummaryResponse();
+                                                        s.setSiteId(e.getKey().getSiteId());
+                                                        s.setSiteName(e.getKey().getSiteName());
+                                                        s.setTotal(e.getValue().size());
+                                                        return s;
+                                                }).toList();
+                                break;
+                }
+
+                return StatusSummaryResponse.builder()
+                                .type(typeList)
+                                .model(modelList)
+                                .site(siteList)
+                                .build();
+        }
+
+        @Override
+        public StatusSummaryResponse getStatusSummaryWithoutSerial(DeviceStatus status) {
+                List<Site> sites = siteRepository.findAll();
+                DeviceType[] types = DeviceType.values();
+
+                List<TypeSummaryResponse> typeList = new ArrayList<>();
+                List<ModelSummaryResponse> modelList = new ArrayList<>();
+                List<SiteSummaryResponse> siteList = new ArrayList<>();
+
+                // Tổng hợp theo type và model
+                for (DeviceType t : types) {
+                        int typeTotal = 0;
+
+                        List<Model> models = modelRepository.findByType(t);
+                        // Tổng hợp theo model
+                        for (Model model : models) {
+                                int modelTotal = 0;
+                                switch (status) {
+                                        case IN_STOCK -> {
+                                                modelTotal += deviceWarehouseRepository.sumQuantityInStockBySite(t,
+                                                                model.getModelId(), null);
+                                        }
+                                        case IN_FLOOR -> {
+                                                int in = transactionDetailRepository.sumFloorInBySite(t,
+                                                                model.getModelId(), null);
+                                                int out = transactionDetailRepository.sumFloorOutBySite(t,
+                                                                model.getModelId(), null);
+                                                modelTotal += (in - out);
+                                        }
+
+                                        case ASSIGNED -> {
+                                                int assignment = transactionDetailRepository.sumAssignment(null,
+                                                                model.getModelId());
+                                                int returnFromUser = transactionDetailRepository
+                                                                .sumReturnFromUser(null, model.getModelId());
+                                                modelTotal += assignment - returnFromUser;
+                                        }
+                                        case ON_THE_MOVE -> {
+                                                modelTotal += transactionDetailRepository.sumOnTheMove(null,
+                                                                model.getModelId(), null);
+                                        }
+                                        case REPAIR -> {
+                                                int repairIn = transactionDetailRepository.sumReturnFromRepair(t,
+                                                                model.getModelId());
+                                                int repairOut = transactionDetailRepository
+                                                                .sumRepair(t, model.getModelId());
+                                                modelTotal += repairOut - repairIn;
+                                        }
+                                        case DISPOSED -> {
+                                                modelTotal += transactionDetailRepository.sumDisposed(t,
+                                                                model.getModelId(), null);
+                                        }
+                                        case E_WASTE -> {
+                                                modelTotal += transactionDetailRepository.sumEWaste(t,
+                                                                model.getModelId(), null);
+                                        }
+                                }
+                                if (modelTotal <= 0) {
+                                        continue; // Không có thiết bị nào
+                                }
+                                modelList.add(ModelSummaryResponse.builder()
+                                                .modelId(model.getModelId())
+                                                .modelName(model.getModelName())
+                                                .total(modelTotal)
+                                                .sites(null)
+                                                .build());
+                                typeTotal += modelTotal;
+                        }
+                        if (typeTotal <= 0) {
+                                continue; // Không có thiết bị nào
+                        }
+                        typeList.add(TypeSummaryResponse.builder()
+                                        .type(t)
+                                        .total(typeTotal)
+                                        .build());
+                }
+
+                // Tổng hợp theo site
+                for (Site site : sites) {
+                        Integer siteId = site.getSiteId();
+                        int totalSite = 0;
+                        switch (status) {
+                                case IN_STOCK -> {
+                                        totalSite += deviceWarehouseRepository.sumQuantityInStockBySite(null, null,
+                                                        siteId);
+                                }
+                                case IN_FLOOR -> {
+                                        int in = transactionDetailRepository.sumFloorInBySite(null, null, siteId);
+                                        int out = transactionDetailRepository.sumFloorOutBySite(null, null, siteId);
+                                        totalSite += (in - out);
+                                }
+                                case E_WASTE -> {
+                                        int quantity = transactionDetailRepository.sumEWaste(null, null, siteId);
+                                        totalSite += quantity;
+                                }
+                                default -> {
+                                        // Không lấy theo site với các trạng thái khác
+                                }
+                        }
+                        if (totalSite > 0) {
+                                SiteSummaryResponse siteSummary = SiteSummaryResponse.builder()
+                                                .siteId(siteId)
+                                                .siteName(site.getSiteName())
+                                                .total(totalSite)
+                                                .build();
+                                siteList.add(siteSummary);
+                        }
+                }
+
+                return StatusSummaryResponse.builder()
+                                .type(typeList)
+                                .model(modelList)
+                                .site(siteList) // Chưa tổng hợp theo site
+                                .build();
+
         }
 
         private List<ReportDetailResponse.TypeNode> buildTypeNodes(List<Device> devices, String filterType,
@@ -469,6 +653,7 @@ public class ReportServiceImpl implements ReportService {
                                         .models(modelNodes)
                                         .build());
                 }
+
                 return typeNodes;
         }
 

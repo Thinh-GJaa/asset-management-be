@@ -16,7 +16,9 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(indexes = {
-        @Index(name = "idx_device_serial_number", columnList = "serialNumber")
+        @Index(name = "idx_device_serial_number", columnList = "serialNumber"),
+        @Index(name = "idx_device_status", columnList = "status"),
+        @Index(name = "idx_device_model_id", columnList = "model_id"),
 })
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

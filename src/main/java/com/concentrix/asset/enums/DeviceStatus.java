@@ -6,6 +6,6 @@ public enum DeviceStatus {
     ASSIGNED,
     ON_THE_MOVE,
     DISPOSED,
-    REPAIR,
     E_WASTE,
-} 
+    REPAIR,
+}
