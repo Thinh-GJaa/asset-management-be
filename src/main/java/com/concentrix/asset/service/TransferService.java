@@ -15,5 +15,8 @@ public interface TransferService {
 
     void confirmTransfer(Integer transferId);
 
+    Page<TransferResponse> filterTransfersSitePending(Pageable pageable) ;
+
+
 }
 

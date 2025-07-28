@@ -21,4 +21,6 @@ public class CreateWarehouseRequest {
     @NotNull(message = "Site ID cannot be null")
             @Min(1)
     Integer siteId;
+
+    String description;
 }

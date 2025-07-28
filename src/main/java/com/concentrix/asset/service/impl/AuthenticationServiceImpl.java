@@ -66,11 +66,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
-        User user = userRepository.findByEmail(request.getUsername())
-                .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND, request.getUsername()));
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND, request.getEmail()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            log.warn("[AUTHENTICATION SERVICE] Invalid password for user: {}", request.getUsername());
+            log.warn("[AUTHENTICATION SERVICE] Invalid password for user: {}", request.getEmail());
             throw new CustomException(ErrorCode.PASSWORD_INCORRECT);
         }
 

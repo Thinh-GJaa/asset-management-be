@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -21,8 +21,8 @@ public class AssignmentResponse implements Serializable {
     WarehouseResponse fromWarehouse;
     UserResponse userUse;
     UserResponse createdBy;
-    LocalDate createdAt;
-    LocalDate updatedAt;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
     String note;
     List<TransferItemResponse> items;
 

@@ -13,12 +13,10 @@ public interface TransferMapper {
     @Mapping(target = "fromWarehouse", source = "fromWarehouseId", qualifiedByName = "warehouseIdToWarehouse")
     AssetTransaction toAssetTransaction(CreateTransferRequest request);
 
-    @Mappings({
-            @Mapping(target = "toWarehouse", source = "toWarehouse"),
-            @Mapping(target = "fromWarehouse", source = "fromWarehouse"),
-            @Mapping(target = "createdBy", source = "createdBy"),
-            @Mapping(target = "items", source = "details", qualifiedByName = "mapItems")
-    })
+    @Mapping(target = "toWarehouse", source = "toWarehouse")
+    @Mapping(target = "fromWarehouse", source = "fromWarehouse")
+    @Mapping(target = "createdBy", source = "createdBy")
+    @Mapping(target = "items", source = "details", qualifiedByName = "mapItems")
+    @Mapping(target = "status", source = "transactionStatus")
     TransferResponse toTransferResponse(AssetTransaction transaction);
-
 }

@@ -15,7 +15,7 @@ public interface POMapper {
 
     @Mapping(target = "vendor", source = "vendor", qualifiedByName = "mapVendor")
     @Mapping(target = "warehouse", source = "warehouse", qualifiedByName = "mapWarehouse")
-    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "mapUser")
+    @Mapping(target = "createdBy", source = "createdBy")
     @Mapping(target = "poItems", source = "poDetails", qualifiedByName = "mapPOItems")
     POResponse toPOResponse(PurchaseOrder purchaseOrder);
 

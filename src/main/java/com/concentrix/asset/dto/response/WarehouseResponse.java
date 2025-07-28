@@ -18,6 +18,7 @@ public class WarehouseResponse implements Serializable{
     Integer warehouseId;
     String warehouseName;
     SiteResponse site;
+    String description;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 

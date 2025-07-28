@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 public class LoginRequest {
 
     @NotBlank(message = "Username is required")
-    String username;
+    String email;
 
     @NotBlank(message = "Password is required")
             @ValidPassword

@@ -138,6 +138,13 @@ public class TransferServiceImpl implements TransferService {
                 .map(transferMapper::toTransferResponse);
     }
 
+    @Override
+    public Page<TransferResponse> filterTransfersSitePending(Pageable pageable) {
+        return transactionRepository.findAllByTransactionTypeAndTransactionStatus(
+                TransactionType.TRANSFER_SITE, TransactionStatus.PENDING, pageable)
+                .map(transferMapper::toTransferResponse);
+    }
+
     private User getCurrentUser() {
         String EID = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findById(EID)
@@ -149,6 +156,12 @@ public class TransferServiceImpl implements TransferService {
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
             if (hasSerial) {
+                // Bổ sung kiểm tra device có đúng ở warehouse không
+                if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
+                        .equals(transaction.getFromWarehouse().getWarehouseId())) {
+                    throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getSerialNumber(),
+                            transaction.getFromWarehouse().getWarehouseName());
+                }
                 device.setStatus(DeviceStatus.ON_THE_MOVE);
                 device.setCurrentWarehouse(null);
                 deviceRepository.save(device);

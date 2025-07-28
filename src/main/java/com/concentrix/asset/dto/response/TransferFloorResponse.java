@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -19,8 +20,8 @@ public class TransferFloorResponse implements Serializable {
     FloorResponse fromFloor;
     FloorResponse toFloor;
     UserResponse createdBy;
-    LocalDate createdAt;
-    LocalDate updatedAt;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
     String note;
     List<TransferItemResponse> items;
 

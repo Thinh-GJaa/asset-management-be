@@ -92,6 +92,13 @@ public class UseFloorServiceImpl implements UseFloorService {
                         if (device.getStatus() != DeviceStatus.IN_STOCK) {
                             throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
                         }
+                        // Bổ sung kiểm tra device có đúng ở warehouse không
+                        if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
+                                .equals(finalTransaction.getFromWarehouse().getWarehouseId())) {
+                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getSerialNumber(),
+                                    finalTransaction.getFromWarehouse().getWarehouseName());
+                        }
+
                     } else {
                         // Non-serial: kiểm tra tồn kho trước khi chuyển lên sàn
                         Integer fromWarehouseId = finalTransaction.getFromWarehouse().getWarehouseId();

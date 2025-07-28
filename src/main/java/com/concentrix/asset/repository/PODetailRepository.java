@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PODetailRepository extends JpaRepository<PODetail, PODetailId> {
-    PODetail findByDeviceDeviceId(Integer deviceId);
+    PODetail findByDevice_DeviceIdAndDevice_SerialNumberNotNull(Integer deviceId);
 }

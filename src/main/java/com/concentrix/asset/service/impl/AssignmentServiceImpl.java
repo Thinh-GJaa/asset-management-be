@@ -3,6 +3,7 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,15 +109,21 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     private void updateWarehouses(AssetTransaction transaction) {
+        List<String> serialInvalid = new ArrayList<>();
         for (TransactionDetail detail : transaction.getDetails()) {
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
             if (hasSerial) {
                 // Kiểm tra trạng thái device phải là IN_STOCK mới được cấp phát
-                if (device.getStatus() != com.concentrix.asset.enums.DeviceStatus.IN_STOCK) {
-                    throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                if (device.getStatus() != DeviceStatus.IN_STOCK) {
+                    serialInvalid.add(device.getSerialNumber());
                 }
-                device.setStatus(com.concentrix.asset.enums.DeviceStatus.ASSIGNED);
+                // Bổ sung kiểm tra device có đúng ở warehouse không
+                if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
+                        .equals(transaction.getFromWarehouse().getWarehouseId())) {
+                    serialInvalid.add(device.getSerialNumber());
+                }
+                device.setStatus(DeviceStatus.ASSIGNED);
                 device.setCurrentUser(transaction.getUserUse());
                 device.setCurrentWarehouse(null);
                 device.setCurrentFloor(null);
@@ -135,6 +143,9 @@ public class AssignmentServiceImpl implements AssignmentService {
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
             }
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
         }
     }
 }

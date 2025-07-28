@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateModelRequest;
 import com.concentrix.asset.dto.request.UpdateModelRequest;
 import com.concentrix.asset.dto.response.ModelResponse;
+import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.service.ModelService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,6 +50,15 @@ public class ModelController {
         ApiResponse<Page<ModelResponse>> response = ApiResponse.<Page<ModelResponse>>builder()
                 .message("Get all models successfully")
                 .data(modelService.filterModel(pageable))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/type")
+    public ResponseEntity<ApiResponse<List<ModelResponse>>> getModelsByType(@RequestParam("type") DeviceType type) {
+        ApiResponse<List<ModelResponse>> response = ApiResponse.<List<ModelResponse>>builder()
+                .message("Get models by type successfully")
+                .data(modelService.getModelsByType(type))
                 .build();
         return ResponseEntity.ok(response);
     }

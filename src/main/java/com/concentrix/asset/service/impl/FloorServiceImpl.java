@@ -8,6 +8,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.FloorMapper;
 import com.concentrix.asset.repository.FloorRepository;
+import com.concentrix.asset.repository.SiteRepository;
 import com.concentrix.asset.service.FloorService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FloorServiceImpl implements FloorService {
     FloorRepository floorRepository;
     FloorMapper floorMapper;
+    SiteRepository siteRepository;
 
     @Override
     public FloorResponse getFloorById(Integer floorId) {
@@ -51,4 +53,15 @@ public class FloorServiceImpl implements FloorService {
     public Page<FloorResponse> filterFloor(Pageable pageable) {
         return floorRepository.findAll(pageable).map(floorMapper::toFloorResponse);
     }
+
+    @Override
+    public Page<FloorResponse> getFloorsBySiteId(Integer siteId, Pageable pageable){
+
+        siteRepository.findById(siteId)
+                .orElseThrow(() -> new CustomException(ErrorCode.SITE_NOT_FOUND, siteId));
+
+        return floorRepository.findAllBySite_SiteId(siteId, pageable)
+                .map(floorMapper::toFloorResponse);
+    }
+
 }

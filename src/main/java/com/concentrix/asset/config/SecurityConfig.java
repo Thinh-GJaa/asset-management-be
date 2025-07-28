@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.Filter;
 import java.util.Arrays;
 
 @Configuration
@@ -23,11 +25,12 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/warehouse/**",
-            "/vendor/**",
-            "/model/**",
-            "/user/**",
-            "/auth/**",
+            "/auth/login",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/swagger-resources/**"
     };
 
     private final CustomJwtDecoder customJwtDecoder;
@@ -65,6 +68,9 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .csrf(AbstractHttpConfigurer::disable);
 
+        // Thêm filter lấy token từ cookie trước filter xác thực JWT
+        httpSecurity.addFilterBefore(jwtTokenCookieFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 
@@ -86,11 +92,14 @@ public class SecurityConfig {
                         : path.equals(pattern));
     }
 
-
     @Bean
     PasswordEncoder passwordEncoder() {
         // Mã hóa mật khẩu với độ mạnh 10
         return new BCryptPasswordEncoder(10);
     }
 
+    @Bean
+    public Filter jwtTokenCookieFilter() {
+        return new JwtTokenCookieFilter();
+    }
 }

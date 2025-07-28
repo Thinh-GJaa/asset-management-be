@@ -16,10 +16,16 @@ public class UserResponse implements Serializable {
     String eid;
     String fullName;
     String email;
-    String SSO;
-    String MSA;
+    String sso;
+    String msa;
     String jobTitle;
     Role role;
+    String location;
+    String company;
+    String costCenter;
+    String msaClient;
+    String managerEmail;
+    boolean isActive;
     boolean isVerified;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

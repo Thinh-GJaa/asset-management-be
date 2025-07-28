@@ -91,6 +91,12 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
                         if (device.getStatus() != DeviceStatus.IN_FLOOR) {
                             throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
                         }
+                        // Bổ sung kiểm tra device có đúng ở floor không
+                        if (device.getCurrentFloor() == null || !device.getCurrentFloor().getFloorId()
+                                .equals(finalTransaction.getFromFloor().getFloorId())) {
+                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getSerialNumber(),
+                                    finalTransaction.getFromFloor().getFloorName());
+                        }
                     }
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);

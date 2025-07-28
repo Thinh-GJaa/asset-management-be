@@ -59,6 +59,17 @@ public class TransferController {
                 return ResponseEntity.ok(apiResponse);
         }
 
+        @GetMapping("/pending")
+        public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfersSitePending(
+                        @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
+                                .message("Filter transaction transfer site pending successful")
+                                .data(transferService.filterTransfersSitePending(pageable))
+                                .build();
+
+                return ResponseEntity.ok(apiResponse);
+        }
+
         @PostMapping("/{id}/confirm")
         public ResponseEntity<ApiResponse<TransferResponse>> confirmTransfer(@PathVariable Integer id) {
 

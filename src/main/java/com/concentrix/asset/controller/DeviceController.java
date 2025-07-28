@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
+import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.service.DeviceService;
 import jakarta.validation.Valid;
@@ -43,6 +44,26 @@ public class DeviceController {
         ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
                 .message("Filter device successfully")
                 .data(deviceService.filterDevices(pageable, modelId, type))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<ApiResponse<List<String>>> getDeviceTypes() {
+        List<String> types = deviceService.getAllDeviceTypes();
+        ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
+                .message("Get device types successfully")
+                .data(types)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<List<String>>> getDeviceStatuses() {
+        List<String> status = deviceService.getDeviceStatuses();
+        ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
+                .message("Get device statuses successfully")
+                .data(status)
                 .build();
         return ResponseEntity.ok(response);
     }
