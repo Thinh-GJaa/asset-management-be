@@ -2,6 +2,7 @@ package com.concentrix.asset.controller;
 
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.service.AssignmentService;
 import jakarta.validation.Valid;
@@ -51,6 +52,12 @@ public class AssignmentController {
                 .data(assignmentService.filterAssignments(pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{assignmentId}/handover-form")
+    public ResponseEntity<AssetHandoverResponse> getAssetHandoverByAssignmentId(@PathVariable Integer assignmentId) {
+        AssetHandoverResponse response = assignmentService.getAssetHandoverByAssignmentId(assignmentId);
+        return ResponseEntity.ok(response);
     }
 
 } 

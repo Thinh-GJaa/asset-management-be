@@ -1,6 +1,7 @@
 package com.concentrix.asset.service;
 
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,5 +14,6 @@ public interface AssignmentService {
 
     Page<AssignmentResponse> filterAssignments(Pageable pageable);
 
+    AssetHandoverResponse getAssetHandoverByAssignmentId(Integer assignmentId);
 }
 

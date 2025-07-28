@@ -1,6 +1,7 @@
 package com.concentrix.asset.service.impl;
 
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.DeviceStatus;
@@ -22,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -109,6 +111,65 @@ public class AssignmentServiceImpl implements AssignmentService {
         return transactionRepository.findALLByTransactionType(TransactionType.ASSIGNMENT, pageable)
                 .map(assignmentMapper::toAssignmentResponse);
     }
+
+    @Override
+    public AssetHandoverResponse getAssetHandoverByAssignmentId(Integer assignmentId) {
+        AssetTransaction assignment = transactionRepository.findById(assignmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND));
+
+        // Kiểm tra xem có phải là ASSIGNMENT transaction không
+        if (assignment.getTransactionType() != TransactionType.ASSIGNMENT) {
+            throw new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND);
+        }
+
+        // Lấy thông tin người dùng
+        String endUser = assignment.getUserUse() != null ? assignment.getUserUse().getFullName() : "N/A";
+        String employeeId = assignment.getUserUse() != null ? assignment.getUserUse().getEid() : "N/A";
+        String ssoEmail = assignment.getUserUse() != null ? assignment.getUserUse().getEmail() : "N/A";
+        String msa = assignment.getUserUse() != null ? assignment.getUserUse().getMsa() : "N/A";
+        String role = assignment.getUserUse() != null ? assignment.getUserUse().getJobTitle() : "N/A";
+        String location = assignment.getUserUse() != null ? assignment.getFromWarehouse().getSite().getSiteName() : "N/A";
+
+        // Lấy thông tin IT person (người tạo)
+        String itPerson = assignment.getCreatedBy() != null ? assignment.getCreatedBy().getFullName() + " - IT" : "N/A";
+
+        // Format ngày
+        String issueDate = assignment.getCreatedAt() != null ?
+                assignment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy")) : "N/A";
+
+        // Lấy danh sách thiết bị
+        List<AssetHandoverResponse.AssetHandoverDetailResponse> assets = assignment.getDetails().stream()
+                .map(this::mapTransactionDetailToAssetDetail)
+                .collect(Collectors.toList());
+
+        return AssetHandoverResponse.builder()
+                .transactionId(assignment.getTransactionId())
+                .itPerson(itPerson)
+                .location(location)
+                .endUser(endUser)
+                .msa(msa)
+                .employeeId(employeeId)
+                .ssoEmail(ssoEmail)
+                .assetType("Permanent") // Mặc định là Permanent cho Assignment
+                .issueDate(issueDate)
+                .role(role)
+                .createdAt(assignment.getCreatedAt())
+                .createdBy(assignment.getCreatedBy() != null ? assignment.getCreatedBy().getFullName() : "N/A")
+                .assets(assets)
+                .build();
+    }
+
+    private AssetHandoverResponse.AssetHandoverDetailResponse mapTransactionDetailToAssetDetail(TransactionDetail detail) {
+        return AssetHandoverResponse.AssetHandoverDetailResponse.builder()
+                .deviceId(detail.getDevice().getDeviceId())
+                .name(detail.getDevice().getDeviceName())
+                .serialNumber(detail.getDevice().getSerialNumber())
+                .quantity(detail.getQuantity())
+                .remark("good") // Mặc định là good
+                .build();
+    }
+
+
 
     private User getCurrentUser() {
         String EID = SecurityContextHolder.getContext().getAuthentication().getName();
