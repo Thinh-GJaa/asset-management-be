@@ -9,10 +9,7 @@ import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransferMapper;
-import com.concentrix.asset.repository.TransactionRepository;
-import com.concentrix.asset.repository.UserRepository;
-import com.concentrix.asset.repository.DeviceRepository;
-import com.concentrix.asset.repository.DeviceWarehouseRepository;
+import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,6 +34,7 @@ public class TransferServiceImpl implements TransferService {
     UserRepository userRepository;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
+    WarehouseRepository warehouseRepository;
 
     @Override
     public TransferResponse getTransferById(Integer transferId) {
@@ -53,20 +51,31 @@ public class TransferServiceImpl implements TransferService {
         transaction.setCreatedBy(getCurrentUser());
         transaction.setTransactionStatus(TransactionStatus.PENDING);
 
-        // Tạo danh sách TransactionDetail từ request.items
+        Warehouse fromWarehouse = warehouseRepository.findById(request.getFromWarehouseId()).orElseThrow(
+                () -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, request.getFromWarehouseId()));
+
+        Warehouse toWarehouse = warehouseRepository.findById(request.getToWarehouseId()).orElseThrow(
+                () -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, request.getToWarehouseId()));
+
+        if (fromWarehouse.getSite().getSiteId()
+                .equals(toWarehouse.getSite().getSiteId())) {
+            throw new CustomException(ErrorCode.INVALID_SITE_TRANSFER);
+        }
+
+        // Gom các serialNumber không tìm thấy vào một list
+        List<String> serialNotFound = new java.util.ArrayList<>();
         AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
                         device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                                .orElse(null);
+                        if (device == null) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null;
+                        }
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
                         device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
                                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
                                         "Model ID: " + item.getModelId()));
@@ -78,10 +87,16 @@ public class TransferServiceImpl implements TransferService {
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
                     detail.setQuantity(item.getQuantity());
-                    detail.setTransaction(finalTransaction); // liên kết ngược
+                    detail.setTransaction(finalTransaction);
                     return detail;
                 })
+                .filter(detail -> detail != null)
                 .collect(Collectors.toList());
+
+        // Nếu có serialNumber không tìm thấy thì trả về list
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
 
         transaction.setDetails(details);
 
@@ -152,6 +167,8 @@ public class TransferServiceImpl implements TransferService {
     }
 
     private void updateDeviceAndWarehousesForTransfer(AssetTransaction transaction) {
+        // Gom các serial invalid vào list
+        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
         for (TransactionDetail detail : transaction.getDetails()) {
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
@@ -159,11 +176,13 @@ public class TransferServiceImpl implements TransferService {
                 // Bổ sung kiểm tra device có đúng ở warehouse không
                 if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
                         .equals(transaction.getFromWarehouse().getWarehouseId())) {
-                    throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getSerialNumber(),
-                            transaction.getFromWarehouse().getWarehouseName());
+                    serialInvalid.add(device.getSerialNumber());
+                    continue;
                 }
                 device.setStatus(DeviceStatus.ON_THE_MOVE);
                 device.setCurrentWarehouse(null);
+                device.setCurrentFloor(null);
+                device.setCurrentUser(null);
                 deviceRepository.save(device);
             } else {
                 Integer deviceId = device.getDeviceId();
@@ -171,9 +190,12 @@ public class TransferServiceImpl implements TransferService {
                 Integer qty = detail.getQuantity();
                 DeviceWarehouse fromStock = deviceWarehouseRepository
                         .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
-                                device.getModel().getModelName(),
-                                transaction.getFromWarehouse().getWarehouseName()));
+                        .orElse(null);
+                if (fromStock == null) {
+                    throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                            device.getModel().getModelName(),
+                            transaction.getFromWarehouse().getWarehouseName());
+                }
                 if (fromStock.getQuantity() < qty) {
                     throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
                 }
@@ -181,6 +203,9 @@ public class TransferServiceImpl implements TransferService {
                 deviceWarehouseRepository.save(fromStock);
                 // Không cộng vào toWarehouse ở bước tạo transfer
             }
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
         }
     }
 }

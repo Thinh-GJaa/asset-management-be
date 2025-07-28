@@ -57,20 +57,25 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
 
         AssetTransaction finalTransaction = transaction;
         java.util.List<TransactionDetail> details = new java.util.ArrayList<>();
+        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
+        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
 
         // Xử lý các device có serial number
         for (java.util.Map.Entry<String, Integer> entry : serialQtyMap.entrySet()) {
             Device device = deviceRepository.findBySerialNumber(entry.getKey())
-                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, entry.getKey()));
-
+                    .orElse(null);
+            if (device == null) {
+                serialNotFound.add(entry.getKey());
+                continue;
+            }
             // Nếu có serial, kiểm tra transaction cuối cùng phải là REPAIR
             TransactionDetail lastDetail = transactionDetailRepository
                     .findFirstByDevice_DeviceIdOrderByTransaction_TransactionIdDesc(device.getDeviceId());
             if (lastDetail == null || lastDetail.getTransaction() == null || lastDetail.getTransaction()
                     .getTransactionType() != com.concentrix.asset.enums.TransactionType.REPAIR) {
-                throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getDeviceId());
+                serialInvalid.add(device.getSerialNumber());
+                continue;
             }
-
             TransactionDetail detail = new TransactionDetail();
             detail.setDevice(device);
             detail.setQuantity(entry.getValue());
@@ -82,12 +87,18 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
         for (java.util.Map.Entry<Integer, Integer> entry : modelQtyMap.entrySet()) {
             Device device = deviceRepository.findFirstByModel_ModelId(entry.getKey())
                     .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, "Model ID: " + entry.getKey()));
-
             TransactionDetail detail = new TransactionDetail();
             detail.setDevice(device);
             detail.setQuantity(entry.getValue());
             detail.setTransaction(finalTransaction);
             details.add(detail);
+        }
+
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
         }
 
         transaction.setDetails(details);

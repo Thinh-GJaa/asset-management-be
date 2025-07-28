@@ -47,6 +47,19 @@ public class TransferFloorServiceImpl implements TransferFloorService {
 
     @Override
     public TransferFloorResponse createTransferFloor(CreateTransferFloorRequest request) {
+
+        Floor fromFloor = floorRepository.findById(request.getFromFloorId())
+                .orElseThrow(() -> new CustomException(ErrorCode.FLOOR_NOT_FOUND, request.getFromFloorId()));
+
+        Floor toFloor = floorRepository.findById(request.getToFloorId())
+                .orElseThrow(() -> new CustomException(ErrorCode.FLOOR_NOT_FOUND, request.getToFloorId()));
+
+        if (fromFloor.getFloorId().equals(toFloor.getFloorId())
+                || !fromFloor.getSite().getSiteId().equals(toFloor.getSite().getSiteId())) {
+            throw new CustomException(ErrorCode.INVALID_FLOOR_TRANSFER);
+        }
+
+
         AssetTransaction transaction = transferFloorMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
@@ -65,19 +78,23 @@ public class TransferFloorServiceImpl implements TransferFloorService {
             }
         }
 
+
+
+        // Gom các serial not found/invalid vào list
+        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
+        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
         final AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
                         device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                                .orElse(null);
+                        if (device == null) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null;
+                        }
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
                         device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
                                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
                                         "Model ID: " + item.getModelId()));
@@ -90,23 +107,31 @@ public class TransferFloorServiceImpl implements TransferFloorService {
                     if (hasSerial) {
                         // Serial: chỉ cho phép chuyển sàn nếu đang IN_FLOOR
                         if (device.getStatus() != DeviceStatus.IN_FLOOR) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                         // Bổ sung kiểm tra device có đúng ở floor không
                         if (device.getCurrentFloor() == null || !device.getCurrentFloor().getFloorId()
                                 .equals(finalTransaction.getFromFloor().getFloorId())) {
-                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getSerialNumber(),
-                                    finalTransaction.getFromFloor().getFloorName());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                     }
-                    // Non-serial: không kiểm tra tồn kho theo floor, chỉ update trạng thái nếu cần
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
                     detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
+                .filter(detail -> detail != null)
                 .collect(Collectors.toList());
+
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
+        }
 
         transaction.setDetails(details);
 

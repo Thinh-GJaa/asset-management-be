@@ -66,19 +66,21 @@ public class DisposalServiceImpl implements DisposalService {
             }
         }
 
+        // Gom các serial not found/invalid vào list
+        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
+        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
         final AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
                         device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                                .orElse(null);
+                        if (device == null) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null;
+                        }
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
                         device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
                                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
                                         "Model ID: " + item.getModelId()));
@@ -91,13 +93,14 @@ public class DisposalServiceImpl implements DisposalService {
                     if (hasSerial) {
                         // Serial: chỉ cho phép disposal nếu đang IN_STOCK
                         if (device.getStatus() != DeviceStatus.IN_STOCK) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                         // Bổ sung kiểm tra device có đúng ở warehouse không
                         if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
                                 .equals(finalTransaction.getFromWarehouse().getWarehouseId())) {
-                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, device.getSerialNumber(),
-                                    finalTransaction.getFromWarehouse().getWarehouseName());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                     } else {
                         // Non-serial: kiểm tra tồn kho trước khi disposal
@@ -105,9 +108,12 @@ public class DisposalServiceImpl implements DisposalService {
                         Integer qty = item.getQuantity();
                         DeviceWarehouse fromStock = deviceWarehouseRepository
                                 .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, device.getDeviceId())
-                                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
-                                        device.getModel().getModelName(),
-                                        finalTransaction.getFromWarehouse().getWarehouseName()));
+                                .orElse(null);
+                        if (fromStock == null) {
+                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                                    device.getModel().getModelName(),
+                                    finalTransaction.getFromWarehouse().getWarehouseName());
+                        }
                         if (fromStock.getQuantity() < qty) {
                             throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
                         }
@@ -118,7 +124,15 @@ public class DisposalServiceImpl implements DisposalService {
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
+                .filter(detail -> detail != null)
                 .collect(Collectors.toList());
+
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
+        }
 
         transaction.setDetails(details);
 

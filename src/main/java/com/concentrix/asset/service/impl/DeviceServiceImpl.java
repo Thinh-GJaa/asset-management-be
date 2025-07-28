@@ -20,12 +20,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.entity.PODetail;
@@ -83,7 +85,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId,
-            com.concentrix.asset.enums.DeviceType type) {
+                                              com.concentrix.asset.enums.DeviceType type) {
         Page<Device> devices;
         if (modelId != null) {
             devices = deviceRepository.findAllByModel_ModelId(modelId, pageable);
@@ -92,8 +94,18 @@ public class DeviceServiceImpl implements DeviceService {
         } else {
             devices = deviceRepository.findAll(pageable);
         }
-        return devices.map(deviceMapper::toDeviceResponse);
+
+        ForkJoinPool customThreadPool = new ForkJoinPool(12); // sử dụng 12 luồng
+
+        List<DeviceResponse> deviceResponses = customThreadPool.submit(() ->
+                devices.getContent().parallelStream()
+                        .map(deviceMapper::toDeviceResponse)
+                        .toList()
+        ).join();
+
+        return new PageImpl<>(deviceResponses, pageable, devices.getTotalElements());
     }
+
 
     @Override
     public List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber) {

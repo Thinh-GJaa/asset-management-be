@@ -65,19 +65,21 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
             }
         }
 
+        // Gom các serial not found/invalid vào list
+        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
+        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
         AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
                         device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                                .orElse(null);
+                        if (device == null) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null;
+                        }
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
                         device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
                                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
                                         "Model ID: " + item.getModelId()));
@@ -90,11 +92,13 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                     if (hasSerial) {
                         // Serial: chỉ cho phép trả nếu đang ASSIGNED cho đúng user
                         if (device.getStatus() != DeviceStatus.ASSIGNED) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                         if (device.getCurrentUser() == null
                                 || !device.getCurrentUser().getEid().equals(request.getEid())) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_USER, device.getSerialNumber());
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
                         }
                     } else {
                         // Non-serial: kiểm tra tổng số lượng user đang mượn
@@ -109,10 +113,7 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                                 .filter(d -> d.getTransaction()
                                         .getTransactionType() == TransactionType.RETURN_FROM_USER)
                                 .mapToInt(TransactionDetail::getQuantity).sum();
-
-                        // Tính số lượng hiện tại đang mượn
                         int currentlyBorrowed = totalAssigned - totalReturned;
-
                         if (item.getQuantity() > currentlyBorrowed) {
                             throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED,
                                     device.getModel().getModelName());
@@ -124,7 +125,15 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
+                .filter(detail -> detail != null)
                 .collect(Collectors.toList());
+
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
+        if (!serialInvalid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
+        }
 
         transaction.setDetails(details);
 

@@ -58,20 +58,22 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
         transaction.setUserUse(userUse);
 
-        // Tạo danh sách TransactionDetail từ request.items
+        // Gom các serialNumber không tìm thấy vào một list
+        List<String> serialNotFound = new ArrayList<>();
         AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
+                        // Tìm device theo serial number - gom lỗi vào list
                         device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                                .orElse(null);
+                        if (device == null) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null; // sẽ filter sau
+                        }
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
+                        // Tìm device theo modelId - báo lỗi từng cái
                         device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
                                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
                                         "Model ID: " + item.getModelId()));
@@ -86,7 +88,13 @@ public class AssignmentServiceImpl implements AssignmentService {
                     detail.setTransaction(finalTransaction); // liên kết ngược
                     return detail;
                 })
+                .filter(detail -> detail != null)
                 .collect(Collectors.toList());
+
+        // Nếu có serialNumber không tìm thấy thì trả về list
+        if (!serialNotFound.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
+        }
 
         transaction.setDetails(details);
 

@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Service
@@ -418,7 +419,15 @@ public class ReportServiceImpl implements ReportService {
 
                 }
 
-                return devices.stream().map(deviceMapper::toDeviceResponse).toList();
+            ForkJoinPool customThreadPool = new ForkJoinPool(12); // dùng 8 luồng
+            List<Device> finalDevices = devices;
+
+            return customThreadPool.submit(() ->
+                    finalDevices.parallelStream()
+                            .map(deviceMapper::toDeviceResponse)
+                            .toList()
+            ).join();
+
         }
 
         @Override

@@ -10,6 +10,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ReturnFromFloorMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.ReturnFromFloorService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -19,16 +20,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
     TransactionRepository transactionRepository;
     ReturnFromFloorMapper returnFromFloorMapper;
@@ -66,45 +65,69 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
         }
 
         final AssetTransaction finalTransaction = transaction;
+        List<String> serialNotFound = new ArrayList<>();
+        List<String> serialInvalid = new ArrayList<>();
+
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
-                    // Tìm device dựa trên serialNumber hoặc modelId
-                    final Device device;
+                    Device device = null;
+
+                    // Trường hợp có serialNumber
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
-                        // Tìm device theo serial number - đây là thiết bị cụ thể
-                        device = deviceRepository.findBySerialNumber(item.getSerialNumber())
-                                .orElseThrow(
-                                        () -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, item.getSerialNumber()));
+                        Optional<Device> optionalDevice = deviceRepository.findBySerialNumber(item.getSerialNumber());
+                        if (optionalDevice.isEmpty()) {
+                            serialNotFound.add(item.getSerialNumber());
+                            return null;
+                        }
+
+                        device = optionalDevice.get();
+
+                        // Kiểm tra trạng thái thiết bị phải là IN_FLOOR
+                        if (device.getStatus() != DeviceStatus.IN_FLOOR) {
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
+                        }
+
+                        // Kiểm tra thiết bị có ở đúng floor hay không
+                        if (device.getCurrentFloor() == null ||
+                                !device.getCurrentFloor().getFloorId().equals(finalTransaction.getFromFloor().getFloorId())) {
+                            serialInvalid.add(device.getSerialNumber());
+                            return null;
+                        }
+
                     } else if (item.getModelId() != null) {
-                        // Tìm device theo modelId - đây là thiết bị không có serial
-                        // Lấy device đầu tiên của model đó
-                        device = deviceRepository.findFirstByModel_ModelId(item.getModelId())
-                                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND,
-                                        "Model ID: " + item.getModelId()));
+                        // Trường hợp không có serial nhưng có modelId
+                        Optional<Device> optionalDevice = deviceRepository.findFirstByModel_ModelId(item.getModelId());
+                        if (optionalDevice.isEmpty()) {
+                            serialNotFound.add("Model ID: " + item.getModelId());
+                            return null;
+                        }
+
+                        device = optionalDevice.get();
                     } else {
-                        throw new CustomException(ErrorCode.NEW_ERROR);
+                        // Không có serial và không có modelId => bỏ qua
+                        return null;
                     }
 
-                    boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-                    if (hasSerial) {
-                        // Serial: chỉ cho phép trả về kho nếu đang IN_FLOOR
-                        if (device.getStatus() != DeviceStatus.IN_FLOOR) {
-                            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, device.getSerialNumber());
-                        }
-                        // Bổ sung kiểm tra device có đúng ở floor không
-                        if (device.getCurrentFloor() == null || !device.getCurrentFloor().getFloorId()
-                                .equals(finalTransaction.getFromFloor().getFloorId())) {
-                            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getSerialNumber(),
-                                    finalTransaction.getFromFloor().getFloorName());
-                        }
-                    }
+                    // Tạo TransactionDetail
                     TransactionDetail detail = new TransactionDetail();
                     detail.setDevice(device);
                     detail.setQuantity(item.getQuantity());
                     detail.setTransaction(finalTransaction);
                     return detail;
+
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        // Nếu có serialNumber không tìm thấy hoặc invalid thì trả về list
+        if (!serialNotFound.isEmpty())
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND,
+                    String.join(",", serialNotFound));
+
+        if (!serialInvalid.isEmpty())
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS,
+                    String.join(",", serialInvalid));
 
         transaction.setDetails(details);
 
