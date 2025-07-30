@@ -192,6 +192,7 @@ public enum ErrorCode {
 
         INVALID_FLOOR_TRANSFER(21700, HttpStatus.BAD_REQUEST, "Invalid floor transfer: From Floor and To Floor must be different and belong to the same site"),
         INVALID_SITE_TRANSFER(21706, HttpStatus.BAD_REQUEST, "Invalid site transfer: The two warehouses belong to different sites"),
+        INVALID_USE_FLOOR(21707, HttpStatus.BAD_REQUEST, "Invalid use floor: Floor and Warehouse must belong to the same site"),
         // Custom: Device not found in floor
         DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
 

@@ -36,6 +36,7 @@ public class UseFloorServiceImpl implements UseFloorService {
     DeviceWarehouseRepository deviceWarehouseRepository;
     FloorRepository floorRepository;
     UserRepository userRepository;
+    WarehouseRepository warehouseRepository;
 
     @Override
     public UseFloorResponse getUseFloorById(Integer useFloorId) {
@@ -48,6 +49,16 @@ public class UseFloorServiceImpl implements UseFloorService {
     public UseFloorResponse createUseFloor(CreateUseFloorRequest request) {
         AssetTransaction transaction = useFloorMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
+
+        Floor toFloor = floorRepository.findById(request.getToFloorId())
+                .orElseThrow(() -> new CustomException(ErrorCode.FLOOR_NOT_FOUND, request.getToFloorId()));
+
+        Warehouse fromWarehouse = warehouseRepository.findById(request.getFromWarehouseId())
+                .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, request.getFromWarehouseId()));
+
+        if(!toFloor.getSite().getSiteId().equals(fromWarehouse.getSite().getSiteId())) {
+            throw new CustomException(ErrorCode.INVALID_USE_FLOOR);
+        }
 
         // Kiểm tra trùng lặp serialNumber hoặc modelId trong danh sách
         Set<String> duplicateSerialCheckSet = new HashSet<>();
