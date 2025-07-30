@@ -3,12 +3,18 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
 import com.concentrix.asset.dto.request.UserImportRequest;
+import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
+import com.concentrix.asset.dto.response.TransactionItemsResponse;
+import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
+import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.Role;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
+import com.concentrix.asset.mapper.TransactionMapper;
 import com.concentrix.asset.mapper.UserMapper;
+import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +39,10 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     UserMapper userMapper;
+    TransactionRepository transactionRepository;
+    TransactionMapper transactionMapper;
+
+
 
     @Override
     public UserResponse getUserById(String eid) {
@@ -170,4 +180,36 @@ public class UserServiceImpl implements UserService {
         result.put("emailErrors", emailErrors);
         return result;
     }
+
+    @Override
+    public List<TransactionResponse> getUserTransactions(String eid) {
+
+        User user = userRepository.findById(eid)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, eid));
+
+        List<AssetTransaction> transactions = transactionRepository.findAllByUserUse_Eid(eid);
+
+        transactions.sort((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()));
+
+        return transactions.stream()
+                .map(transactionMapper::toTransactionResponse)
+                .toList();
+    }
+
+    public List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId){
+        AssetTransaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId.toString()));
+        return transaction.getDetails().stream()
+                .map(transactionMapper::toTransactionItemsResponse)
+                .toList();
+    }
+
+    @Override
+    public List<DeviceBorrowingInfoResponse> getDeviceBorrowingInfo() {
+        List<String> eids = transactionRepository.findDistinctEidFromTransactions();
+        log.info("[UserServiceImpl] EIDs: {}",  String.join(", ", eids));
+        return List.of();
+    }
+
+
 }

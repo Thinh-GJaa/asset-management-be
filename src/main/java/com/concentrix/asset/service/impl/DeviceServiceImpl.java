@@ -187,7 +187,6 @@ public class DeviceServiceImpl implements DeviceService {
                                 .builder()
                                 .serialNumber(device.getSerialNumber())
                                 .deviceName(device.getDeviceName())
-                                .assignedAt(lastTx.getCreatedAt())
                                 .quantity(1)
                                 .modelId(
                                         device.getModel() != null
@@ -198,10 +197,8 @@ public class DeviceServiceImpl implements DeviceService {
                         DeviceBorrowingInfoResponse info = userMap.get(eid);
                         if (info == null) {
                             info = DeviceBorrowingInfoResponse.builder()
-                                    .user(DeviceBorrowingInfoResponse.UserInfo.builder()
-                                            .eid(user.getEid())
-                                            .fullName(user.getFullName())
-                                            .build())
+                                    .eid(user.getEid())
+                                    .fullName(user.getFullName())
                                     .devices(new java.util.ArrayList<>())
                                     .build();
                             userMap.put(eid, info);
@@ -238,7 +235,6 @@ public class DeviceServiceImpl implements DeviceService {
                                 .builder()
                                 .serialNumber(device.getSerialNumber())
                                 .deviceName(device.getDeviceName())
-                                .assignedAt(assignTimeMap.get(eid))
                                 .quantity(entry.getValue())
                                 .modelId(
                                         device.getModel() != null
@@ -250,10 +246,8 @@ public class DeviceServiceImpl implements DeviceService {
                         DeviceBorrowingInfoResponse info = userMap.get(eid);
                         if (info == null) {
                             info = DeviceBorrowingInfoResponse.builder()
-                                    .user(DeviceBorrowingInfoResponse.UserInfo.builder()
-                                            .eid(user.getEid())
-                                            .fullName(user.getFullName())
-                                            .build())
+                                    .eid(user.getEid())
+                                    .fullName(user.getFullName())
                                     .devices(new java.util.ArrayList<>())
                                     .build();
                             userMap.put(eid, info);

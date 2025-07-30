@@ -31,6 +31,8 @@ public interface DeviceRepository extends JpaRepository<Device, Integer> {
 
         Integer countByStatusAndSerialNumberIsNotNull(DeviceStatus status);
 
+        List<Device> findAllBySerialNumberIsNotNull();
+
         @Query("""
                             SELECT COUNT(d) FROM Device d
                             WHERE (:type IS NULL OR d.model.type = :type)
