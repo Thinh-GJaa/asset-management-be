@@ -4,14 +4,13 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.response.*;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 
 @RestController
@@ -20,98 +19,108 @@ import org.springframework.http.ResponseEntity;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ReportController {
 
-    ReportService reportService;
-    DeviceService deviceService;
+        ReportService reportService;
 
-    @GetMapping("/summary")
-    public List<ReportSummaryResponse> getReportSummary(
-            @RequestParam(value = "siteId", required = false) Integer siteId) {
-        return reportService.getReportSummary(siteId);
-    }
+        @GetMapping("/status-summary")
+        public ResponseEntity<Map<String, Map<String, Integer>>> getStatusSummaryAllSite() {
+                return ResponseEntity.ok(reportService.getStatusSummaryAllSite());
+        }
 
-    @GetMapping("/detail")
-    public ReportDetailResponse getReportDetail(
-            @RequestParam(value = "siteId", required = false) Integer siteId,
-            @RequestParam(value = "floorId", required = false) Integer floorId,
-            @RequestParam(value = "warehouseId", required = false) Integer warehouseId,
-            @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "modelId", required = false) Integer modelId) {
-        return reportService.getReportDetail(siteId, floorId, warehouseId, type, modelId);
-    }
+        @GetMapping("/without-serial")
+        public ResponseEntity<ApiResponse<List<SiteDeviceWithoutSerialSummaryResponse>>> getWithoutSerialSummary(
+                        @RequestParam(value = "status", required = false) DeviceStatus status,
+                        @RequestParam(value = "type", required = false) DeviceType type,
+                        @RequestParam(value = "modelId", required = false) Integer modelId) {
+                List<SiteDeviceWithoutSerialSummaryResponse> result = reportService.getWithoutSerialSummary(status,
+                                type,
+                                modelId);
+                ApiResponse<List<SiteDeviceWithoutSerialSummaryResponse>> response = ApiResponse
+                                .<List<SiteDeviceWithoutSerialSummaryResponse>>builder()
+                                .message("Get without serial summary successfully")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/status-summary")
-    public ResponseEntity<Map<String, Map<String, Integer>>> getStatusSummaryAllSite() {
-        return ResponseEntity.ok(reportService.getStatusSummaryAllSite());
-    }
+        @GetMapping("/with-serial")
+        public ResponseEntity<ApiResponse<List<TypeSummaryResponse>>> getWithSerialSummary(
+                        @RequestParam(value = "siteId", required = false) Integer siteId,
+                        @RequestParam(value = "floorId", required = false) Integer floorId,
+                        @RequestParam(value = "status", required = false) DeviceStatus status,
+                        @RequestParam(value = "type", required = false) DeviceType type,
+                        @RequestParam(value = "modelId", required = false) Integer modelId) {
+                List<TypeSummaryResponse> result = reportService.getWithSerialSummary(siteId, status, floorId, type,
+                                modelId);
+                ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
+                                .<List<TypeSummaryResponse>>builder()
+                                .message("Get with serial summary successfully")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/without-serial")
-    public ResponseEntity<ApiResponse<List<SiteDeviceWithoutSerialSummaryResponse>>> getWithoutSerialSummary(
-            @RequestParam(value = "status", required = false) DeviceStatus status,
-            @RequestParam(value = "type", required = false) DeviceType type,
-            @RequestParam(value = "modelId", required = false) Integer modelId) {
-        List<SiteDeviceWithoutSerialSummaryResponse> result = reportService.getWithoutSerialSummary(status, type,
-                modelId);
-        ApiResponse<List<SiteDeviceWithoutSerialSummaryResponse>> response = ApiResponse
-                .<List<SiteDeviceWithoutSerialSummaryResponse>>builder()
-                .message("Get without serial summary successfully")
-                .data(result)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/device-list")
+        public ResponseEntity<ApiResponse<List<DeviceResponse>>> getDeviceListForReport(
+                        @RequestParam(value = "siteId", required = false) Integer siteId,
+                        @RequestParam(value = "status", required = false) DeviceStatus status,
+                        @RequestParam(value = "floorId", required = false) Integer floorId,
+                        @RequestParam(value = "type", required = false) DeviceType type,
+                        @RequestParam(value = "modelId", required = false) Integer modelId) {
+                List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, type,
+                                modelId);
+                ApiResponse<List<DeviceResponse>> response = ApiResponse.<List<DeviceResponse>>builder()
+                                .message("Get device list for report successfully")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/with-serial")
-    public ResponseEntity<ApiResponse<List<TypeSummaryResponse>>> getWithSerialSummary(
-            @RequestParam(value = "siteId", required = false) Integer siteId,
-            @RequestParam(value = "floorId", required = false) Integer floorId,
-            @RequestParam(value = "status", required = false) DeviceStatus status,
-            @RequestParam(value = "type", required = false) DeviceType type,
-            @RequestParam(value = "modelId", required = false) Integer modelId) {
-        List<TypeSummaryResponse> result = reportService.getWithSerialSummary(siteId, status, floorId, type, modelId);
-        ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
-                .<List<TypeSummaryResponse>>builder()
-                .message("Get with serial summary successfully")
-                .data(result)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/with-serial/status/{status}")
+        public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStautsWithSerialSummary(
+                        @PathVariable DeviceStatus status) {
+                StatusSummaryResponse data = reportService.getStatusSummaryWithSerial(status);
+                ApiResponse<StatusSummaryResponse> response = ApiResponse
+                                .<StatusSummaryResponse>builder()
+                                .message("Get with serial summary status successfully")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/device-list")
-    public ResponseEntity<ApiResponse<List<DeviceResponse>>> getDeviceListForReport(
-            @RequestParam(value = "siteId", required = false) Integer siteId,
-            @RequestParam(value = "status", required = false) DeviceStatus status,
-            @RequestParam(value = "floorId", required = false) Integer floorId,
-            @RequestParam(value = "type", required = false) DeviceType type,
-            @RequestParam(value = "modelId", required = false) Integer modelId) {
-        List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, type, modelId);
-        ApiResponse<List<DeviceResponse>> response = ApiResponse.<List<DeviceResponse>>builder()
-                .message("Get device list for report successfully")
-                .data(result)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/without-serial/status/{status}")
+        public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStatusWithoutSerialSummary(
+                        @PathVariable DeviceStatus status) {
+                StatusSummaryResponse data = reportService.getStatusSummaryWithoutSerial(status);
+                ApiResponse<StatusSummaryResponse> response = ApiResponse
+                                .<StatusSummaryResponse>builder()
+                                .message("Get without serial summary status successfully")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/with-serial/status/{status}")
-    public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStautsWithSerialSummary(
-            @PathVariable DeviceStatus status) {
-        StatusSummaryResponse data = reportService.getStatusSummaryWithSerial(status);
-        ApiResponse<StatusSummaryResponse> response = ApiResponse
-                .<StatusSummaryResponse>builder()
-                .message("Get with serial summary status successfully")
-                .data(data)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/with-serial/chart/{status}")
+        public ResponseEntity<ApiResponse<List<SiteTypeChartResponse>>> getSiteTypeChartWithSerial(
+                        @PathVariable DeviceStatus status) {
+                List<SiteTypeChartResponse> result = reportService.getSiteTypeChartWithSerial(status);
+                ApiResponse<List<SiteTypeChartResponse>> response = ApiResponse
+                                .<List<SiteTypeChartResponse>>builder()
+                                .message("Get site type chart successfully")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    
-    @GetMapping("/without-serial/status/{status}")
-    public ResponseEntity<ApiResponse<StatusSummaryResponse>> getStatusWithoutSerialSummary(
-            @PathVariable DeviceStatus status) {
-        StatusSummaryResponse data = reportService.getStatusSummaryWithoutSerial(status);
-        ApiResponse<StatusSummaryResponse> response = ApiResponse
-                .<StatusSummaryResponse>builder()
-                .message("Get without serial summary status successfully")
-                .data(data)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/without-serial/chart/{status}")
+        public ResponseEntity<ApiResponse<List<SiteTypeChartResponse>>> getSiteTypeChartWithoutSerial(
+                @PathVariable DeviceStatus status) {
+                List<SiteTypeChartResponse> result = reportService.getSiteTypeChartWithoutSerial(status);
+                ApiResponse<List<SiteTypeChartResponse>> response = ApiResponse.<List<SiteTypeChartResponse>>builder()
+                                .message("Get site type chart successfully")
+                                .data(result)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+
 }
