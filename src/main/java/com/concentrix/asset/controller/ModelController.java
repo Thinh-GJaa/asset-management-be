@@ -71,4 +71,24 @@ public class ModelController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/with-serial")
+    public ResponseEntity<ApiResponse<List<ModelResponse>>> getModelWithSerial() {
+        ApiResponse<List<ModelResponse>> response = ApiResponse.<List<ModelResponse>>builder()
+                .message("Get models with serial successfully")
+                .data(modelService.getModelWithSerial())
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/without-serial")
+    public ResponseEntity<ApiResponse<List<ModelResponse>>> getModelWithoutSerial() {
+        ApiResponse<List<ModelResponse>> response = ApiResponse.<List<ModelResponse>>builder()
+                .message("Get models without serial successfully")
+                .data(modelService.getModelWithoutSerial())
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
 }

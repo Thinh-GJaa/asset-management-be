@@ -10,6 +10,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ModelMapper;
 import com.concentrix.asset.repository.ModelRepository;
 import com.concentrix.asset.service.ModelService;
+import com.concentrix.asset.service.TypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ public class ModelServiceImpl implements ModelService {
 
     ModelRepository modelRepository;
     ModelMapper modelMapper;
+    TypeService typeService;
 
     @Override
     public ModelResponse getModelById(Integer id) {
@@ -74,4 +76,26 @@ public class ModelServiceImpl implements ModelService {
         List<Model> models = modelRepository.findByType(type);
         return models.stream().map(modelMapper::toModelResponse).collect(Collectors.toList());
     }
+
+    @Override
+    public List<ModelResponse> getModelWithSerial() {
+        List<DeviceType> typesWithSerial = typeService.getTypeWithSerial();
+
+        return typesWithSerial.stream()
+                .flatMap(type -> modelRepository.findByType(type).stream()
+                        .map(modelMapper::toModelResponse))
+                .toList();
+    }
+
+    @Override
+    public List<ModelResponse> getModelWithoutSerial() {
+        List<DeviceType> typesWithoutSerial = typeService.getTypeWithoutSerial();
+
+        return typesWithoutSerial.stream()
+                .flatMap(type -> modelRepository.findByType(type).stream()
+                        .map(modelMapper::toModelResponse))
+                .toList();
+    }
+
+
 }
