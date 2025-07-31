@@ -2,6 +2,7 @@ package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.entity.Device;
+import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.enums.TransactionStatus;
 import com.concentrix.asset.enums.TransactionType;
@@ -27,8 +28,8 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
 
     List<AssetTransaction> findAllByUserUse_Eid(String eid);
 
-    @Query("SELECT DISTINCT t.userUse.eid FROM AssetTransaction t WHERE t.userUse.eid IS NOT NULL")
-    List<String> findDistinctEidFromTransactions();
+    @Query("SELECT DISTINCT t.userUse FROM AssetTransaction t WHERE t.userUse.eid IS NOT NULL")
+    List<User> findDistinctEidFromTransactions();
 
 
 }

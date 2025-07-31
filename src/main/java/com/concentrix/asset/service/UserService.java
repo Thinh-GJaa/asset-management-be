@@ -30,6 +30,4 @@ public interface UserService {
 
     List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId);
 
-    List<DeviceBorrowingInfoResponse> getDeviceBorrowingInfo();
-
 }

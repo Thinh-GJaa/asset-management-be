@@ -37,6 +37,8 @@ public interface DeviceService {
          */
         List<DeviceBorrowingInfoResponse.DeviceInfo> getBorrowingDevicesByUser(String eid);
 
+        Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable);
+
         List<String> getAllDeviceTypes();
 
         public List<String> getDeviceStatuses();

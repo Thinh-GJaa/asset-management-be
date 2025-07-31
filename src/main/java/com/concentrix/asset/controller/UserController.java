@@ -138,9 +138,10 @@ public class UserController {
         }
 
         @GetMapping("/borrowing-devices")
-        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getDeviceBorrowingInfo() {
-                List<DeviceBorrowingInfoResponse> borrowingInfo = userService.getDeviceBorrowingInfo();
-                ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse.<List<DeviceBorrowingInfoResponse>>builder()
+        public ResponseEntity<ApiResponse<Page<DeviceBorrowingInfoResponse>>> getDeviceBorrowingInfo(
+                @PageableDefault(page = 0, size = 10, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable){
+                Page<DeviceBorrowingInfoResponse> borrowingInfo = deviceService.getBorrowingDevice(pageable);
+                ApiResponse<Page<DeviceBorrowingInfoResponse>> response = ApiResponse.<Page<DeviceBorrowingInfoResponse>>builder()
                         .message("Get device borrowing info successfully")
                         .data(borrowingInfo)
                         .build();

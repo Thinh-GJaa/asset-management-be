@@ -106,10 +106,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserResponse(user);
     }
 
-    @Override
-    public void deleteUser(String id) {
-        userRepository.deleteById(id);
-    }
 
     @Override
     public Page<UserResponse> filterUser(Pageable pageable) {
@@ -204,12 +200,6 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    @Override
-    public List<DeviceBorrowingInfoResponse> getDeviceBorrowingInfo() {
-        List<String> eids = transactionRepository.findDistinctEidFromTransactions();
-        log.info("[UserServiceImpl] EIDs: {}",  String.join(", ", eids));
-        return List.of();
-    }
 
 
 }
