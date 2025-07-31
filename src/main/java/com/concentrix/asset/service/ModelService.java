@@ -18,4 +18,8 @@ public interface ModelService {
     Page<ModelResponse> filterModel(Pageable pageable);
 
     List<ModelResponse> getModelsByType(DeviceType type);
+
+    List<ModelResponse> getModelWithSerial();
+
+    List<ModelResponse> getModelWithoutSerial();
 }

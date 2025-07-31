@@ -8,8 +8,10 @@ import com.concentrix.asset.enums.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,5 +23,12 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
             TransactionType transactionType,
             TransactionStatus transactionStatus,
             Pageable pageable);
+
+
+    List<AssetTransaction> findAllByUserUse_Eid(String eid);
+
+    @Query("SELECT DISTINCT t.userUse.eid FROM AssetTransaction t WHERE t.userUse.eid IS NOT NULL")
+    List<String> findDistinctEidFromTransactions();
+
 
 }

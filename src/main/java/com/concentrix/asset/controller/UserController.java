@@ -3,6 +3,8 @@ package com.concentrix.asset.controller;
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
+import com.concentrix.asset.dto.response.TransactionItemsResponse;
+import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.service.UserService;
@@ -83,15 +85,15 @@ public class UserController {
                 return ResponseEntity.ok(response);
         }
 
-        @GetMapping("/borrowing-devices")
-        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getAllUserBorrowingDevices() {
-                ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse
-                                .<List<DeviceBorrowingInfoResponse>>builder()
-                                .message("Get all user borrowing devices successfully")
-                                .data(deviceService.getAllUserBorrowingDevices())
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+//        @GetMapping("/borrowing-devices")
+//        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getAllUserBorrowingDevices() {
+//                ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse
+//                                .<List<DeviceBorrowingInfoResponse>>builder()
+//                                .message("Get all user borrowing devices successfully")
+//                                .data(deviceService.getAllUserBorrowingDevices())
+//                                .build();
+//                return ResponseEntity.ok(response);
+//        }
 
         @GetMapping("/{eid}/borrowing-devices")
         public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>>> getBorrowingDevicesByUser(
@@ -110,6 +112,38 @@ public class UserController {
                                 .message("Get current user profile successfully")
                                 .data(userService.getUserById(eid))
                                 .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @GetMapping("/{eid}/transactions")
+        public ResponseEntity<ApiResponse<List<TransactionResponse>>> getUserTransactions(
+                        @PathVariable String eid) {
+                List<TransactionResponse> transactions = userService.getUserTransactions(eid);
+                ApiResponse<List<TransactionResponse>> response = ApiResponse.<List<TransactionResponse>>builder()
+                                .message("Get user transactions successfully")
+                                .data(transactions)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @GetMapping("/transactions/{transactionId}/items")
+        public ResponseEntity<ApiResponse<List<TransactionItemsResponse>>> getUserTransactionsDetail(
+                        @PathVariable Integer transactionId) {
+                List<TransactionItemsResponse> transactions = userService.getUserTransactionItems(transactionId);
+                ApiResponse<List<TransactionItemsResponse>> response = ApiResponse.<List<TransactionItemsResponse>>builder()
+                                .message("Get user transaction items successfully")
+                                .data(transactions)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @GetMapping("/borrowing-devices")
+        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getDeviceBorrowingInfo() {
+                List<DeviceBorrowingInfoResponse> borrowingInfo = userService.getDeviceBorrowingInfo();
+                ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse.<List<DeviceBorrowingInfoResponse>>builder()
+                        .message("Get device borrowing info successfully")
+                        .data(borrowingInfo)
+                        .build();
                 return ResponseEntity.ok(response);
         }
 }

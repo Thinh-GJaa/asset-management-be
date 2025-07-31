@@ -12,19 +12,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceBorrowingInfoResponse implements Serializable {
-    UserInfo user;
-    List<DeviceInfo> devices;
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class UserInfo implements Serializable {
-        String eid;
-        String fullName;
-    }
+    String eid;
+    String fullName;
+    List<DeviceInfo> devices;
 
     @Data
     @Builder
@@ -35,7 +28,6 @@ public class DeviceBorrowingInfoResponse implements Serializable {
     public static class DeviceInfo implements Serializable {
         String serialNumber;
         String deviceName;
-        LocalDateTime assignedAt;
         Integer quantity; // null hoặc 1 với serial, >1 với không serial
         Integer modelId; // Thêm trường này
         String modelName; // Thêm trường này

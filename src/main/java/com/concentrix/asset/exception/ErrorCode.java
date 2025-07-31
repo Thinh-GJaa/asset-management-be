@@ -190,8 +190,13 @@ public enum ErrorCode {
         FLOOR_UPDATE_FAILED(21703, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update floor with ID '{}'"),
         FLOOR_DELETE_FAILED(21704, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete floor with ID '{}'"),
 
+        INVALID_FLOOR_TRANSFER(21700, HttpStatus.BAD_REQUEST, "Invalid floor transfer: From Floor and To Floor must be different and belong to the same site"),
+        INVALID_SITE_TRANSFER(21706, HttpStatus.BAD_REQUEST, "Invalid site transfer: The two warehouses belong to different sites"),
+        INVALID_USE_FLOOR(21707, HttpStatus.BAD_REQUEST, "Invalid use floor: Floor and Warehouse must belong to the same site"),
         // Custom: Device not found in floor
         DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
+
+
 
         private final int code;
         private final HttpStatus status;

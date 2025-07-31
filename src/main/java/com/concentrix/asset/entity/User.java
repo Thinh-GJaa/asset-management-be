@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
+
     @Id
     String eid;
 
@@ -59,6 +60,18 @@ public class User {
     @Column
     @Enumerated(EnumType.STRING)
     Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "site_id")  // khóa ngoại
+    Site site;
+
+    @ManyToOne
+    @JoinColumn(name = "create_by_eid")  // khóa ngoại
+    User createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "update_by_eid")  // khóa ngoại
+    User updatedBy;
 
     @Column
     LocalDateTime createdAt;

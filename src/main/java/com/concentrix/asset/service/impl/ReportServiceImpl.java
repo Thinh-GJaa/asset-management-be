@@ -1,28 +1,20 @@
 package com.concentrix.asset.service.impl;
 
-import com.concentrix.asset.dto.response.ReportSummaryResponse;
-import com.concentrix.asset.dto.response.ReportDetailResponse;
-import com.concentrix.asset.dto.response.StatusReportResponse;
-import com.concentrix.asset.dto.response.StatusSummaryResponse;
-import com.concentrix.asset.dto.response.SiteDeviceWithoutSerialSummaryResponse;
-import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
-import com.concentrix.asset.dto.response.DeviceResponse;
-import com.concentrix.asset.dto.response.TypeSummaryResponse;
-import com.concentrix.asset.dto.response.ModelSummaryResponse;
-import com.concentrix.asset.dto.response.SiteSummaryResponse;
+import com.concentrix.asset.dto.response.*;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.ReportService;
 import com.concentrix.asset.mapper.DeviceMapper;
+import com.concentrix.asset.service.TypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,155 +31,7 @@ public class ReportServiceImpl implements ReportService {
         DeviceWarehouseRepository deviceWarehouseRepository;
         TransactionDetailRepository transactionDetailRepository;
         DeviceMapper deviceMapper;
-
-        @Override
-        public List<ReportSummaryResponse> getReportSummary(Integer siteId) {
-                List<Site> sites = (siteId == null) ? siteRepository.findAll()
-                                : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
-                List<ReportSummaryResponse> result = new ArrayList<>();
-                for (Site site : sites) {
-                        if (site == null)
-                                continue;
-                        List<Warehouse> warehouses = warehouseRepository.findAllBySite_SiteId(site.getSiteId());
-                        List<Floor> floors = floorRepository.findAllBySite_SiteId(site.getSiteId());
-                        Set<Integer> warehouseIds = warehouses.stream().map(Warehouse::getWarehouseId)
-                                        .collect(Collectors.toSet());
-                        Set<Integer> floorIds = floors.stream().map(Floor::getFloorId).collect(Collectors.toSet());
-                        List<Device> devices = deviceRepository.findAll().stream()
-                                        .filter(d -> (d.getCurrentWarehouse() != null && warehouseIds
-                                                        .contains(d.getCurrentWarehouse().getWarehouseId()))
-                                                        || (d.getCurrentFloor() != null && floorIds
-                                                                        .contains(d.getCurrentFloor().getFloorId())))
-                                        .collect(Collectors.toList());
-                        // Tổng hợp theo trạng thái
-                        ReportSummaryResponse.DeviceStatusCount statusCount = countByStatus(devices);
-                        // Tổng hợp theo warehouse
-                        List<ReportSummaryResponse.WarehouseSummary> warehouseSummaries = warehouses.stream()
-                                        .map(wh -> ReportSummaryResponse.WarehouseSummary.builder()
-                                                        .warehouseId(wh.getWarehouseId())
-                                                        .warehouseName(wh.getWarehouseName())
-                                                        .statusCount(countByStatus(devices.stream()
-                                                                        .filter(d -> wh.equals(d.getCurrentWarehouse()))
-                                                                        .collect(Collectors.toList())))
-                                                        .build())
-                                        .collect(Collectors.toList());
-                        // Tổng hợp theo floor
-                        List<ReportSummaryResponse.FloorSummary> floorSummaries = floors.stream()
-                                        .map(f -> ReportSummaryResponse.FloorSummary.builder()
-                                                        .floorId(f.getFloorId())
-                                                        .floorName(f.getFloorName())
-                                                        .statusCount(countByStatus(devices.stream()
-                                                                        .filter(d -> f.equals(d.getCurrentFloor()))
-                                                                        .collect(Collectors.toList())))
-                                                        .build())
-                                        .collect(Collectors.toList());
-                        // Tổng hợp theo type
-                        List<ReportSummaryResponse.TypeSummary> typeSummaries = devices.stream()
-                                        .collect(Collectors.groupingBy(d -> d.getModel().getType())).entrySet().stream()
-                                        .map(e -> ReportSummaryResponse.TypeSummary.builder()
-                                                        .type(e.getKey().name())
-                                                        .statusCount(countByStatus(e.getValue()))
-                                                        .build())
-                                        .collect(Collectors.toList());
-                        // Tổng hợp theo model
-                        List<ReportSummaryResponse.ModelSummary> modelSummaries = devices.stream()
-                                        .collect(Collectors.groupingBy(d -> d.getModel())).entrySet().stream()
-                                        .map(e -> ReportSummaryResponse.ModelSummary.builder()
-                                                        .modelId(e.getKey().getModelId())
-                                                        .modelName(e.getKey().getModelName())
-                                                        .statusCount(countByStatus(e.getValue()))
-                                                        .build())
-                                        .collect(Collectors.toList());
-                        result.add(ReportSummaryResponse.builder()
-                                        .siteId(site.getSiteId())
-                                        .siteName(site.getSiteName())
-                                        .warehouses(warehouseSummaries)
-                                        .floors(floorSummaries)
-                                        .types(typeSummaries)
-                                        .models(modelSummaries)
-                                        .statusCount(statusCount)
-                                        .build());
-                }
-                return result;
-        }
-
-        @Override
-        public ReportDetailResponse getReportDetail(Integer siteId, Integer floorId, Integer warehouseId, String type,
-                        Integer modelId) {
-                // Lấy tất cả site hoặc theo filter
-                List<Site> sites = (siteId == null) ? siteRepository.findAll()
-                                : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
-                List<ReportDetailResponse.SiteNode> siteNodes = new ArrayList<>();
-                int totalAll = 0;
-                for (Site site : sites) {
-                        if (site == null)
-                                continue;
-                        // Floor
-                        List<Floor> floors = floorRepository.findAllBySite_SiteId(site.getSiteId());
-                        if (floorId != null)
-                                floors = floors.stream().filter(f -> f.getFloorId().equals(floorId)).toList();
-                        List<ReportDetailResponse.FloorNode> floorNodes = new ArrayList<>();
-                        // Warehouse
-                        List<Warehouse> warehouses = warehouseRepository.findAllBySite_SiteId(site.getSiteId());
-                        if (warehouseId != null)
-                                warehouses = warehouses.stream().filter(w -> w.getWarehouseId().equals(warehouseId))
-                                                .toList();
-                        List<ReportDetailResponse.WarehouseNode> warehouseNodes = new ArrayList<>();
-                        int totalSite = 0;
-                        // Floor drill-down
-                        for (Floor floor : floors) {
-                                List<Device> devices = deviceRepository.findAll().stream()
-                                                .filter(d -> d.getCurrentFloor() != null && d.getCurrentFloor()
-                                                                .getFloorId().equals(floor.getFloorId()))
-                                                .toList();
-                                List<ReportDetailResponse.TypeNode> typeNodes = buildTypeNodes(devices, type, modelId);
-                                int totalFloor = typeNodes.stream().mapToInt(ReportDetailResponse.TypeNode::getTotal)
-                                                .sum();
-                                totalSite += totalFloor;
-                                floorNodes.add(ReportDetailResponse.FloorNode.builder()
-                                                .floorId(floor.getFloorId())
-                                                .floorName(floor.getFloorName())
-                                                .total(totalFloor)
-                                                .types(typeNodes)
-                                                .build());
-                        }
-                        // Warehouse drill-down
-                        for (Warehouse warehouse : warehouses) {
-                                List<Device> devices = deviceRepository.findAll().stream()
-                                                .filter(d -> d.getCurrentWarehouse() != null && d.getCurrentWarehouse()
-                                                                .getWarehouseId().equals(warehouse.getWarehouseId()))
-                                                .toList();
-                                List<ReportDetailResponse.TypeNode> typeNodes = buildTypeNodes(devices, type, modelId);
-                                int totalWarehouse = typeNodes.stream()
-                                                .mapToInt(ReportDetailResponse.TypeNode::getTotal).sum();
-                                totalSite += totalWarehouse;
-                                warehouseNodes.add(ReportDetailResponse.WarehouseNode.builder()
-                                                .warehouseId(warehouse.getWarehouseId())
-                                                .warehouseName(warehouse.getWarehouseName())
-                                                .total(totalWarehouse)
-                                                .types(typeNodes)
-                                                .build());
-                        }
-                        siteNodes.add(ReportDetailResponse.SiteNode.builder()
-                                        .siteId(site.getSiteId())
-                                        .siteName(site.getSiteName())
-                                        .total(totalSite)
-                                        .floors(floorNodes)
-                                        .warehouses(warehouseNodes)
-                                        .build());
-                        totalAll += totalSite;
-                }
-                return ReportDetailResponse.builder()
-                                .total(totalAll)
-                                .sites(siteNodes)
-                                .build();
-        }
-
-        @Override
-        public List<StatusReportResponse> getStatusReport(Integer siteId, Integer floorId, Integer warehouseId,
-                        TransactionType type, Integer modelId) {
-                return List.of();
-        }
+        TypeService typeService;
 
         @Override
         public Map<String, Map<String, Integer>> getStatusSummaryAllSite() {
@@ -250,7 +94,6 @@ public class ReportServiceImpl implements ReportService {
                                                                         t, model.getModelId(), site.getSiteId());
                                                         quantity = in - out;
                                                         break;
-
                                                 case ASSIGNED:
                                                         int assignment = transactionDetailRepository.sumAssignment(
                                                                         t, model.getModelId());
@@ -418,7 +261,13 @@ public class ReportServiceImpl implements ReportService {
 
                 }
 
-                return devices.stream().map(deviceMapper::toDeviceResponse).toList();
+                ForkJoinPool customThreadPool = new ForkJoinPool(12); // dùng 8 luồng
+                List<Device> finalDevices = devices;
+
+                return customThreadPool.submit(() -> finalDevices.parallelStream()
+                                .map(deviceMapper::toDeviceResponse)
+                                .toList()).join();
+
         }
 
         @Override
@@ -609,53 +458,212 @@ public class ReportServiceImpl implements ReportService {
 
         }
 
-        private List<ReportDetailResponse.TypeNode> buildTypeNodes(List<Device> devices, String filterType,
-                        Integer filterModelId) {
-                Map<String, List<Device>> typeMap = devices.stream()
-                                .filter(d -> filterType == null
-                                                || d.getModel().getType().name().equalsIgnoreCase(filterType))
-                                .collect(Collectors.groupingBy(d -> d.getModel().getType().name()));
-                List<ReportDetailResponse.TypeNode> typeNodes = new ArrayList<>();
-                for (var entry : typeMap.entrySet()) {
-                        String type = entry.getKey();
-                        List<Device> typeDevices = entry.getValue();
-                        Map<Model, List<Device>> modelMap = typeDevices.stream()
-                                        .filter(d -> filterModelId == null
-                                                        || d.getModel().getModelId().equals(filterModelId))
-                                        .collect(Collectors.groupingBy(Device::getModel));
-                        List<ReportDetailResponse.ModelNode> modelNodes = new ArrayList<>();
-                        int totalType = 0;
-                        for (var modelEntry : modelMap.entrySet()) {
-                                Model model = modelEntry.getKey();
-                                List<Device> modelDevices = modelEntry.getValue();
-                                boolean isSerial = modelDevices.stream().anyMatch(
-                                                d -> d.getSerialNumber() != null && !d.getSerialNumber().isEmpty());
-                                int totalModel = modelDevices.size();
-                                totalType += totalModel;
-                                List<String> serials = null;
-                                if (isSerial) {
-                                        serials = modelDevices.stream()
-                                                        .map(Device::getSerialNumber)
-                                                        .filter(s -> s != null && !s.isEmpty())
-                                                        .toList();
+
+
+        @Override
+        public List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status) {
+                // Định nghĩa main type có serial
+                Set<DeviceType> mainTypes = Set.of(
+                                DeviceType.MONITOR, DeviceType.DESKTOP, DeviceType.LAPTOP,
+                                DeviceType.IMAC, DeviceType.MACBOOK, DeviceType.MAC_MINI);
+                List<SiteTypeChartResponse> result = new ArrayList<>();
+
+                List<Site> sites = siteRepository.findAll();
+                List<Device> devices = deviceRepository.findAllBySerialNumberIsNotNull();
+
+                switch (status) {
+                        case IN_STOCK, IN_FLOOR, E_WASTE -> {
+                                for (Site site : sites) {
+                                        List<SiteTypeChartResponse.TypeCount> typeCounts = new ArrayList<>();
+                                        int otherCount = 0;
+                                        for (DeviceType type : mainTypes) {
+                                                int count = (int) devices.parallelStream()
+                                                                .filter(d -> d.getModel().getType() == type
+                                                                                && d.getStatus() == status
+                                                                                && ((d.getCurrentWarehouse() != null
+                                                                                                && d.getCurrentWarehouse()
+                                                                                                                .getSite()
+                                                                                                                .getSiteId()
+                                                                                                                .equals(site.getSiteId()))
+                                                                                                || (d.getCurrentFloor() != null
+                                                                                                                && d.getCurrentFloor()
+                                                                                                                                .getSite()
+                                                                                                                                .getSiteId()
+                                                                                                                                .equals(site.getSiteId()))))
+                                                                .count();
+                                                typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                                                .type(type.name())
+                                                                .count(count)
+                                                                .build());
+                                        }
+                                        // Đếm OTHER
+                                        otherCount = (int) devices.stream()
+                                                        .filter(d -> !mainTypes.contains(d.getModel().getType())
+                                                                        && d.getStatus() == status
+                                                                        && ((d.getCurrentWarehouse() != null
+                                                                                        && d.getCurrentWarehouse()
+                                                                                                        .getSite()
+                                                                                                        .getSiteId()
+                                                                                                        .equals(site.getSiteId()))
+                                                                                        || (d.getCurrentFloor() != null
+                                                                                                        && d
+                                                                                                                        .getCurrentFloor()
+                                                                                                                        .getSite()
+                                                                                                                        .getSiteId()
+                                                                                                                        .equals(site.getSiteId()))))
+                                                        .count();
+                                        typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                                        .type("OTHER")
+                                                        .count(otherCount)
+                                                        .build());
+                                        result.add(SiteTypeChartResponse.builder()
+                                                        .siteId(site.getSiteId())
+                                                        .siteName(site.getSiteName())
+                                                        .typeCounts(typeCounts)
+                                                        .build());
                                 }
-                                modelNodes.add(ReportDetailResponse.ModelNode.builder()
-                                                .modelId(model.getModelId())
-                                                .modelName(model.getModelName())
-                                                .isSerial(isSerial)
-                                                .total(totalModel)
-                                                .serials(serials)
+                        }
+                        case DISPOSED, ASSIGNED, REPAIR, ON_THE_MOVE -> {
+                                List<SiteTypeChartResponse.TypeCount> typeCounts = new ArrayList<>();
+
+                                for (DeviceType type : mainTypes) {
+                                        int count = (int) devices.stream()
+                                                        .filter(d -> d.getModel().getType() == type
+                                                                        && d.getStatus() == status)
+                                                        .count();
+                                        typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                                        .type(type.name())
+                                                        .count(count)
+                                                        .build());
+
+                                }
+                                // Đếm OTHER
+                                int otherCount = (int) devices.stream()
+                                                .filter(d -> !mainTypes.contains(d.getModel().getType())
+                                                                && d.getStatus() == status)
+                                                .count();
+                                typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                                .type("OTHER")
+                                                .count(otherCount)
+                                                .build());
+
+                                result.add(SiteTypeChartResponse.builder()
+                                                .siteId(null) // Không phân theo site với các trạng thái này
+                                                .siteName("All Sites")
+                                                .typeCounts(typeCounts)
                                                 .build());
                         }
-                        typeNodes.add(ReportDetailResponse.TypeNode.builder()
-                                        .type(type)
-                                        .total(totalType)
-                                        .models(modelNodes)
-                                        .build());
+
                 }
 
-                return typeNodes;
+                return result;
         }
+
+        @Override
+        public List<SiteTypeChartResponse> getSiteTypeChartWithoutSerial(DeviceStatus status) {
+                Set<DeviceType> mainTypes = Set.of(
+                        DeviceType.MOUSE, DeviceType.KEYBOARD, DeviceType.HEADSET,
+                        DeviceType.DONGLE, DeviceType.UBIKEY);
+                List<DeviceType> allTypes = typeService.getTypeWithoutSerial();
+                List<Site> sites = siteRepository.findAll();
+
+                List<SiteTypeChartResponse> result = new ArrayList<>();
+
+                boolean isGlobalStatus = status == DeviceStatus.DISPOSED ||
+                        status == DeviceStatus.ASSIGNED ||
+                        status == DeviceStatus.REPAIR ||
+                        status == DeviceStatus.ON_THE_MOVE;
+
+                if (isGlobalStatus) {
+                        List<SiteTypeChartResponse.TypeCount> typeCounts = buildTypeCounts(mainTypes, status, null);
+                        int otherCount = buildTypeCounts(filterOtherTypes(allTypes, mainTypes), status, null)
+                                .stream()
+                                .mapToInt(SiteTypeChartResponse.TypeCount::getCount)
+                                .sum();
+
+                        typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                .type("OTHER")
+                                .count(otherCount)
+                                .build());
+
+                        result.add(SiteTypeChartResponse.builder()
+                                .siteId(null)
+                                .siteName("All Sites")
+                                .typeCounts(typeCounts)
+                                .build());
+
+                        return result;
+                }
+
+                // Trường hợp phân theo site
+                for (Site site : sites) {
+                        Integer siteId = site.getSiteId();
+                        List<SiteTypeChartResponse.TypeCount> typeCounts = buildTypeCounts(mainTypes, status, siteId);
+                        int otherCount = buildTypeCounts(filterOtherTypes(allTypes, mainTypes), status, siteId)
+                                .stream()
+                                .mapToInt(SiteTypeChartResponse.TypeCount::getCount)
+                                .sum();
+
+                        typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
+                                .type("OTHER")
+                                .count(otherCount)
+                                .build());
+
+                        result.add(SiteTypeChartResponse.builder()
+                                .siteId(siteId)
+                                .siteName(site.getSiteName())
+                                .typeCounts(typeCounts)
+                                .build());
+                }
+
+                return result;
+        }
+
+        private List<DeviceType> filterOtherTypes(List<DeviceType> all, Set<DeviceType> exclude) {
+                return all.stream()
+                        .filter(type -> !exclude.contains(type))
+                        .toList();
+        }
+
+        private List<SiteTypeChartResponse.TypeCount> buildTypeCounts(Collection<DeviceType> types,
+                                                                      DeviceStatus status,
+                                                                      Integer siteId) {
+                List<SiteTypeChartResponse.TypeCount> result = new ArrayList<>();
+                for (DeviceType type : types) {
+                        int count = getDeviceCountByStatus(status, type, siteId);
+                        result.add(SiteTypeChartResponse.TypeCount.builder()
+                                .type(type.name())
+                                .count(count)
+                                .build());
+                }
+                return result;
+        }
+
+        private int getDeviceCountByStatus(DeviceStatus status, DeviceType type, Integer siteId) {
+                return switch (status) {
+                        case DISPOSED -> transactionDetailRepository.sumDisposed(type, null, siteId);
+                        case ASSIGNED -> {
+                                int assignment = transactionDetailRepository.sumAssignment(type, null);
+                                int returnFromUser = transactionDetailRepository.sumReturnFromUser(type, null);
+                                yield assignment - returnFromUser;
+                        }
+                        case REPAIR -> {
+                                int repairIn = transactionDetailRepository.sumReturnFromRepair(type, null);
+                                int repairOut = transactionDetailRepository.sumRepair(type, null);
+                                yield repairOut - repairIn;
+                        }
+                        case ON_THE_MOVE -> transactionDetailRepository.sumOnTheMove(type, null, siteId);
+                        case IN_STOCK -> deviceWarehouseRepository.sumQuantityInStockBySite(type, null, siteId);
+                        case IN_FLOOR -> {
+                                int in = transactionDetailRepository.sumFloorInBySite(type, null, siteId);
+                                int out = transactionDetailRepository.sumFloorOutBySite(type, null, siteId);
+                                yield in - out;
+                        }
+                        case E_WASTE -> transactionDetailRepository.sumEWaste(type, null, siteId);
+                };
+        }
+
+
 
         private ReportSummaryResponse.DeviceStatusCount countByStatus(List<Device> devices) {
                 return ReportSummaryResponse.DeviceStatusCount.builder()

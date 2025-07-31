@@ -5,6 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entity lưu thông tin các site/cơ sở (tên, địa chỉ).
@@ -25,6 +27,9 @@ public class Site {
 
     @Column
     String siteLocation;
+
+    @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<User> products = new ArrayList<>();
 
     @Column
     LocalDateTime createdAt;
