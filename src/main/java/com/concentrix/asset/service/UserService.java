@@ -22,8 +22,6 @@ public interface UserService {
 
     UserResponse updateUser(UpdateUserRequest request);
 
-    void deleteUser(String id);
-
     Page<UserResponse> filterUser(Pageable pageable);
 
     Map<String, Object> importUsers(List<UserImportRequest> importRequests);
@@ -33,4 +31,5 @@ public interface UserService {
     List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId);
 
     List<DeviceBorrowingInfoResponse> getDeviceBorrowingInfo();
+
 }

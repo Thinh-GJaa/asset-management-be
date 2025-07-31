@@ -1,7 +1,10 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.User;
+import com.concentrix.asset.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, String > {
@@ -11,5 +14,8 @@ public interface UserRepository extends JpaRepository<User, String > {
 
     Optional<User> findByMsa(String msa);
 
+    List<User> findBySite_SiteId(Integer siteId);
+
+    List<User> findByRoleAndSite_SiteId(Role role, Integer siteId);
 
 }
