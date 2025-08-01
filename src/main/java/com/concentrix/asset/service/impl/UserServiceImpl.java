@@ -22,7 +22,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     TransactionRepository transactionRepository;
     TransactionMapper transactionMapper;
+    PasswordEncoder passwordEncoder;
 
 
 
@@ -66,14 +69,30 @@ public class UserServiceImpl implements UserService {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        if (userRepository.findByMsa(request.getMSA()).isPresent()) {
-            throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getMSA());
-        }
         User user = userMapper.toUser(request);
-        user.setRole(Role.IT);
+        if (request.getRole() == Role.ADMIN) {
+            user = setRoleOther(user);
+        } else {
+           user = setRole(user, request.getRole(), true); // Create password for non-admin users
+        }
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    private User setRole(User user, Role role, boolean createPassword) {
+        user.setRole(role);
+        if( createPassword) {
+            user.setPassword(passwordEncoder.encode(user.getSso())); // Clear password for non-admin users
+        }
+        return user;
+    }
+
+    private User setRoleOther(User user) {
+        user.setRole(Role.ORTHER);
+        return user;
+    }
+
 
     @Override
     public UserResponse updateUser(UpdateUserRequest request) {
@@ -81,27 +100,26 @@ public class UserServiceImpl implements UserService {
         var context = SecurityContextHolder.getContext();
         String EID = context.getAuthentication().getName();
 
-        log.info("[UserServiceImpl] Updating user with EID: {}", EID);
-
-        User user = userRepository.findById(EID)
+        userRepository.findById(EID)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+        User user = userRepository.findById(request.getEid())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
 
         Optional<User> existingEmail = userRepository.findByEmail(request.getEmail());
-        if (existingEmail.isPresent() && !existingEmail.get().getEid().equals(user.getEid())) {
+        if (existingEmail.isPresent() && !existingEmail.get().getEid().equals(request.getEid())) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        Optional<User> existingSSO = userRepository.findBySso(request.getSSO());
-        if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(user.getEid())) {
-            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
-        }
-
-        Optional<User> existingMSA = userRepository.findByMsa(request.getMSA());
-        if (existingMSA.isPresent() && !existingMSA.get().getMsa().equals(user.getMsa())) {
-            throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getSSO());
+        Optional<User> existingSSO = userRepository.findBySso(request.getSso());
+        if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(request.getEid())) {
+            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSso());
         }
 
         user = userMapper.updateUser(user, request);
+
+        if (request.getRole() != Role.ORTHER)
+            user = setRole(user, request.getRole(), true); // Update password only for non-admin users
+
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
