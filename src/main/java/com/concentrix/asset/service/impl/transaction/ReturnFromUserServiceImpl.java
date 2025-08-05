@@ -11,6 +11,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ReturnFromUserMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.ReturnFromUserService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
@@ -149,9 +152,24 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     }
 
     @Override
-    public Page<ReturnFromUserResponse> filterReturnFromUsers(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.RETURN_FROM_USER, pageable)
-                .map(returnFromUserMapper::toReturnFromUserResponse);
+    public Page<ReturnFromUserResponse> filterReturnFromUsers(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.RETURN_FROM_USER));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(returnFromUserMapper::toReturnFromUserResponse);
     }
 
     private User getCurrentUser() {

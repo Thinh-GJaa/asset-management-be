@@ -44,10 +44,13 @@ public class TransferFloorController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<TransferFloorResponse>>> filterTransferFloor(
+            @RequestParam(required = false) Integer transactionId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime fromDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<TransferFloorResponse>> apiResponse = ApiResponse.<Page<TransferFloorResponse>>builder()
                 .message("Filter transaction transfer floor successful")
-                .data(transferFloorService.filterTransferFloors(pageable))
+                .data(transferFloorService.filterTransferFloors(transactionId, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

@@ -178,6 +178,9 @@ public enum ErrorCode {
         // New errors
         NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred"),
 
+        // Date validation errors
+        INVALID_DATE_RANGE(21410, HttpStatus.BAD_REQUEST, "fromDate must be before toDate"),
+
         // Repair entity errors
         REPAIR_NOT_FOUND(22001, HttpStatus.NOT_FOUND, "Repair with ID '{}' not found"),
         REPAIR_ALREADY_EXISTS(22002, HttpStatus.CONFLICT, "Repair with code '{}' already exists"),

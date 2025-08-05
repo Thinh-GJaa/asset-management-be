@@ -10,5 +10,5 @@ public interface EWasteService {
 
     EWasteResponse createEWaste(CreateEWasteRequest request);
 
-    Page<EWasteResponse> filterEWastes(Pageable pageable);
+    Page<EWasteResponse> filterEWastes(Integer transactionId, java.time.LocalDateTime fromDate, java.time.LocalDateTime toDate, Pageable pageable);
 }

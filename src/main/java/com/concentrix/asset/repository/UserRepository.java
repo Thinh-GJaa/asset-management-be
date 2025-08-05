@@ -3,11 +3,12 @@ package com.concentrix.asset.repository;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, String > {
+public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
     Optional<User> findBySso(String sso);
 
     Optional<User> findByEmail(String email);

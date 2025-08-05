@@ -1,5 +1,7 @@
 package com.concentrix.asset.service.impl.transaction;
 
+import java.time.LocalDateTime;
+
 import com.concentrix.asset.dto.request.CreateReturnFromFloorRequest;
 import com.concentrix.asset.dto.response.ReturnFromFloorResponse;
 import com.concentrix.asset.entity.*;
@@ -138,8 +140,12 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
     }
 
     @Override
-    public Page<ReturnFromFloorResponse> filterReturnFromFloors(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.RETURN_FROM_FLOOR, pageable)
+    public Page<ReturnFromFloorResponse> filterReturnFromFloors(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        return transactionRepository.findALLByTransactionTypeAndDynamicFilter(
+                TransactionType.RETURN_FROM_FLOOR, transactionId, fromDate, toDate, pageable)
                 .map(returnFromFloorMapper::toReturnFromFloorResponse);
     }
 

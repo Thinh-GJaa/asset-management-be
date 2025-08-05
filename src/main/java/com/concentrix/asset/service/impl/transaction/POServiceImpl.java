@@ -10,6 +10,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.POMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.POService;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,7 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -85,9 +89,24 @@ public class POServiceImpl implements POService {
     }
 
     @Override
-    public Page<POResponse> filterPO(Pageable pageable) {
-        return poRepository.findAll(pageable)
-                .map(poMapper::toPOResponse);
+    public Page<POResponse> filterPO(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        return poRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("poId")), like)
+                ));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(poMapper::toPOResponse);
     }
 
     private void handleDeviceWithSerial(POItem item, Model model, PurchaseOrder purchaseOrder) {

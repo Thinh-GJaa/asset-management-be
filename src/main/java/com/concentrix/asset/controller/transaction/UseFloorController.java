@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,10 +46,13 @@ public class UseFloorController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<UseFloorResponse>>> filterUseFloor(
+            @RequestParam(required = false) Integer transactionId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<UseFloorResponse>> apiResponse = ApiResponse.<Page<UseFloorResponse>>builder()
                 .message("Filter transaction use floor successful")
-                .data(useFloorService.filterUseFloors(pageable))
+                .data(useFloorService.filterUseFloors(transactionId, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

@@ -20,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -68,10 +70,12 @@ public class UserController {
 
         @GetMapping("/filter")
         public ResponseEntity<ApiResponse<Page<UserResponse>>> filterUser(
+                        @RequestParam(required = false) String search,
+                        @RequestParam(required = false) com.concentrix.asset.enums.Role role,
                         @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
                 ApiResponse<Page<UserResponse>> response = ApiResponse.<Page<UserResponse>>builder()
                                 .message("Get all users successfully")
-                                .data(userService.filterUser(pageable))
+                                .data(userService.filterUser(search, role, pageable))
                                 .build();
                 return ResponseEntity.ok(response);
         }
@@ -84,16 +88,6 @@ public class UserController {
                                 .build();
                 return ResponseEntity.ok(response);
         }
-
-//        @GetMapping("/borrowing-devices")
-//        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse>>> getAllUserBorrowingDevices() {
-//                ApiResponse<List<DeviceBorrowingInfoResponse>> response = ApiResponse
-//                                .<List<DeviceBorrowingInfoResponse>>builder()
-//                                .message("Get all user borrowing devices successfully")
-//                                .data(deviceService.getAllUserBorrowingDevices())
-//                                .build();
-//                return ResponseEntity.ok(response);
-//        }
 
         @GetMapping("/{eid}/borrowing-devices")
         public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>>> getBorrowingDevicesByUser(

@@ -18,10 +18,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDateTime;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -144,9 +148,22 @@ public class RepairServiceImpl implements RepairService {
     }
 
     @Override
-    public Page<RepairResponse> filterRepairs(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.REPAIR, pageable)
-                .map(repairMapper::toRepairResponse);
+    public Page<RepairResponse> filterRepairs(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate,
+            Pageable pageable) {
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.REPAIR));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(repairMapper::toRepairResponse);
     }
 
     private User getCurrentUser() {

@@ -44,10 +44,13 @@ public class ReturnFromUserController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<ReturnFromUserResponse>>> filterReturnFromUser(
+            @RequestParam(required = false) Integer transactionId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime fromDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<ReturnFromUserResponse>> apiResponse = ApiResponse.<Page<ReturnFromUserResponse>>builder()
                 .message("Filter transaction return from user successful")
-                .data(returnFromUserService.filterReturnFromUsers(pageable))
+                .data(returnFromUserService.filterReturnFromUsers(transactionId, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

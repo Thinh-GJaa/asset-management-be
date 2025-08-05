@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -62,7 +61,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @NonFinal
     @Value("${jwt.issuer}")
     protected String ISSUER;
-
 
     @Override
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
@@ -103,7 +101,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             invalidateToken(jit, expiryTime);
 
-           log.info("[AUTHENTICATION SERVICE] Logout successful for user: {}", signedJWT.getJWTClaimsSet().getSubject());
+            log.info("[AUTHENTICATION SERVICE] Logout successful for user: {}",
+                    signedJWT.getJWTClaimsSet().getSubject());
             clearRefreshTokenFromCookie(response);
         } catch (CustomException e) {
             log.error("[AUTHENTICATION SERVICE] Failed to logout: {}", e.getMessage(), e);
@@ -264,7 +263,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
 
             if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-                log.warn("[AUTHENTICATION SERVICE] Token already invalidated: {}", signedJWT.getJWTClaimsSet().getJWTID());
+                log.warn("[AUTHENTICATION SERVICE] Token already invalidated: {}",
+                        signedJWT.getJWTClaimsSet().getJWTID());
                 throw new CustomException(ErrorCode.TOKEN_ALREADY_INVALIDATED);
             }
 
@@ -277,8 +277,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new CustomException(ErrorCode.JWT_VERIFY_ERROR);
         }
     }
-
-
-
 
 }

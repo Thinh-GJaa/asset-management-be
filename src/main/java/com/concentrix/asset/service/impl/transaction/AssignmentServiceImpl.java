@@ -14,6 +14,7 @@ import com.concentrix.asset.repository.DeviceWarehouseRepository;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.transaction.AssignmentService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -107,9 +109,21 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public Page<AssignmentResponse> filterAssignments(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.ASSIGNMENT, pageable)
-                .map(assignmentMapper::toAssignmentResponse);
+    public Page<AssignmentResponse> filterAssignments(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.ASSIGNMENT));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(assignmentMapper::toAssignmentResponse);
     }
 
     @Override

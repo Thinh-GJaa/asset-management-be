@@ -5,10 +5,13 @@ import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+
 public interface ReturnFromUserService {
     ReturnFromUserResponse getReturnFromUserById(Integer returnId);
 
     ReturnFromUserResponse createReturnFromUser(CreateReturnFromUserRequest request);
 
-    Page<ReturnFromUserResponse> filterReturnFromUsers(Pageable pageable);
+    Page<ReturnFromUserResponse> filterReturnFromUsers(Integer transactionId, LocalDateTime fromDate,
+                                                       LocalDateTime toDate, Pageable pageable);
 }

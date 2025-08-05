@@ -10,12 +10,16 @@ import com.concentrix.asset.mapper.FloorMapper;
 import com.concentrix.asset.repository.FloorRepository;
 import com.concentrix.asset.repository.SiteRepository;
 import com.concentrix.asset.service.FloorService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +54,18 @@ public class FloorServiceImpl implements FloorService {
     }
 
     @Override
-    public Page<FloorResponse> filterFloor(Pageable pageable) {
-        return floorRepository.findAll(pageable).map(floorMapper::toFloorResponse);
+    public Page<FloorResponse> filterFloor(String search, Integer siteId, Pageable pageable) {
+        return floorRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (siteId != null) {
+                predicates.add(cb.equal(root.get("site").get("siteId"), siteId));
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("floorName")), like));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(floorMapper::toFloorResponse);
     }
 
     @Override

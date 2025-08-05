@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.request.CreateRepairRequest;
 import com.concentrix.asset.dto.response.RepairResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.time.LocalDateTime;
 
 public interface RepairService {
 
@@ -11,6 +12,6 @@ public interface RepairService {
 
     RepairResponse createRepair(CreateRepairRequest request);
 
-    Page<RepairResponse> filterRepairs(Pageable pageable);
+    Page<RepairResponse> filterRepairs(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
 
 }

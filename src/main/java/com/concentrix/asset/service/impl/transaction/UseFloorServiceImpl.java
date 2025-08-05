@@ -1,5 +1,7 @@
 package com.concentrix.asset.service.impl.transaction;
 
+import java.time.LocalDateTime;
+
 import com.concentrix.asset.dto.request.CreateUseFloorRequest;
 import com.concentrix.asset.dto.response.UseFloorResponse;
 import com.concentrix.asset.entity.*;
@@ -153,8 +155,12 @@ public class UseFloorServiceImpl implements UseFloorService {
     }
 
     @Override
-    public Page<UseFloorResponse> filterUseFloors(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.USE_FLOOR, pageable)
+    public Page<UseFloorResponse> filterUseFloors(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        return transactionRepository.findALLByTransactionTypeAndDynamicFilter(
+                TransactionType.USE_FLOOR, transactionId, fromDate, toDate, pageable)
                 .map(useFloorMapper::toUseFloorResponse);
     }
 
