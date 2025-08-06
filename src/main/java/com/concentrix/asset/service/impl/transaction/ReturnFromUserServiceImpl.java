@@ -1,6 +1,7 @@
 package com.concentrix.asset.service.impl.transaction;
 
 import com.concentrix.asset.dto.request.CreateReturnFromUserRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import com.concentrix.asset.entity.*;
 
@@ -8,6 +9,7 @@ import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
+import com.concentrix.asset.mapper.AssignmentMapper;
 import com.concentrix.asset.mapper.ReturnFromUserMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.ReturnFromUserService;
@@ -40,6 +42,7 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
     TransactionDetailRepository transactionDetailRepository;
+    AssignmentMapper assignmentMapper;
 
     @Override
     public ReturnFromUserResponse getReturnFromUserById(Integer returnId) {
@@ -209,5 +212,16 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                 deviceWarehouseRepository.save(toStock);
             }
         }
+    }
+
+    @Override
+    public AssetHandoverResponse getAssetHandoverForm(Integer id) {
+        AssetTransaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, id));
+
+        if (transaction.getTransactionType() != TransactionType.RETURN_FROM_USER) {
+            throw new CustomException(ErrorCode.TRANSACTION_NOT_FOUND);
+        }
+        return assignmentMapper.toAssetHandoverResponse(transaction);
     }
 }

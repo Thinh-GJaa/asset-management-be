@@ -92,15 +92,7 @@ public class DeviceServiceImpl implements DeviceService {
             devices = deviceRepository.findAll(pageable);
         }
 
-        ForkJoinPool customThreadPool = new ForkJoinPool(12); // sử dụng 12 luồng
-
-        List<DeviceResponse> deviceResponses = customThreadPool.submit(() ->
-                devices.getContent().parallelStream()
-                        .map(deviceMapper::toDeviceResponse)
-                        .toList()
-        ).join();
-
-        return new PageImpl<>(deviceResponses, pageable, devices.getTotalElements());
+        return devices.map(deviceMapper::toDeviceResponse);
     }
 
 

@@ -1,7 +1,9 @@
 package com.concentrix.asset.dto.response;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,30 +11,31 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AssetHandoverResponse {
-    private Integer transactionId;
-    private String itPerson;
-    private String location;
-    private String endUser;
-    private String msa;
-    private String employeeId;
-    private String ssoEmail;
-    private String assetType;
-    private String issueDate;
-    private String role;
-    private LocalDateTime createdAt;
-    private String createdBy;
-    private List<AssetHandoverDetailResponse> assets;
+    Integer transactionId;
+    String itPerson;
+    String location;
+    String endUser;
+    String msa;
+    String employeeId;
+    String ssoEmail;
+    String assetType;
+    String issueDate;
+    String role;
+    LocalDateTime createdAt;
+    LocalDate returnDate;
+    List<TransactionItemsResponse> items;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
     public static class AssetHandoverDetailResponse {
-        private Integer deviceId;
-        private String name;
-        private String serialNumber;
-        private Integer quantity;
-        private String remark;
+        Integer deviceId;
+        String deviceName;
+        String serialNumber;
+        Integer quantity;
+
     }
-} 
+}

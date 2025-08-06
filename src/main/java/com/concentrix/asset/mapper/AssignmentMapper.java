@@ -1,11 +1,10 @@
 package com.concentrix.asset.mapper;
 
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.AssetTransaction;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
 public interface AssignmentMapper {
@@ -24,5 +23,22 @@ public interface AssignmentMapper {
     })
 
     AssignmentResponse toAssignmentResponse(AssetTransaction transaction);
+
+    @Mappings(value = {
+            @Mapping(target = "itPerson", source = "createdBy.fullName"),
+            @Mapping(target = "location", source = "assetTransaction", qualifiedByName = "mapLocation"),
+            @Mapping(target = "endUser", source = "userUse.fullName"),
+            @Mapping(target = "msa", source = "userUse.msa"),
+            @Mapping(target = "employeeId", source = "userUse.eid"),
+            @Mapping(target = "ssoEmail", source = "userUse.email"),
+            @Mapping(target = "assetType", source = "assetTransaction", qualifiedByName = "transactionTypeToAssetType"),
+            @Mapping(target = "issueDate", dateFormat = "dd-MM-YYYY", source = "createdAt"),
+            @Mapping(target = "role", source = "userUse.jobTitle"),
+            @Mapping(target = "returnDate", dateFormat = "dd-mm-yyyy", source = "returnDate"),
+            @Mapping(target = "items", source = "details", qualifiedByName = "mapItemsTransaction"),
+    })
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    AssetHandoverResponse toAssetHandoverResponse(AssetTransaction assetTransaction);
+
 
 }

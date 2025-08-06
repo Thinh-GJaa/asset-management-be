@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class TransactionItemsResponse {
+    Integer deviceId;
     String deviceName;
     String serialNumber;
     Integer quantity;

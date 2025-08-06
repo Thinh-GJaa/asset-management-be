@@ -2,6 +2,7 @@ package com.concentrix.asset.controller.transaction;
 
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateReturnFromUserRequest;
+import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import com.concentrix.asset.service.transaction.ReturnFromUserService;
 import jakarta.validation.Valid;
@@ -11,9 +12,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,8 +49,8 @@ public class ReturnFromUserController {
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<ReturnFromUserResponse>>> filterReturnFromUser(
             @RequestParam(required = false) Integer transactionId,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime fromDate,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime toDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<ReturnFromUserResponse>> apiResponse = ApiResponse.<Page<ReturnFromUserResponse>>builder()
                 .message("Filter transaction return from user successful")
@@ -54,4 +58,15 @@ public class ReturnFromUserController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/{id}/handover-form")
+    public ResponseEntity<ApiResponse<AssetHandoverResponse>> getHandoverFormById(
+            @PathVariable Integer id) {
+        ApiResponse<AssetHandoverResponse> apiResponse = ApiResponse.<AssetHandoverResponse>builder()
+                .message("Get handover form for return from user successful")
+                .data(returnFromUserService.getAssetHandoverForm(id))
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
 }
