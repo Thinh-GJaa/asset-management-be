@@ -197,8 +197,9 @@ public enum ErrorCode {
         INVALID_SITE_TRANSFER(21706, HttpStatus.BAD_REQUEST, "Invalid site transfer: The two warehouses belong to different sites"),
         INVALID_USE_FLOOR(21707, HttpStatus.BAD_REQUEST, "Invalid use floor: Floor and Warehouse must belong to the same site"),
         // Custom: Device not found in floor
-        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
+        INVALID_RETURN_DATE( 21708, HttpStatus.BAD_REQUEST, "Return date must be after the current date"),
 
+        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
 
 
         private final int code;

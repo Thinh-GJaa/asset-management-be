@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -56,6 +57,10 @@ public class AssignmentServiceImpl implements AssignmentService {
     public AssignmentResponse createAssignment(CreateAssignmentRequest request) {
         AssetTransaction transaction = assignmentMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
+
+        if (request.getReturnDate().isBefore(LocalDate.now())) {
+            throw new CustomException(ErrorCode.INVALID_RETURN_DATE);
+        }
 
         // Gán UserUse từ eid trong request
         User userUse = userRepository.findById(request.getEid())
@@ -109,7 +114,8 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public Page<AssignmentResponse> filterAssignments(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<AssignmentResponse> filterAssignments(Integer transactionId, LocalDateTime fromDate,
+            LocalDateTime toDate, Pageable pageable) {
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.ASSIGNMENT));
@@ -142,14 +148,16 @@ public class AssignmentServiceImpl implements AssignmentService {
         String ssoEmail = assignment.getUserUse() != null ? assignment.getUserUse().getEmail() : "N/A";
         String msa = assignment.getUserUse() != null ? assignment.getUserUse().getMsa() : "N/A";
         String role = assignment.getUserUse() != null ? assignment.getUserUse().getJobTitle() : "N/A";
-        String location = assignment.getUserUse() != null ? assignment.getFromWarehouse().getSite().getSiteName() : "N/A";
+        String location = assignment.getUserUse() != null ? assignment.getFromWarehouse().getSite().getSiteName()
+                : "N/A";
 
         // Lấy thông tin IT person (người tạo)
         String itPerson = assignment.getCreatedBy() != null ? assignment.getCreatedBy().getFullName() + " - IT" : "N/A";
 
         // Format ngày
-        String issueDate = assignment.getCreatedAt() != null ?
-                assignment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy")) : "N/A";
+        String issueDate = assignment.getCreatedAt() != null
+                ? assignment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy"))
+                : "N/A";
 
         // Lấy danh sách thiết bị
         List<AssetHandoverResponse.AssetHandoverDetailResponse> assets = assignment.getDetails().stream()
@@ -173,7 +181,8 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .build();
     }
 
-    private AssetHandoverResponse.AssetHandoverDetailResponse mapTransactionDetailToAssetDetail(TransactionDetail detail) {
+    private AssetHandoverResponse.AssetHandoverDetailResponse mapTransactionDetailToAssetDetail(
+            TransactionDetail detail) {
         return AssetHandoverResponse.AssetHandoverDetailResponse.builder()
                 .deviceId(detail.getDevice().getDeviceId())
                 .name(detail.getDevice().getDeviceName())
@@ -182,8 +191,6 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .remark("good") // Mặc định là good
                 .build();
     }
-
-
 
     private User getCurrentUser() {
         String EID = SecurityContextHolder.getContext().getAuthentication().getName();

@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -65,6 +66,9 @@ public class AssetTransaction {
 
     @Column
     String note;
+
+    @Column
+    LocalDate returnDate;
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TransactionDetail> details;

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -18,6 +19,8 @@ public class CreateAssignmentRequest {
 
     @NotBlank(message = "Employee ID cannot be blank")
     String eid;
+
+    LocalDate returnDate;
 
     String note;
 
