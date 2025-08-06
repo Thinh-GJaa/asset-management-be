@@ -103,7 +103,7 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND td.transaction.transactionType = 'DISPOSAL'
             AND (:siteId IS NULL OR td.transaction.fromWarehouse.site.siteId = :siteId)
       """)
-  Integer sumDisposed(@Param("type") com.concentrix.asset.enums.DeviceType type,
+  Integer sumDisposed(@Param("type") DeviceType type,
       @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
 
   // Lấy total device without serial e_waste
