@@ -2,6 +2,7 @@ package com.concentrix.asset.service.transaction;
 
 import com.concentrix.asset.dto.request.CreatePORequest;
 import com.concentrix.asset.dto.response.POResponse;
+import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,6 +12,6 @@ public interface POService {
 
     POResponse getPOById(String poId);
 
-    Page<POResponse> filterPO(Pageable pageable);
+    Page<POResponse> filterPO(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 
 }

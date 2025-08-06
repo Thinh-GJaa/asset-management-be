@@ -16,6 +16,8 @@ import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -40,19 +42,17 @@ public class DeviceMapperHelper {
     }
 
     @Named("mapPoId")
-    public String mapPoId(Integer deviceId) {
-        PODetail poDetail = poDetailRepository.findByDevice_DeviceIdAndDevice_SerialNumberNotNull(deviceId);
-        if (poDetail == null || poDetail.getPurchaseOrder() == null)
+    public String mapPoId(List<PODetail> poDetails) {
+        if(poDetails == null || poDetails.isEmpty())
             return null;
-        return poDetail.getPurchaseOrder().getPoId();
+        return poDetails.get(0).getPurchaseOrder().getPoId();
     }
 
     @Named("mapPurchaseDate")
-    public LocalDate mapPurchaseDate(Integer deviceId) {
-        PODetail poDetail = poDetailRepository.findByDevice_DeviceIdAndDevice_SerialNumberNotNull(deviceId);
-        if (poDetail == null || poDetail.getPurchaseOrder() == null)
+    public LocalDate mapPurchaseDate(List<PODetail> poDetails) {
+        if(poDetails == null || poDetails.isEmpty())
             return null;
-        return poDetail.getPurchaseOrder().getCreatedAt();
+        return poDetails.get(0).getPurchaseOrder().getCreatedAt();
     }
 
     @Named("mapSite")

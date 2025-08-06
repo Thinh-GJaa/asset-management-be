@@ -17,19 +17,19 @@ import com.concentrix.asset.mapper.UserMapper;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.UserService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -41,8 +41,7 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     TransactionRepository transactionRepository;
     TransactionMapper transactionMapper;
-
-
+    PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse getUserById(String eid) {
@@ -66,13 +65,28 @@ public class UserServiceImpl implements UserService {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        if (userRepository.findByMsa(request.getMSA()).isPresent()) {
-            throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getMSA());
-        }
         User user = userMapper.toUser(request);
-        user.setRole(Role.IT);
+        if (request.getRole() == Role.ADMIN) {
+            user = setRoleOther(user);
+        } else {
+            user = setRole(user, request.getRole(), true); // Create password for non-admin users
+        }
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    private User setRole(User user, Role role, boolean createPassword) {
+        user.setRole(role);
+        if (createPassword) {
+            user.setPassword(passwordEncoder.encode(user.getSso())); // Clear password for non-admin users
+        }
+        return user;
+    }
+
+    private User setRoleOther(User user) {
+        user.setRole(Role.ORTHER);
+        return user;
     }
 
     @Override
@@ -81,40 +95,46 @@ public class UserServiceImpl implements UserService {
         var context = SecurityContextHolder.getContext();
         String EID = context.getAuthentication().getName();
 
-        log.info("[UserServiceImpl] Updating user with EID: {}", EID);
-
-        User user = userRepository.findById(EID)
+        userRepository.findById(EID)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+        User user = userRepository.findById(request.getEid())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
 
         Optional<User> existingEmail = userRepository.findByEmail(request.getEmail());
-        if (existingEmail.isPresent() && !existingEmail.get().getEid().equals(user.getEid())) {
+        if (existingEmail.isPresent() && !existingEmail.get().getEid().equals(request.getEid())) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
-        Optional<User> existingSSO = userRepository.findBySso(request.getSSO());
-        if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(user.getEid())) {
-            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
-        }
-
-        Optional<User> existingMSA = userRepository.findByMsa(request.getMSA());
-        if (existingMSA.isPresent() && !existingMSA.get().getMsa().equals(user.getMsa())) {
-            throw new CustomException(ErrorCode.MSA_ALREADY_EXISTS, request.getSSO());
+        Optional<User> existingSSO = userRepository.findBySso(request.getSso());
+        if (existingSSO.isPresent() && !existingSSO.get().getEid().equals(request.getEid())) {
+            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSso());
         }
 
         user = userMapper.updateUser(user, request);
+
+        if (request.getRole() != Role.ORTHER)
+            user = setRole(user, request.getRole(), true); // Update password only for non-admin users
+
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
 
     @Override
-    public void deleteUser(String id) {
-        userRepository.deleteById(id);
-    }
-
-    @Override
-    public Page<UserResponse> filterUser(Pageable pageable) {
-        Page<User> userPage = userRepository.findAll(pageable);
-        return userPage.map(userMapper::toUserResponse);
+    public Page<UserResponse> filterUser(String search, Role role, Pageable pageable) {
+        return userRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fullName")), like),
+                        cb.like(cb.lower(root.get("sso")), like),
+                        cb.like(cb.lower(root.get("msa")), like)));
+            }
+            if (role != null) {
+                predicates.add(cb.equal(root.get("role"), role));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(userMapper::toUserResponse);
     }
 
     @Override
@@ -130,7 +150,8 @@ public class UserServiceImpl implements UserService {
         int updated = 0;
         List<String> emailErrors = new java.util.ArrayList<>();
         for (UserImportRequest req : importRequests) {
-            if (req.getEmail() == null || req.getEid() == null) continue;
+            if (req.getEmail() == null || req.getEid() == null)
+                continue;
             // Check email trùng với user khác eid
             var emailUserOpt = userRepository.findByEmail(req.getEmail());
             if (emailUserOpt.isPresent() && !emailUserOpt.get().getEid().equals(req.getEid())) {
@@ -151,7 +172,8 @@ public class UserServiceImpl implements UserService {
                 user.setCostCenter(req.getCostCenter());
                 user.setMsaClient(req.getMsaClient());
                 user.setManagerEmail(req.getManagerEmail());
-                if (req.getIsActive() != null) user.setActive(req.getIsActive());
+                if (req.getIsActive() != null)
+                    user.setActive(req.getIsActive());
                 userRepository.save(user);
                 updated++;
             } else {
@@ -196,20 +218,12 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    public List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId){
+    public List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId) {
         AssetTransaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId.toString()));
         return transaction.getDetails().stream()
                 .map(transactionMapper::toTransactionItemsResponse)
                 .toList();
     }
-
-    @Override
-    public List<DeviceBorrowingInfoResponse> getDeviceBorrowingInfo() {
-        List<String> eids = transactionRepository.findDistinctEidFromTransactions();
-        log.info("[UserServiceImpl] EIDs: {}",  String.join(", ", eids));
-        return List.of();
-    }
-
 
 }

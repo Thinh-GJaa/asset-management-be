@@ -178,6 +178,9 @@ public enum ErrorCode {
         // New errors
         NEW_ERROR(21400, HttpStatus.INTERNAL_SERVER_ERROR, "New error occurred"),
 
+        // Date validation errors
+        INVALID_DATE_RANGE(21410, HttpStatus.BAD_REQUEST, "fromDate must be before toDate"),
+
         // Repair entity errors
         REPAIR_NOT_FOUND(22001, HttpStatus.NOT_FOUND, "Repair with ID '{}' not found"),
         REPAIR_ALREADY_EXISTS(22002, HttpStatus.CONFLICT, "Repair with code '{}' already exists"),
@@ -194,8 +197,9 @@ public enum ErrorCode {
         INVALID_SITE_TRANSFER(21706, HttpStatus.BAD_REQUEST, "Invalid site transfer: The two warehouses belong to different sites"),
         INVALID_USE_FLOOR(21707, HttpStatus.BAD_REQUEST, "Invalid use floor: Floor and Warehouse must belong to the same site"),
         // Custom: Device not found in floor
-        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
+        INVALID_RETURN_DATE( 21708, HttpStatus.BAD_REQUEST, "Return date must be after the current date"),
 
+        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
 
 
         private final int code;

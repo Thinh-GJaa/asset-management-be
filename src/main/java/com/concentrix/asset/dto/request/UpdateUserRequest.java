@@ -1,5 +1,6 @@
 package com.concentrix.asset.dto.request;
 
+import com.concentrix.asset.enums.Role;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -19,7 +20,9 @@ public class UpdateUserRequest {
     String fullName;
     String password;
     String jobTitle;
-    String SSO;
-    String MSA;
+    String sso;
+    String msa;
+
+    Role role;
 
 }

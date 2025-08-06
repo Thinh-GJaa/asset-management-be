@@ -9,11 +9,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.concentrix.asset.dto.response.TransferResponse;
 import com.concentrix.asset.service.transaction.TransferService;
 import org.springframework.http.ResponseEntity;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,10 +53,13 @@ public class TransferController {
 
         @GetMapping("/filter")
         public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfer(
+                        @RequestParam(required = false) Integer transactionId,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
                         @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
                 ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
                                 .message("Filter transaction transfer site successful")
-                                .data(transferService.filterTransfers(pageable))
+                                .data(transferService.filterTransfers(transactionId, fromDate, toDate, pageable))
                                 .build();
 
                 return ResponseEntity.ok(apiResponse);

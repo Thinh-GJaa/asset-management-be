@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,10 +47,13 @@ public class RepairController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<RepairResponse>>> filterRepair(
+            @RequestParam(required = false) Integer transactionId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<RepairResponse>> apiResponse = ApiResponse.<Page<RepairResponse>>builder()
                 .message("Filter transaction repair successful")
-                .data(repairService.filterRepairs(pageable))
+                .data(repairService.filterRepairs(transactionId, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

@@ -44,10 +44,13 @@ public class EWasteController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<EWasteResponse>>> filterEWaste(
+            @RequestParam(required = false) Integer transactionId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime fromDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<EWasteResponse>> apiResponse = ApiResponse.<Page<EWasteResponse>>builder()
                 .message("Filter transaction ewaste successful")
-                .data(ewasteService.filterEWastes(pageable))
+                .data(ewasteService.filterEWastes(transactionId, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

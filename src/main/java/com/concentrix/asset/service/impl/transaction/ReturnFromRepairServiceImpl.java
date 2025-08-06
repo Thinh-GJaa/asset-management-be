@@ -9,6 +9,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ReturnFromRepairMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.ReturnFromRepairService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -110,9 +115,24 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
     }
 
     @Override
-    public Page<ReturnFromRepairResponse> filterReturnFromRepairs(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.RETURN_FROM_REPAIR, pageable)
-                .map(returnFromRepairMapper::toReturnFromRepairResponse);
+    public Page<ReturnFromRepairResponse> filterReturnFromRepairs(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.RETURN_FROM_REPAIR));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(returnFromRepairMapper::toReturnFromRepairResponse);
     }
 
     private User getCurrentUser() {

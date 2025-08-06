@@ -9,12 +9,7 @@ import com.concentrix.asset.entity.TransactionDetail;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
-import com.concentrix.asset.repository.DeviceRepository;
-import com.concentrix.asset.repository.ModelRepository;
-import com.concentrix.asset.repository.TransactionDetailRepository;
-import com.concentrix.asset.repository.PODetailRepository;
-import com.concentrix.asset.repository.SiteRepository;
-import com.concentrix.asset.repository.DeviceWarehouseRepository;
+import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.DeviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import com.concentrix.asset.entity.AssetTransaction;
@@ -52,6 +48,7 @@ public class DeviceServiceImpl implements DeviceService {
     PODetailRepository poDetailRepository;
     SiteRepository siteRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
+    TransactionRepository transactionRepository;
 
     @Override
     public DeviceResponse getDeviceById(Integer deviceId) {
@@ -95,15 +92,7 @@ public class DeviceServiceImpl implements DeviceService {
             devices = deviceRepository.findAll(pageable);
         }
 
-        ForkJoinPool customThreadPool = new ForkJoinPool(12); // sử dụng 12 luồng
-
-        List<DeviceResponse> deviceResponses = customThreadPool.submit(() ->
-                devices.getContent().parallelStream()
-                        .map(deviceMapper::toDeviceResponse)
-                        .toList()
-        ).join();
-
-        return new PageImpl<>(deviceResponses, pageable, devices.getTotalElements());
+        return devices.map(deviceMapper::toDeviceResponse);
     }
 
 
@@ -302,7 +291,29 @@ public class DeviceServiceImpl implements DeviceService {
             }
         }
         return result;
+    }
 
+    @Override
+    public Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable) {
+        List<User> users = transactionRepository.findDistinctEidFromTransactions();
+
+        List<DeviceBorrowingInfoResponse> result =  users.parallelStream().map(
+                user -> {
+
+                    List<DeviceBorrowingInfoResponse.DeviceInfo> deviceInfos = getBorrowingDevicesByUser(user.getEid());
+
+                    if( deviceInfos.isEmpty() ) {
+                        return null;
+                    }
+
+                    return DeviceBorrowingInfoResponse.builder()
+                            .eid(user.getEid())
+                            .fullName(user.getFullName())
+                            .build();
+                }
+        ).filter(Objects::nonNull).toList();
+
+        return new PageImpl<>(result, pageable, result.size());
     }
 
     @Override

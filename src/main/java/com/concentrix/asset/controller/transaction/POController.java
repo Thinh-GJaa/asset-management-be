@@ -14,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,11 +48,14 @@ public class POController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<POResponse>>> filterPO(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         ApiResponse<Page<POResponse>> response = ApiResponse.<Page<POResponse>>builder()
-                .message("Get all sites successfully")
-                .data(poService.filterPO(pageable))
+                .message("Get PO report successfully")
+                .data(poService.filterPO(search, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(response);
     }

@@ -11,6 +11,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransferMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.TransferService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -148,9 +152,24 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public Page<TransferResponse> filterTransfers(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.TRANSFER_SITE, pageable)
-                .map(transferMapper::toTransferResponse);
+    public Page<TransferResponse> filterTransfers(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.TRANSFER_SITE));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(transferMapper::toTransferResponse);
     }
 
     @Override

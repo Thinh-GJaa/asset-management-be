@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FloorRepository extends JpaRepository<Floor, Integer> {
+public interface FloorRepository extends JpaRepository<Floor, Integer>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Floor> {
     Page<Floor> findAllBySite_SiteId(Integer siteId, Pageable pageable);
     List<Floor> findAllBySite_SiteId(Integer siteId);
 }

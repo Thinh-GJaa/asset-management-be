@@ -14,6 +14,7 @@ import com.concentrix.asset.repository.DeviceWarehouseRepository;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.transaction.AssignmentService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +57,10 @@ public class AssignmentServiceImpl implements AssignmentService {
     public AssignmentResponse createAssignment(CreateAssignmentRequest request) {
         AssetTransaction transaction = assignmentMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
+
+        if (request.getReturnDate().isBefore(LocalDate.now())) {
+            throw new CustomException(ErrorCode.INVALID_RETURN_DATE);
+        }
 
         // Gán UserUse từ eid trong request
         User userUse = userRepository.findById(request.getEid())
@@ -107,9 +114,22 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public Page<AssignmentResponse> filterAssignments(Pageable pageable) {
-        return transactionRepository.findALLByTransactionType(TransactionType.ASSIGNMENT, pageable)
-                .map(assignmentMapper::toAssignmentResponse);
+    public Page<AssignmentResponse> filterAssignments(Integer transactionId, LocalDateTime fromDate,
+            LocalDateTime toDate, Pageable pageable) {
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.ASSIGNMENT));
+            if (transactionId != null) {
+                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            }
+            if (fromDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(assignmentMapper::toAssignmentResponse);
     }
 
     @Override
@@ -122,54 +142,9 @@ public class AssignmentServiceImpl implements AssignmentService {
             throw new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND);
         }
 
-        // Lấy thông tin người dùng
-        String endUser = assignment.getUserUse() != null ? assignment.getUserUse().getFullName() : "N/A";
-        String employeeId = assignment.getUserUse() != null ? assignment.getUserUse().getEid() : "N/A";
-        String ssoEmail = assignment.getUserUse() != null ? assignment.getUserUse().getEmail() : "N/A";
-        String msa = assignment.getUserUse() != null ? assignment.getUserUse().getMsa() : "N/A";
-        String role = assignment.getUserUse() != null ? assignment.getUserUse().getJobTitle() : "N/A";
-        String location = assignment.getUserUse() != null ? assignment.getFromWarehouse().getSite().getSiteName() : "N/A";
+        return assignmentMapper.toAssetHandoverResponse(assignment);
 
-        // Lấy thông tin IT person (người tạo)
-        String itPerson = assignment.getCreatedBy() != null ? assignment.getCreatedBy().getFullName() + " - IT" : "N/A";
-
-        // Format ngày
-        String issueDate = assignment.getCreatedAt() != null ?
-                assignment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MMM/yyyy")) : "N/A";
-
-        // Lấy danh sách thiết bị
-        List<AssetHandoverResponse.AssetHandoverDetailResponse> assets = assignment.getDetails().stream()
-                .map(this::mapTransactionDetailToAssetDetail)
-                .collect(Collectors.toList());
-
-        return AssetHandoverResponse.builder()
-                .transactionId(assignment.getTransactionId())
-                .itPerson(itPerson)
-                .location(location)
-                .endUser(endUser)
-                .msa(msa)
-                .employeeId(employeeId)
-                .ssoEmail(ssoEmail)
-                .assetType("Permanent") // Mặc định là Permanent cho Assignment
-                .issueDate(issueDate)
-                .role(role)
-                .createdAt(assignment.getCreatedAt())
-                .createdBy(assignment.getCreatedBy() != null ? assignment.getCreatedBy().getFullName() : "N/A")
-                .assets(assets)
-                .build();
     }
-
-    private AssetHandoverResponse.AssetHandoverDetailResponse mapTransactionDetailToAssetDetail(TransactionDetail detail) {
-        return AssetHandoverResponse.AssetHandoverDetailResponse.builder()
-                .deviceId(detail.getDevice().getDeviceId())
-                .name(detail.getDevice().getDeviceName())
-                .serialNumber(detail.getDevice().getSerialNumber())
-                .quantity(detail.getQuantity())
-                .remark("good") // Mặc định là good
-                .build();
-    }
-
-
 
     private User getCurrentUser() {
         String EID = SecurityContextHolder.getContext().getAuthentication().getName();
