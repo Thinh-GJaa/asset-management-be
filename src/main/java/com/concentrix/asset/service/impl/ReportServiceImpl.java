@@ -307,12 +307,9 @@ public class ReportServiceImpl implements ReportService {
 
                 }
 
-                ForkJoinPool customThreadPool = new ForkJoinPool(12); // dùng 8 luồng
-                List<Device> finalDevices = devices;
-
-                return customThreadPool.submit(() -> finalDevices.parallelStream()
+                return devices.stream()
                                 .map(deviceMapper::toDeviceResponse)
-                                .toList()).join();
+                                .collect(Collectors.toList());
 
         }
 

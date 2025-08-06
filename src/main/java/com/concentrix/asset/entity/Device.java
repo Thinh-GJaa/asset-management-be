@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -53,5 +54,9 @@ public class Device {
     User currentUser;
 
     @OneToMany(mappedBy = "device")
-    Set<DeviceWarehouse> deviceWarehouses;
+    List<DeviceWarehouse> deviceWarehouses;
+
+    @OneToMany(mappedBy = "device")
+    List<PODetail> poDetails;
+
 }
