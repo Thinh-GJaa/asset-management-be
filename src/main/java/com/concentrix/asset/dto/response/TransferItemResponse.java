@@ -17,6 +17,7 @@ public class TransferItemResponse implements Serializable {
 
    Integer deviceId;
    String serialNumber;
+   String modelName;
    String deviceName;
    Integer quantity;
 
