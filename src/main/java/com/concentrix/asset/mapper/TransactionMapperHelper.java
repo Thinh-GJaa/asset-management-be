@@ -1,11 +1,8 @@
 package com.concentrix.asset.mapper;
 
+import com.concentrix.asset.dto.response.POResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
-import com.concentrix.asset.dto.response.TransferItemResponse;
-import com.concentrix.asset.entity.AssetTransaction;
-import com.concentrix.asset.entity.Floor;
-import com.concentrix.asset.entity.TransactionDetail;
-import com.concentrix.asset.entity.Warehouse;
+import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
@@ -25,6 +22,7 @@ public class TransactionMapperHelper {
 
     WarehouseRepository warehouseRepository;
     FloorRepository floorRepository;
+    VendorRepository vendorRepository;
 
     @Named("warehouseIdToWarehouse")
     public Warehouse warehouseIdToWarehouse(Integer warehouseId) {
@@ -78,5 +76,60 @@ public class TransactionMapperHelper {
             return "Return";
         }
         return null;
+    }
+
+
+
+    @Named("vendorIdToVendor")
+    public Vendor vendorIdToVendor(Integer vendorId) {
+        return vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new CustomException(ErrorCode.VENDOR_NOT_FOUND, vendorId));
+    }
+
+    @Named("mapVendor")
+    public POResponse.VendorResponse mapVendor(Vendor vendor) {
+        if (vendor == null)
+            return null;
+        return POResponse.VendorResponse.builder()
+                .vendorId(vendor.getVendorId())
+                .vendorName(vendor.getVendorName())
+                .build();
+    }
+
+    @Named("mapWarehouse")
+    public POResponse.WarehouseResponse mapWarehouse(Warehouse warehouse) {
+        if (warehouse == null)
+            return null;
+        return POResponse.WarehouseResponse.builder()
+                .warehouseId(warehouse.getWarehouseId())
+                .warehouseName(warehouse.getWarehouseName())
+                .build();
+    }
+
+    @Named("mapUser")
+    public POResponse.UserResponse mapUser(User user) {
+        if (user == null)
+            return null;
+        return POResponse.UserResponse.builder()
+                .eid(user.getEid())
+                .fullName(user.getFullName())
+                .build();
+    }
+
+    @Named("mapPOItems")
+    public List<TransactionItemsResponse> mapPOItems(List<PODetail> poDetails) {
+        if (poDetails == null)
+            return null;
+        return poDetails.stream()
+                .map(detail -> {
+                    return TransactionItemsResponse.builder()
+                            .deviceId(detail.getDevice().getDeviceId())
+                            .serialNumber(detail.getDevice().getSerialNumber())
+                            .modelName(detail.getDevice().getModel().getModelName())
+                            .deviceName(detail.getDevice().getDeviceName())
+                            .quantity(detail.getQuantity())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
