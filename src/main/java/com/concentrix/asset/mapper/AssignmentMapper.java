@@ -34,7 +34,7 @@ public interface AssignmentMapper {
             @Mapping(target = "assetType", source = "assetTransaction", qualifiedByName = "transactionTypeToAssetType"),
             @Mapping(target = "issueDate", dateFormat = "dd-MM-YYYY", source = "createdAt"),
             @Mapping(target = "role", source = "userUse.jobTitle"),
-            @Mapping(target = "returnDate", dateFormat = "dd-mm-yyyy", source = "returnDate"),
+            @Mapping(target = "returnDate", dateFormat = "dd-MM-YYYY", source = "returnDate"),
             @Mapping(target = "items", source = "details", qualifiedByName = "mapItemsTransaction"),
     })
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
