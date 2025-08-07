@@ -1,9 +1,7 @@
 package com.concentrix.asset.mapper;
 
-import com.concentrix.asset.dto.response.POItemResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransferItemResponse;
-import com.concentrix.asset.dto.response.TransferResponse;
 import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.entity.Floor;
 import com.concentrix.asset.entity.TransactionDetail;
@@ -41,14 +39,14 @@ public class TransactionMapperHelper {
     }
 
     @Named("mapItems")
-    public List<TransferItemResponse> mapItems(List<TransactionDetail> details) {
+    public List<TransactionItemsResponse> mapItems(List<TransactionDetail> details) {
         if (details == null)
             return null;
-
         return details.stream()
-                .map(detail -> TransferItemResponse.builder()
+                .map(detail -> TransactionItemsResponse.builder()
                         .deviceId(detail.getDevice().getDeviceId())
                         .serialNumber(detail.getDevice().getSerialNumber())
+                        .modelName(detail.getDevice().getModel().getModelName())
                         .deviceName(detail.getDevice().getDeviceName())
                         .quantity(detail.getQuantity())
                         .build())
@@ -81,20 +79,4 @@ public class TransactionMapperHelper {
         }
         return null;
     }
-
-    @Named("mapItemsTransaction")
-    public List<TransactionItemsResponse> mapItemsTransaction(List<TransactionDetail> details) {
-        if (details == null)
-            return null;
-
-        return details.stream()
-                .map(detail -> TransactionItemsResponse.builder()
-                        .deviceId(detail.getDevice().getDeviceId())
-                        .serialNumber(detail.getDevice().getSerialNumber())
-                        .deviceName(detail.getDevice().getDeviceName())
-                        .quantity(detail.getQuantity())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
 }

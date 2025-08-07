@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class TransactionItemsResponse {
     Integer deviceId;
     String deviceName;
+    String modelName;
     String serialNumber;
     Integer quantity;
 } 

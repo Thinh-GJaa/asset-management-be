@@ -6,6 +6,7 @@ import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
@@ -82,7 +83,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId,
-                                              com.concentrix.asset.enums.DeviceType type) {
+                                              DeviceType type) {
         Page<Device> devices;
         if (modelId != null) {
             devices = deviceRepository.findAllByModel_ModelId(modelId, pageable);
