@@ -13,5 +13,5 @@ public interface VendorService {
 
     VendorResponse updateVendor(UpdateVendorRequest request);
 
-    Page<VendorResponse> filterVendor(Pageable pageable);
+    Page<VendorResponse> filterVendor(Pageable pageable, String search);
 }

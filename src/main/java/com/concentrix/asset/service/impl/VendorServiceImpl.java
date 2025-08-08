@@ -12,6 +12,8 @@ import com.concentrix.asset.service.VendorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +50,17 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public Page<VendorResponse> filterVendor(Pageable pageable) {
-        return vendorRepository.findAll(pageable).map(vendorMapper::toVendorResponse);
+    public Page<VendorResponse> filterVendor(Pageable pageable, String search) {
+        Specification<Vendor> spec = Specification.where(null);
+        if (StringUtils.hasText(search)) {
+            final String like = "%" + search.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("vendorName")), like),
+                    cb.like(cb.lower(root.get("email")), like),
+                    cb.like(cb.lower(root.get("phoneNumber")), like),
+                    cb.like(cb.lower(root.get("address")), like)
+            ));
+        }
+        return vendorRepository.findAll(spec, pageable).map(vendorMapper::toVendorResponse);
     }
 }
