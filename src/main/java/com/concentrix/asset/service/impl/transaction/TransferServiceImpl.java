@@ -152,16 +152,21 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public Page<TransferResponse> filterTransfers(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<TransferResponse> filterTransfers(String search, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
+
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.TRANSFER_SITE));
-            if (transactionId != null) {
-                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim().toLowerCase() + "%";
+                Predicate fromWarehouseName = cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern);
+                Predicate toWarehouseName = cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern);
+                predicates.add(cb.or(fromWarehouseName, toWarehouseName));
             }
+
             if (fromDate != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
             }

@@ -13,7 +13,7 @@ public interface TransferService {
 
     TransferResponse createTransfer(CreateTransferRequest request);
 
-    Page<TransferResponse> filterTransfers(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
+    Page<TransferResponse> filterTransfers(String search, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
 
     void confirmTransfer(Integer transferId);
 
