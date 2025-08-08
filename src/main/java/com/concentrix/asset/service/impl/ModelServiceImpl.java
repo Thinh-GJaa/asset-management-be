@@ -4,7 +4,6 @@ import com.concentrix.asset.dto.request.CreateModelRequest;
 import com.concentrix.asset.dto.request.UpdateModelRequest;
 import com.concentrix.asset.dto.response.ModelResponse;
 import com.concentrix.asset.entity.Model;
-import com.concentrix.asset.entity.Site;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ModelMapper;
@@ -15,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +72,23 @@ public class ModelServiceImpl implements ModelService {
         return modelRepository.findAll(pageable).map(modelMapper::toModelResponse);
     }
 
+    // New overloaded method to support search and type filters
+    public Page<ModelResponse> filterModel(Pageable pageable, String search, DeviceType type) {
+        Specification<Model> spec = Specification.where(null);
+
+        if (StringUtils.hasText(search)) {
+            final String like = "%" + search.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("modelName")), like),
+                    cb.like(cb.lower(root.get("manufacturer")), like)));
+        }
+        if (type != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), type));
+        }
+
+        return modelRepository.findAll(spec, pageable).map(modelMapper::toModelResponse);
+    }
+
     @Override
     public List<ModelResponse> getModelsByType(DeviceType type) {
         List<Model> models = modelRepository.findByType(type);
@@ -96,6 +114,5 @@ public class ModelServiceImpl implements ModelService {
                         .map(modelMapper::toModelResponse))
                 .toList();
     }
-
 
 }
