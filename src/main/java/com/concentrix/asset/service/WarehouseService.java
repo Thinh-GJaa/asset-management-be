@@ -17,6 +17,6 @@ public interface WarehouseService {
 
      WarehouseResponse updateWarehouse(UpdateWarehouseRequest request);
 
-     Page<WarehouseResponse> filterWarehouse(Pageable pageable);
+     Page<WarehouseResponse> filterWarehouse(Pageable pageable, String search, Integer siteId);
 
 }
