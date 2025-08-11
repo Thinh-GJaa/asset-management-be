@@ -1,5 +1,6 @@
 package com.concentrix.asset.service.impl.transaction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.concentrix.asset.dto.request.CreateReturnFromFloorRequest;
@@ -12,6 +13,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ReturnFromFloorMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.transaction.ReturnFromFloorService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -140,13 +142,36 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
     }
 
     @Override
-    public Page<ReturnFromFloorResponse> filterReturnFromFloors(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<ReturnFromFloorResponse> filterReturnFromFloors(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
-        return transactionRepository.findALLByTransactionTypeAndDynamicFilter(
-                TransactionType.RETURN_FROM_FLOOR, transactionId, fromDate, toDate, pageable)
-                .map(returnFromFloorMapper::toReturnFromFloorResponse);
+
+        return transactionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("transactionType"), TransactionType.RETURN_FROM_FLOOR));
+            if (search != null && !search.trim().isEmpty()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fromFloor").get("floorName")), keyword),
+                        cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), keyword),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword)
+                ));
+            }
+
+            if (fromDate != null) {
+                LocalDateTime fromDateTime = fromDate.atStartOfDay();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
+            }
+            if (toDate != null) {
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(returnFromFloorMapper::toReturnFromFloorResponse);
+
+
     }
 
     private User getCurrentUser() {

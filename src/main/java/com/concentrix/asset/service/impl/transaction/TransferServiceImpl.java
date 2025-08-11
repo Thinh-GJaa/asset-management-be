@@ -160,12 +160,17 @@ public class TransferServiceImpl implements TransferService {
 
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.TRANSFER_SITE));
-            if (search != null && !search.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("transactionStatus"), TransactionStatus.CONFIRMED));
+
+            if (search != null && !search.isEmpty()) {
                 String searchPattern = "%" + search.trim().toLowerCase() + "%";
-                Predicate fromWarehouseName = cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern);
-                Predicate toWarehouseName = cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern);
-                predicates.add(cb.or(fromWarehouseName, toWarehouseName));
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern),
+                        cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)
+                ));
             }
 
             if (fromDate != null) {

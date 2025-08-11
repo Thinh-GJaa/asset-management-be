@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -128,23 +127,20 @@ public class AssignmentServiceImpl implements AssignmentService {
 
             // Search theo nhiều trường
             if (search != null && !search.trim().isEmpty()) {
-                String keyword = "%" + search.trim() + "%";
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+
                 predicates.add(cb.or(
-                        cb.like(root.get("transactionId").as(String.class), keyword),
-                        cb.like(root.get("userUse").get("fullName"), keyword),
-                        cb.like(root.get("fromWarehouse").get("warehouseName"), keyword),
-                        cb.like(root.get("toWarehouse").get("warehouseName"), keyword)
-                        // Thêm các field cần search khác ở đây
-                ));
+                        cb.like(cb.lower(root.get("userUse").get("fullName")), keyword),
+                        cb.like(cb.lower(root.get("userUse").get("eid")), keyword),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword),
+                        cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), keyword)));
             }
 
-            // Lọc từ ngày (convert LocalDate → LocalDateTime)
             if (fromDate != null) {
                 LocalDateTime startOfDay = fromDate.atStartOfDay(); // 00:00:00
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startOfDay));
             }
 
-            // Lọc đến ngày (convert LocalDate → LocalDateTime)
             if (toDate != null) {
                 LocalDateTime endOfDay = toDate.atTime(23, 59, 59); // 23:59:59
                 predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endOfDay));

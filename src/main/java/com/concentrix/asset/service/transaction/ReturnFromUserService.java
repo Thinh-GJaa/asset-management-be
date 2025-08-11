@@ -6,6 +6,7 @@ import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public interface ReturnFromUserService {
@@ -13,8 +14,8 @@ public interface ReturnFromUserService {
 
     ReturnFromUserResponse createReturnFromUser(CreateReturnFromUserRequest request);
 
-    Page<ReturnFromUserResponse> filterReturnFromUsers(Integer transactionId, LocalDateTime fromDate,
-                                                       LocalDateTime toDate, Pageable pageable);
+    Page<ReturnFromUserResponse> filterReturnFromUsers(String search, LocalDate fromDate,
+                                                       LocalDate toDate, Pageable pageable);
 
     AssetHandoverResponse getAssetHandoverForm(Integer id);
 

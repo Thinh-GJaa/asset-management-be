@@ -11,9 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,13 +47,13 @@ public class ReturnFromRepairController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<ReturnFromRepairResponse>>> filterReturnFromRepair(
-            @RequestParam(required = false) Integer transactionId,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime fromDate,
-            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime toDate,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<ReturnFromRepairResponse>> apiResponse = ApiResponse.<Page<ReturnFromRepairResponse>>builder()
                 .message("Filter transaction return from repair successful")
-                .data(returnFromRepairService.filterReturnFromRepairs(transactionId, fromDate, toDate, pageable))
+                .data(returnFromRepairService.filterReturnFromRepairs(search, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
