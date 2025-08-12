@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,26 +153,33 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public Page<TransferResponse> filterTransfers(String search, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
 
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.TRANSFER_SITE));
-            if (search != null && !search.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("transactionStatus"), TransactionStatus.CONFIRMED));
+
+            if (search != null && !search.isEmpty()) {
                 String searchPattern = "%" + search.trim().toLowerCase() + "%";
-                Predicate fromWarehouseName = cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern);
-                Predicate toWarehouseName = cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern);
-                predicates.add(cb.or(fromWarehouseName, toWarehouseName));
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern),
+                        cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)
+                ));
             }
 
             if (fromDate != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+                LocalDateTime fromDateTime = fromDate.atStartOfDay();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }
             if (toDate != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(transferMapper::toTransferResponse);

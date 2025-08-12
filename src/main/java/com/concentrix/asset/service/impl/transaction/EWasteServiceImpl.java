@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -145,21 +146,28 @@ public class EWasteServiceImpl implements EWasteService {
     }
 
     @Override
-    public Page<EWasteResponse> filterEWastes(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<EWasteResponse> filterEWastes(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.E_WASTE));
-            if (transactionId != null) {
-                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            if (search != null && !search.trim().isEmpty()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), keyword),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword)
+                ));
             }
+
             if (fromDate != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+                LocalDateTime fromDateTime = fromDate.atStartOfDay();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }
             if (toDate != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(ewasteMapper::toEWasteResponse);

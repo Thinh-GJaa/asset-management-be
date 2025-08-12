@@ -5,6 +5,7 @@ import com.concentrix.asset.dto.response.TransferResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public interface TransferService {
@@ -13,7 +14,7 @@ public interface TransferService {
 
     TransferResponse createTransfer(CreateTransferRequest request);
 
-    Page<TransferResponse> filterTransfers(String search, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
+    Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 
     void confirmTransfer(Integer transferId);
 

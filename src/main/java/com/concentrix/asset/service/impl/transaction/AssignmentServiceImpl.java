@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +57,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         AssetTransaction transaction = assignmentMapper.toAssetTransaction(request);
         transaction.setCreatedBy(getCurrentUser());
 
-        if (request.getReturnDate().isBefore(LocalDate.now())) {
+        if (request.getReturnDate() != null && request.getReturnDate().isBefore(LocalDate.now())) {
             throw new CustomException(ErrorCode.INVALID_RETURN_DATE);
         }
 
@@ -114,20 +113,39 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public Page<AssignmentResponse> filterAssignments(Integer transactionId, LocalDateTime fromDate,
-            LocalDateTime toDate, Pageable pageable) {
+    public Page<AssignmentResponse> filterAssignments(
+            String search,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
+
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            // Chỉ lấy transaction type = ASSIGNMENT
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.ASSIGNMENT));
-            if (transactionId != null) {
-                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+
+            // Search theo nhiều trường
+            if (search != null && !search.trim().isEmpty()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("userUse").get("fullName")), keyword),
+                        cb.like(cb.lower(root.get("userUse").get("eid")), keyword),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword),
+                        cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), keyword)));
             }
+
             if (fromDate != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+                LocalDateTime startOfDay = fromDate.atStartOfDay(); // 00:00:00
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startOfDay));
             }
+
             if (toDate != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+                LocalDateTime endOfDay = toDate.atTime(23, 59, 59); // 23:59:59
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endOfDay));
             }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(assignmentMapper::toAssignmentResponse);
     }

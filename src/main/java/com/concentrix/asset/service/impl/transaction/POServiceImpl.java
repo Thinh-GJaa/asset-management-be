@@ -94,9 +94,12 @@ public class POServiceImpl implements POService {
             List<Predicate> predicates = new ArrayList<>();
 
             if (search != null && !search.isEmpty()) {
-                String like = "%" + search.trim().toLowerCase() + "%";
+                String keyword = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
-                    cb.like(cb.lower(root.get("poId")), like)
+                    cb.like(cb.lower(root.get("poId")), keyword),
+                    cb.like(cb.lower(root.get("vendor").get("vendorName")), keyword),
+                    cb.like(cb.lower(root.get("warehouse").get("warehouseName")), keyword),
+                    cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword)
                 ));
             }
             if (fromDate != null) {

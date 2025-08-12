@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,22 +116,29 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
     }
 
     @Override
-    public Page<ReturnFromRepairResponse> filterReturnFromRepairs(Integer transactionId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<ReturnFromRepairResponse> filterReturnFromRepairs(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
         return transactionRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("transactionType"), TransactionType.RETURN_FROM_REPAIR));
-            if (transactionId != null) {
-                predicates.add(cb.equal(root.get("transactionId"), transactionId));
+            if (search != null && !search.isEmpty()) {
+                String searchPattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)
+                ));
             }
-            if (fromDate != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            if( fromDate != null) {
+                LocalDateTime fromDateTime = fromDate.atStartOfDay();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }
             if (toDate != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
             }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(returnFromRepairMapper::toReturnFromRepairResponse);
     }

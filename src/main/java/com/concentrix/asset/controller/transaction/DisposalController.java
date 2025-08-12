@@ -12,7 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDateTime;
+
+import java.time.LocalDate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,13 +47,13 @@ public class DisposalController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<DisposalResponse>>> filterDisposal(
-            @RequestParam(required = false) Integer transactionId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDate,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<DisposalResponse>> apiResponse = ApiResponse.<Page<DisposalResponse>>builder()
                 .message("Filter transaction disposal successful")
-                .data(disposalService.filterDisposals(transactionId, fromDate, toDate, pageable))
+                .data(disposalService.filterDisposals(search, fromDate, toDate, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }

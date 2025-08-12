@@ -16,6 +16,7 @@ import com.concentrix.asset.dto.response.TransferResponse;
 import com.concentrix.asset.service.transaction.TransferService;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @RestController
@@ -54,8 +55,8 @@ public class TransferController {
         @GetMapping("/filter")
         public ResponseEntity<ApiResponse<Page<TransferResponse>>> filterTransfer(
                         @RequestParam(required = false) String search,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+                        @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDate,
+                        @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDate,
                         @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
                 ApiResponse<Page<TransferResponse>> apiResponse = ApiResponse.<Page<TransferResponse>>builder()
                                 .message("Filter transaction transfer site successful")
