@@ -1,6 +1,5 @@
 package com.concentrix.asset.dto.response;
 
-import com.concentrix.asset.dto.request.POItem;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -24,7 +23,7 @@ public class POResponse implements Serializable{
     String note;
     LocalDate createdAt;
     LocalDateTime updatedAt;
-    List<POItemResponse> poItems;
+    List<TransactionItemsResponse> items;
 
     @Getter
     @Setter

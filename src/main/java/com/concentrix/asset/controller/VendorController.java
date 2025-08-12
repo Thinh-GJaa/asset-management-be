@@ -43,10 +43,12 @@ public class VendorController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<VendorResponse>>> filterVendor(
-            @PageableDefault(size = 10, page = 0, sort = "vendorId", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 0, sort = "vendorId", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(value = "search", required = false) String search
+    ) {
         ApiResponse<Page<VendorResponse>> response = ApiResponse.<Page<VendorResponse>>builder()
                 .message("Get all vendors successfully")
-                .data(vendorService.filterVendor(pageable))
+                .data(vendorService.filterVendor(pageable, search))
                 .build();
         return ResponseEntity.ok(response);
     }

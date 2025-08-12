@@ -4,5 +4,5 @@ public enum Role {
     LEADER,
     IT,
     ADMIN,
-    ORTHER,
+    OTHER,
 }

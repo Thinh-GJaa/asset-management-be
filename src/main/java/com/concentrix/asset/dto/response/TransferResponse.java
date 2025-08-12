@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import com.concentrix.asset.enums.TransactionStatus;
@@ -28,7 +27,7 @@ public class TransferResponse implements Serializable {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     String note;
-    List<TransferItemResponse> items;
+    List<TransactionItemsResponse> items;
 
     @Getter
     @Setter

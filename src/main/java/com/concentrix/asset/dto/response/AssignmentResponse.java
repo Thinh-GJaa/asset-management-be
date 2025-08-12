@@ -26,7 +26,7 @@ public class AssignmentResponse implements Serializable {
     LocalDateTime updatedAt;
     String note;
     LocalDate returnDate;
-    List<TransferItemResponse> items;
+    List<TransactionItemsResponse> items;
 
     @Getter
     @Setter

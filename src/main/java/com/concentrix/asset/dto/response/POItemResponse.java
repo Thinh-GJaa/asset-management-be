@@ -14,6 +14,7 @@ import java.io.Serializable;
 public class POItemResponse implements Serializable {
     Integer deviceId;
     String deviceName;
+
     String serialNumber;
     Integer quantity;
 

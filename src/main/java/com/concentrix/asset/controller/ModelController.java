@@ -46,10 +46,12 @@ public class ModelController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<ModelResponse>>> filterModel(
-            @PageableDefault(size = 10, page = 0, sort = "modelId", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, page = 0, sort = "modelId", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "type", required = false) DeviceType type) {
         ApiResponse<Page<ModelResponse>> response = ApiResponse.<Page<ModelResponse>>builder()
                 .message("Get all models successfully")
-                .data(modelService.filterModel(pageable))
+                .data(modelService.filterModel(pageable, search, type))
                 .build();
         return ResponseEntity.ok(response);
     }

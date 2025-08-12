@@ -24,7 +24,7 @@ public class RepairResponse implements Serializable {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     String note;
-    List<TransferItemResponse> items;
+    List<TransactionItemsResponse> items;
 
     @Getter
     @Setter

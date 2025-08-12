@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User setRoleOther(User user) {
-        user.setRole(Role.ORTHER);
+        user.setRole(Role.OTHER);
         return user;
     }
 
@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
         user = userMapper.updateUser(user, request);
 
-        if (request.getRole() != Role.ORTHER)
+        if (request.getRole() != Role.OTHER)
             user = setRole(user, request.getRole(), true); // Update password only for non-admin users
 
         user = userRepository.save(user);

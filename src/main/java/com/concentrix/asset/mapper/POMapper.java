@@ -6,7 +6,7 @@ import com.concentrix.asset.entity.PurchaseOrder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = POMapperHelper.class)
+@Mapper(componentModel = "spring", uses = TransactionMapperHelper.class)
 public interface POMapper {
 
     @Mapping(target = "vendor", source = "vendorId", qualifiedByName = "vendorIdToVendor")
@@ -16,7 +16,7 @@ public interface POMapper {
     @Mapping(target = "vendor", source = "vendor", qualifiedByName = "mapVendor")
     @Mapping(target = "warehouse", source = "warehouse", qualifiedByName = "mapWarehouse")
     @Mapping(target = "createdBy", source = "createdBy")
-    @Mapping(target = "poItems", source = "poDetails", qualifiedByName = "mapPOItems")
+    @Mapping(target = "items", source = "poDetails", qualifiedByName = "mapPOItems")
     POResponse toPOResponse(PurchaseOrder purchaseOrder);
 
 }

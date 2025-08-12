@@ -50,23 +50,16 @@ public class WarehouseController {
                 .build();
         return ResponseEntity.ok(response);
     }
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<ApiResponse<Void>> deleteWarehouse(@PathVariable Long id) {
-//        stockService.deleteWarehouse(id);
-//        ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                .message("Delete stock successfully")
-//                .build();
-//        return ResponseEntity.ok(response);
-//    }
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<Page<WarehouseResponse>>> filterWarehouses(
-            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "siteId", required = false) Integer siteId
     ) {
         ApiResponse<Page<WarehouseResponse>> response = ApiResponse.<Page<WarehouseResponse>>builder()
                 .message("Filter warehouse successfully")
-                .data(warehouseService.filterWarehouse(pageable))
+                .data(warehouseService.filterWarehouse(pageable, search, siteId))
                 .build();
         return ResponseEntity.ok(response);
     }

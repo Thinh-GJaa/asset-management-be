@@ -11,7 +11,7 @@ public interface UserMapper {
 
     UserResponse toUserResponse(User user);
 
-    @Mapping(target = "role", defaultValue = "ORTHER")
+    @Mapping(target = "role", defaultValue = "OTHER")
     @Mapping(target = "password", source = "password", qualifiedByName = "hashPassword")
     User toUser(CreateUserRequest request);
 

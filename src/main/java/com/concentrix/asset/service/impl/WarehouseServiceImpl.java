@@ -21,6 +21,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,8 +70,20 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    public Page<WarehouseResponse> filterWarehouse(Pageable pageable) {
-        Page<Warehouse> warehouses = warehouseRepository.findAll(pageable);
+    public Page<WarehouseResponse> filterWarehouse(Pageable pageable, String search, Integer siteId) {
+        Specification<Warehouse> spec = Specification.where(null);
+
+        if (StringUtils.hasText(search)) {
+            final String like = "%" + search.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("warehouseName")), like)
+            ));
+        }
+        if (siteId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("site").get("siteId"), siteId));
+        }
+
+        Page<Warehouse> warehouses = warehouseRepository.findAll(spec, pageable);
         return warehouses.map(warehouseMapper::toWarehouseResponse);
     }
 }
