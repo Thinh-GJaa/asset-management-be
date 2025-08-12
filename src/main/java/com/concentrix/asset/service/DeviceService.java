@@ -4,8 +4,6 @@ import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
-import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
-import com.concentrix.asset.dto.response.SiteDeviceWithoutSerialSummaryResponse;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.domain.Page;
@@ -18,7 +16,7 @@ public interface DeviceService {
 
         DeviceResponse updateDevice(UpdateDeviceRequest request);
 
-        Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId, DeviceType type);
+        Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId,DeviceStatus status, Pageable pageable);
 
         /**
          * Lấy lịch sử vòng đời thiết bị (mô tả dạng chuỗi từng transaction)

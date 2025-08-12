@@ -6,12 +6,14 @@ import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.DeviceService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import com.concentrix.asset.entity.AssetTransaction;
@@ -32,8 +33,6 @@ import java.time.LocalDate;
 import com.concentrix.asset.entity.PurchaseOrder;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.TransactionType;
-import java.util.Map;
-import java.util.HashMap;
 
 @Slf4j
 @Service
@@ -82,18 +81,31 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId,
-                                              DeviceType type) {
-        Page<Device> devices;
-        if (modelId != null) {
-            devices = deviceRepository.findAllByModel_ModelId(modelId, pageable);
-        } else if (type != null) {
-            devices = deviceRepository.findAllByModel_Type(type, pageable);
-        } else {
-            devices = deviceRepository.findAll(pageable);
-        }
+    public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status, Pageable pageable) {
+        return deviceRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        return devices.map(deviceMapper::toDeviceResponse);
+            if(search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("deviceName")), like),
+                        cb.like(cb.lower(root.get("serialNumber")), like)
+                ));
+            }
+
+            if (type != null) {
+                predicates.add(cb.equal(root.get("model").get("type"), type));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (modelId != null) {
+                predicates.add(cb.equal(root.get("model").get("modelId"), modelId));
+            }
+            predicates.add(cb.isNotNull(root.get("serialNumber")));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(deviceMapper::toDeviceResponse);
     }
 
 
