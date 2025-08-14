@@ -1,10 +1,10 @@
 package com.concentrix.asset.mapper;
 
 import com.concentrix.asset.dto.request.CreateWarehouseRequest;
-import com.concentrix.asset.dto.request.UpdateSiteRequest;
 import com.concentrix.asset.dto.request.UpdateWarehouseRequest;
 import com.concentrix.asset.dto.response.WarehouseResponse;
 import com.concentrix.asset.entity.Warehouse;
+import com.concentrix.asset.mapper.helper.WarehouseMapperHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring" , uses = WarehouseMapperHelper.class)

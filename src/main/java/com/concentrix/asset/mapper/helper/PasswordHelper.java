@@ -1,4 +1,4 @@
-package com.concentrix.asset.mapper;
+package com.concentrix.asset.mapper.helper;
 
 
 import lombok.AccessLevel;

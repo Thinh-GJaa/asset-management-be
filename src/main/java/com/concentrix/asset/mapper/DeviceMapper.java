@@ -3,6 +3,7 @@ package com.concentrix.asset.mapper;
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.entity.Device;
+import com.concentrix.asset.mapper.helper.DeviceMapperHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = DeviceMapperHelper.class)

@@ -1,4 +1,4 @@
-package com.concentrix.asset.mapper;
+package com.concentrix.asset.mapper.helper;
 
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.SiteResponse;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor

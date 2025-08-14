@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
 import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.entity.User;
+import com.concentrix.asset.mapper.helper.PasswordHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = PasswordHelper.class)

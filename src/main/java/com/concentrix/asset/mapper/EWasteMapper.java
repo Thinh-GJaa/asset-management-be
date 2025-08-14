@@ -3,6 +3,7 @@ package com.concentrix.asset.mapper;
 import com.concentrix.asset.dto.request.CreateEWasteRequest;
 import com.concentrix.asset.dto.response.EWasteResponse;
 import com.concentrix.asset.entity.AssetTransaction;
+import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;

@@ -1,10 +1,9 @@
-package com.concentrix.asset.mapper;
+package com.concentrix.asset.mapper.helper;
 
 import com.concentrix.asset.entity.Site;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.repository.SiteRepository;
-import com.concentrix.asset.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.mapstruct.Named;
