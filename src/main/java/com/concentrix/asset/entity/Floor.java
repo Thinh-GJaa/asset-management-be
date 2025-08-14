@@ -27,6 +27,10 @@ public class Floor {
     @JoinColumn(name = "site_id")
     Site site;
 
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    Account account;
+
     @Column
     String description;
 

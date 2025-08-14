@@ -34,6 +34,12 @@ public class Device {
     @Column(nullable = false)
     String deviceName;
 
+    @Column
+    String hostName;
+
+    @Column
+    String seatNumber;
+
     @Enumerated(EnumType.STRING)
     DeviceStatus status;
 
