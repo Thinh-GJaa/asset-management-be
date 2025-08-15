@@ -20,6 +20,8 @@ public class FloorResponse implements Serializable {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     SiteResponse site;
+    UserResponse createdBy;
+    AccountResponse account;
 
     @Getter
     @Setter
@@ -30,5 +32,27 @@ public class FloorResponse implements Serializable {
     public static class SiteResponse implements Serializable {
         Integer siteId;
         String siteName;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class UserResponse implements Serializable {
+        String eid;
+        String fullName;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class AccountResponse implements Serializable {
+        Integer accountId;
+        String accountName;
     }
 }
