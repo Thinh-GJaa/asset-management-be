@@ -95,8 +95,9 @@ public enum ErrorCode {
         // Account entity errors
         ACCOUNT_NOT_FOUND(20401, HttpStatus.NOT_FOUND, "Account with ID '{}' not found"),
         ACCOUNT_ALREADY_EXISTS(20402, HttpStatus.CONFLICT, "Account with username '{}' already exists"),
-        ACCOUNT_UPDATE_FAILED(20403, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account with ID '{}'"),
-        ACCOUNT_DELETE_FAILED(20404, HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete account with ID '{}'"),
+        ACCOUNT_NAME_ALREADY_EXISTS(20403, HttpStatus.CONFLICT, "Account with name '{}' already exists"),
+        ACCOUNT_CODE_ALREADY_EXISTS(20404, HttpStatus.CONFLICT, "Account with code '{}' already exists"),
+
 
         // DeviceType entity errors
         DEVICETYPE_NOT_FOUND(20501, HttpStatus.NOT_FOUND, "DeviceType with ID '{}' not found"),
