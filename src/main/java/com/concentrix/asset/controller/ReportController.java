@@ -47,9 +47,10 @@ public class ReportController {
                         @RequestParam(value = "siteId", required = false) Integer siteId,
                         @RequestParam(value = "floorId", required = false) Integer floorId,
                         @RequestParam(value = "status", required = false) DeviceStatus status,
+                        @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId) {
-                List<TypeSummaryResponse> result = reportService.getWithSerialSummary(siteId, status, floorId, type,
+                List<TypeSummaryResponse> result = reportService.getWithSerialSummary(siteId, status, floorId, accountId, type,
                                 modelId);
                 ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
                                 .<List<TypeSummaryResponse>>builder()
@@ -64,9 +65,10 @@ public class ReportController {
                         @RequestParam(value = "siteId", required = false) Integer siteId,
                         @RequestParam(value = "status", required = false) DeviceStatus status,
                         @RequestParam(value = "floorId", required = false) Integer floorId,
+                        @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId) {
-                List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, type,
+                List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, accountId, type,
                                 modelId);
                 ApiResponse<List<DeviceResponse>> response = ApiResponse.<List<DeviceResponse>>builder()
                                 .message("Get device list for report successfully")

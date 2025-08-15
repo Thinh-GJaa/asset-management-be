@@ -191,13 +191,18 @@ public class ReportServiceImpl implements ReportService {
 
         @Override
         public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
-                        Integer floorId, DeviceType type, Integer modelId) {
+                        Integer floorId, Integer accountId, DeviceType type, Integer modelId) {
                 List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
                 List<Site> sites = (siteId == null) ? siteRepository.findAll()
                                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
                 List<TypeSummaryResponse> typeSummaries = new ArrayList<>();
 
+                log.info("Fetching devices in floor for report: siteId={}, floorId={}, accountId={}, type={}, modelId={}",
+                        siteId, floorId, accountId, type, modelId);
                 for (DeviceType t : types) {
+                        if(type != null && !t.equals(type)) {
+                                continue; // Bỏ qua nếu type là null
+                        }
                         List<Model> models = modelRepository.findByType(t);
                         int typeTotal = 0;
                         List<ModelSummaryResponse> modelSummaries = new ArrayList<>();
@@ -209,7 +214,7 @@ public class ReportServiceImpl implements ReportService {
                                 switch (status) {
                                         case IN_STOCK -> {
                                                 for (Site site : sites) {
-                                                        if (site == null)
+                                                        if (siteId != null && !site.getSiteId().equals(siteId))
                                                                 continue;
                                                         int quantity = deviceRepository.countAssetInStock(
                                                                         site.getSiteId(), t, model.getModelId());
@@ -224,13 +229,17 @@ public class ReportServiceImpl implements ReportService {
                                                 }
                                         }
                                         case IN_FLOOR -> {
+
                                                 for (Site site : sites) {
-                                                        if (site == null)
+                                                        if (siteId != null && !site.getSiteId().equals(siteId))
                                                                 continue;
                                                         for (Floor floor : floorRepository
                                                                         .findAllBySite_SiteId(site.getSiteId())) {
+                                                                if (floorId != null && !floor.getFloorId().equals(floorId))
+                                                                        continue;
+
                                                                 int quantity = deviceRepository.countAssetInFloor(
-                                                                                site.getSiteId(), floor.getFloorId(), t,
+                                                                                site.getSiteId(), floor.getFloorId(), accountId, t,
                                                                                 model.getModelId());
                                                                 if (quantity > 0) {
                                                                         SiteSummaryResponse siteSummary = new SiteSummaryResponse();
@@ -284,7 +293,7 @@ public class ReportServiceImpl implements ReportService {
 
         @Override
         public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-                        DeviceType type, Integer modelId) {
+                        Integer accountId, DeviceType type, Integer modelId) {
 
                 List<Device> devices = new ArrayList<>();
                 switch (status) {
@@ -292,7 +301,9 @@ public class ReportServiceImpl implements ReportService {
                                 devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId);
                         }
                         case IN_FLOOR -> {
-                                devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, type, modelId);
+                                log.info("Fetching devices in floor for report: siteId={}, floorId={}, accountId={}, type={}, modelId={}",
+                                                siteId, floorId, accountId, type, modelId);
+                                devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, accountId, type, modelId);
                         }
                         case ON_THE_MOVE -> {
                                 devices = deviceRepository.findDevicesOnTheMoveForReport(type, modelId);

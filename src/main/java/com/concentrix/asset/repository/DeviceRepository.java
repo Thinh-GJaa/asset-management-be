@@ -52,6 +52,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                             WHERE (:type IS NULL OR d.model.type = :type)
                               AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
                               AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
+                              AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
                               AND (:modelId IS NULL OR d.model.modelId = :modelId)
                               AND d.status = 'IN_FLOOR'
                               AND d.serialNumber IS NOT NULL
@@ -59,6 +60,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
         int countAssetInFloor(
                         @Param("siteId") Integer siteId,
                         @Param("floorId") Integer floorId,
+                        @Param("accountId") Integer accountId,
                         @Param("type") DeviceType type,
                         @Param("modelId") Integer modelId);
 
@@ -105,13 +107,14 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                             AND (:modelId IS NULL OR d.model.modelId = :modelId)
                             AND (:type IS NULL OR d.model.type = :type)
                             AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
+                            AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
                             AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
                             AND d.serialNumber IS NOT NULL
-
                         """)
         List<Device> findDevicesInFloorForReport(
                         @Param("siteId") Integer siteId,
                         @Param("floorId") Integer floorId,
+                        @Param("accountId") Integer accountId,
                         @Param("type") DeviceType type,
                         @Param("modelId") Integer modelId);
 

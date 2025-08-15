@@ -15,10 +15,10 @@ public interface ReportService {
     List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status, DeviceType type,
             Integer modelId);
 
-    List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status, Integer floorId,
+    List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status, Integer floorId, Integer accountId,
             DeviceType type, Integer modelId);
 
-    List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, DeviceType type,
+    List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, Integer accountId, DeviceType type,
             Integer modelId);
 
     StatusSummaryResponse getStatusSummaryWithSerial(DeviceStatus status);
