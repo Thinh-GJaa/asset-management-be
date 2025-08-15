@@ -7,6 +7,7 @@ import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
+import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,5 +31,7 @@ public interface UserService {
     List<TransactionResponse> getUserTransactions(String eid);
 
     List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId);
+
+    User getCurrentUser();
 
 }
