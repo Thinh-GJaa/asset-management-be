@@ -31,6 +31,10 @@ public class Floor {
     @JoinColumn(name = "account_id")
     Account account;
 
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    User createdBy;
+
     @Column
     String description;
 
