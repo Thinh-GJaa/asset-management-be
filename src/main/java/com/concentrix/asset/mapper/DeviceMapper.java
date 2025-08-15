@@ -20,7 +20,6 @@ public interface DeviceMapper {
     DeviceResponse toDeviceResponse(Device device);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-
     Device updateDevice(@MappingTarget Device device, UpdateDeviceRequest request);
 
 }
