@@ -9,6 +9,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.AccountMapper;
 import com.concentrix.asset.repository.AccountRepository;
 import com.concentrix.asset.service.AccountService;
+import com.concentrix.asset.service.UserService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
 
     AccountRepository accountRepository;
     AccountMapper accountMapper;
-
+    UserService userService;
 
     @Override
     public AccountResponse getAccountById(Integer accountId) {
@@ -51,8 +52,10 @@ public class AccountServiceImpl implements AccountService {
             throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
         }
 
-        return accountMapper.toAccountResponse(
-                accountRepository.save(accountMapper.toAccount(request))
+        Account account = accountMapper.toAccount(request);
+        account.setCreatedBy(userService.getCurrentUser());
+
+        return accountMapper.toAccountResponse(accountRepository.save(account)
         );
 
     }
