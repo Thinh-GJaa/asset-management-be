@@ -14,7 +14,7 @@ public interface FloorService {
 
     FloorResponse updateFloor(UpdateFloorRequest request);
 
-    Page<FloorResponse> filterFloor(String search, Integer siteId, Pageable pageable);
+    Page<FloorResponse> filterFloor(String search, Integer siteId, Integer accountId, Pageable pageable);
 
     Page<FloorResponse> getFloorsBySiteId(Integer siteId, Pageable pageable);
 }
