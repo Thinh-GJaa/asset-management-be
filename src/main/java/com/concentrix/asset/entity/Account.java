@@ -31,6 +31,10 @@ public class Account {
     @Column(unique = true)
     String accountCode;
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    User owner;
+
     @Column
     String description;
 
