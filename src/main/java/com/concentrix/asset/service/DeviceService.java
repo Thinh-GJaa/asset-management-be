@@ -4,6 +4,8 @@ import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
+import com.concentrix.asset.entity.Device;
+import com.concentrix.asset.entity.Floor;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,10 @@ public interface DeviceService {
 
         List<String> getAllDeviceTypes();
 
-        public List<String> getDeviceStatuses();
+        List<String> getDeviceStatuses();
+
+        String generateHostName(Device device, Floor floor);
+
+
 
 }

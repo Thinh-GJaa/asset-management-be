@@ -4,8 +4,7 @@ import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
-import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.exception.CustomException;
@@ -25,13 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
-import com.concentrix.asset.entity.AssetTransaction;
-import com.concentrix.asset.entity.PODetail;
 import java.time.LocalDate;
-import com.concentrix.asset.entity.PurchaseOrder;
-import com.concentrix.asset.entity.User;
+
 import com.concentrix.asset.enums.TransactionType;
 
 @Slf4j
@@ -341,6 +336,48 @@ public class DeviceServiceImpl implements DeviceService {
         return java.util.Arrays.stream(com.concentrix.asset.enums.DeviceStatus.values())
                 .map(Enum::name)
                 .toList();
+    }
+
+    @Override
+    public String generateHostName(Device device, Floor floor) {
+        DeviceType type = device.getModel().getType();
+        String serialNumber = device.getSerialNumber();
+        int lenSN = serialNumber.length();
+        String accountCode = floor.getAccount().getAccountCode();
+
+        StringBuilder hostName = new StringBuilder();
+
+        switch (type){
+            case LAPTOP -> {
+                if(accountCode.equalsIgnoreCase("GRA")){
+                    hostName.append("ITVNCNX");
+                    hostName.append(serialNumber, 0,6);
+                    hostName.append("-D");
+                    return hostName.toString();
+                }
+                 hostName.append("VNHCM-LAP");
+                 hostName.append(serialNumber,0,6);
+            }
+            case DESKTOP -> {
+                hostName.append("VN");
+                switch (floor.getSite().getSiteName()){
+                    case "QTSC1", "QTSC9" -> {hostName.append("QUA-");}
+                    case "OneHub" -> {hostName.append("ONE-");}
+                    case "Flemington" -> {hostName.append("FLE-");}
+                    case "Tech Vally" -> {hostName.append("TEC-");}
+                }
+                hostName.append(accountCode);
+                if(device.getModel().getModelName().equalsIgnoreCase("dell")){
+                    hostName.append(serialNumber,lenSN - 6 ,lenSN);
+                }else{
+                    hostName.append(serialNumber, 0, 6);
+                }
+            }
+            default -> {
+                return null;
+            }
+        }
+        return hostName.toString();
     }
 
     private String buildTransactionDescription(AssetTransaction tx) {
