@@ -43,7 +43,9 @@ public interface DeviceService {
 
         List<String> getDeviceStatuses();
 
-        String generateHostName(Device device, Floor floor);
+        String generateHostNameForDesktop(Device device, Floor floor);
+
+        String generateHostNameForLaptop(Device device);
 
 
 

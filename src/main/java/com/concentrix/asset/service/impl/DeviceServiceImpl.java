@@ -339,43 +339,53 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public String generateHostName(Device device, Floor floor) {
+    public String generateHostNameForLaptop(Device device) {
         DeviceType type = device.getModel().getType();
-        String serialNumber = device.getSerialNumber();
-        int lenSN = serialNumber.length();
+        int lenSN = device.getSerialNumber().length();
+        String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
+                ? device.getSerialNumber().substring(0, 6)
+                : device.getSerialNumber().substring(lenSN - 6, lenSN);
+        StringBuilder hostName = new StringBuilder();
+
+        if(type == DeviceType.LAPTOP) {
+           hostName.append("VNHCM-LAP");
+           hostName.append(serialNumber);
+           return hostName.toString();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public String generateHostNameForDesktop(Device device, Floor floor) {
+        DeviceType type = device.getModel().getType();
+        int lenSN = device.getSerialNumber().length();
+        String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
+                ? device.getSerialNumber().substring(0, 6)
+                : device.getSerialNumber().substring(lenSN - 6, lenSN);
         String accountCode = floor.getAccount().getAccountCode();
 
         StringBuilder hostName = new StringBuilder();
 
-        switch (type){
-            case LAPTOP -> {
-                if(accountCode.equalsIgnoreCase("GRA")){
-                    hostName.append("ITVNCNX");
-                    hostName.append(serialNumber, 0,6);
-                    hostName.append("-D");
-                    return hostName.toString();
-                }
-                 hostName.append("VNHCM-LAP");
-                 hostName.append(serialNumber,0,6);
+        if (type != DeviceType.DESKTOP) {
+            return null;
+        } else {
+            if (accountCode.equalsIgnoreCase("gra")) {
+                hostName.append("ITVNCNX");
+                hostName.append(serialNumber);
+                hostName.append("-D");
+                return hostName.toString();
             }
-            case DESKTOP -> {
-                hostName.append("VN");
-                switch (floor.getSite().getSiteName()){
-                    case "QTSC1", "QTSC9" -> {hostName.append("QUA-");}
-                    case "OneHub" -> {hostName.append("ONE-");}
-                    case "Flemington" -> {hostName.append("FLE-");}
-                    case "Tech Vally" -> {hostName.append("TEC-");}
-                }
-                hostName.append(accountCode);
-                if(device.getModel().getModelName().equalsIgnoreCase("dell")){
-                    hostName.append(serialNumber,lenSN - 6 ,lenSN);
-                }else{
-                    hostName.append(serialNumber, 0, 6);
-                }
+
+            hostName.append("VN");
+            switch (floor.getSite().getSiteName().toLowerCase()) {
+                case "qtsc1", "qtsc9" -> hostName.append("QUA-");
+                case "onehub" -> hostName.append("ONE-");
+                case "flemington" -> hostName.append("FLE-");
+                case "techvally" -> hostName.append("TEC-");
             }
-            default -> {
-                return null;
-            }
+            hostName.append(accountCode);
+            hostName.append(serialNumber);
         }
         return hostName.toString();
     }
