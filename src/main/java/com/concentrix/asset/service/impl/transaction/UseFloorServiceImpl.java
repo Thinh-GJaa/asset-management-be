@@ -12,6 +12,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.UseFloorMapper;
 import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.transaction.UseFloorService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class UseFloorServiceImpl implements UseFloorService {
     FloorRepository floorRepository;
     UserRepository userRepository;
     WarehouseRepository warehouseRepository;
+    DeviceService deviceService;
 
     @Override
     public UseFloorResponse getUseFloorById(Integer useFloorId) {
@@ -205,6 +207,7 @@ public class UseFloorServiceImpl implements UseFloorService {
                 device.setCurrentFloor(transaction.getToFloor());
                 device.setCurrentWarehouse(null);
                 device.setCurrentUser(null);
+                device.setHostName(deviceService.generateHostNameForDesktop(device, transaction.getToFloor()));
                 deviceRepository.save(device);
             } else {
                 Integer deviceId = device.getDeviceId();

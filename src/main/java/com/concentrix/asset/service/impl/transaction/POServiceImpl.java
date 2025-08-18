@@ -9,6 +9,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.POMapper;
 import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.transaction.POService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
@@ -36,10 +37,10 @@ public class POServiceImpl implements POService {
     PORepository poRepository;
     POMapper poMapper;
     DeviceRepository deviceRepository;
-    PODetailRepository poDetailRepository;
     ModelRepository modelRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
     UserRepository userRepository;
+    DeviceService deviceService;
 
     @Override
     public POResponse createPO(CreatePORequest createPORequest) {
@@ -123,7 +124,9 @@ public class POServiceImpl implements POService {
                 .currentWarehouse(purchaseOrder.getWarehouse())
                 .status(DeviceStatus.IN_STOCK)
                 .build();
-        device = deviceRepository.save(device);
+
+        device.setHostName(deviceService.generateHostNameForLaptop(device));
+        deviceRepository.save(device);
 
         createPODetail(purchaseOrder, device, 1);
     }
