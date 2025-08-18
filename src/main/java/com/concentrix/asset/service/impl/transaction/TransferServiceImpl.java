@@ -10,6 +10,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransferMapper;
 import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.UserService;
 import com.concentrix.asset.service.transaction.TransferService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +37,10 @@ public class TransferServiceImpl implements TransferService {
 
     TransactionRepository transactionRepository;
     TransferMapper transferMapper;
-    UserRepository userRepository;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
     WarehouseRepository warehouseRepository;
+    UserService userService;
 
     @Override
     public TransferResponse getTransferById(Integer transferId) {
@@ -53,7 +54,7 @@ public class TransferServiceImpl implements TransferService {
     @Override
     public TransferResponse createTransfer(CreateTransferRequest request) {
         AssetTransaction transaction = transferMapper.toAssetTransaction(request);
-        transaction.setCreatedBy(getCurrentUser());
+        transaction.setCreatedBy(userService.getCurrentUser());
         transaction.setTransactionStatus(TransactionStatus.PENDING);
 
         Warehouse fromWarehouse = warehouseRepository.findById(request.getFromWarehouseId()).orElseThrow(
@@ -111,6 +112,30 @@ public class TransferServiceImpl implements TransferService {
         return transferMapper.toTransferResponse(transaction);
     }
 
+    @Override
+    public void approveTransfer(Integer transactionId) {
+        AssetTransaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId));
+        if (transaction.getTransactionType() != TransactionType.TRANSFER_SITE) {
+            throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID, transactionId);
+        }
+
+        if (transaction.getTransactionStatus() != TransactionStatus.PENDING) {
+            throw new CustomException(ErrorCode.TRANSACTION_STATUS_INVALID, transactionId);
+        }
+        transaction.setTransactionStatus(TransactionStatus.APPROVED);
+        transaction.setConfirmedBy(userService.getCurrentUser());
+
+        transactionRepository.save(transaction);
+    }
+
+
+    @Override
+    public void approveTransferByToken(String token) {
+          log.info("[TransferServiceImpl] Approving transfer by token: {}", token);
+          approveTransfer(Integer.parseInt(token));
+    }
+
     public void confirmTransfer(Integer transactionId) {
         AssetTransaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId));
@@ -119,7 +144,7 @@ public class TransferServiceImpl implements TransferService {
             throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID, transactionId);
         }
 
-        if (transaction.getTransactionStatus() != TransactionStatus.PENDING) {
+        if (transaction.getTransactionStatus() != TransactionStatus.APPROVED) {
             throw new CustomException(ErrorCode.TRANSACTION_STATUS_INVALID, transactionId);
         }
 
@@ -153,7 +178,8 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+    public Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate,
+            Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
@@ -169,8 +195,7 @@ public class TransferServiceImpl implements TransferService {
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("fromWarehouse").get("warehouseName")), searchPattern),
                         cb.like(cb.lower(root.get("toWarehouse").get("warehouseName")), searchPattern),
-                        cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)
-                ));
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)));
             }
 
             if (fromDate != null) {
@@ -187,15 +212,9 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public Page<TransferResponse> filterTransfersSitePending(Pageable pageable) {
-        return transactionRepository.findAllByTransactionTypeAndTransactionStatus(
-                TransactionType.TRANSFER_SITE, TransactionStatus.PENDING, pageable)
-                .map(transferMapper::toTransferResponse);
-    }
 
-    private User getCurrentUser() {
-        String EID = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findById(EID)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+        return transactionRepository.findPendingOrApprovedTransfers(pageable)
+                .map(transferMapper::toTransferResponse);
     }
 
     private void updateDeviceAndWarehousesForTransfer(AssetTransaction transaction) {

@@ -64,6 +64,10 @@ public class AssetTransaction {
     @JoinColumn(name = "create_by")
     User createdBy;
 
+    @ManyToOne
+    @JoinColumn(name = "confirmed_by")
+    User confirmedBy;
+
     @Column
     String note;
 

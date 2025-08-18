@@ -88,7 +88,7 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:type IS NULL OR td.device.model.type = :type)
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND td.transaction.transactionType = 'TRANSFER_SITE'
-            AND td.transaction.transactionStatus = 'PENDING'
+            AND td.transaction.transactionStatus IN ('PENDING', 'APPROVED')
             AND (:siteId IS NULL OR td.transaction.fromWarehouse.site.siteId = :siteId)
       """)
   Integer sumOnTheMove(@Param("type") com.concentrix.asset.enums.DeviceType type,
@@ -207,7 +207,7 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
           SELECT COALESCE(SUM(td.quantity), 0) FROM TransactionDetail td
           WHERE (td.device.serialNumber IS NULL)
             AND td.transaction.transactionType = 'TRANSFER_SITE'
-            AND td.transaction.transactionStatus = 'PENDING'
+            AND (td.transaction.transactionStatus IN ('PENDING', 'APPROVED'))
       """)
   Integer sumAllOnTheMove();
 

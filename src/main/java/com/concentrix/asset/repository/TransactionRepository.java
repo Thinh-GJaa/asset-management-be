@@ -20,8 +20,6 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<AssetTransaction, Integer>, JpaSpecificationExecutor<AssetTransaction> {
 
-
-
     Page<AssetTransaction> findALLByTransactionType(TransactionType transactionType, Pageable pageable);
 
     Page<AssetTransaction> findAllByTransactionTypeAndTransactionStatus(
@@ -33,5 +31,9 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
 
     @Query("SELECT DISTINCT t.userUse FROM AssetTransaction t WHERE t.userUse.eid IS NOT NULL")
     List<User> findDistinctEidFromTransactions();
+
+    @Query("SELECT t FROM AssetTransaction t WHERE t.transactionType = 'TRANSFER_SITE' " +
+            "AND t.transactionStatus IN ('PENDING', 'APPROVED') ")
+    Page<AssetTransaction> findPendingOrApprovedTransfers(Pageable pageable);
 
 }
