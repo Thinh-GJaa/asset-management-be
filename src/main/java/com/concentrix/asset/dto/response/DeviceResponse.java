@@ -21,6 +21,8 @@ public class DeviceResponse implements Serializable {
     Integer deviceId;
     String serialNumber;
     String deviceName;
+    String hostName;
+    String seatNumber;
     String poId;
     LocalDate purchaseDate;
 
