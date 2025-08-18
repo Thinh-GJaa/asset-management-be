@@ -62,15 +62,19 @@ public class User {
     Role role;
 
     @ManyToOne
-    @JoinColumn(name = "site_id")  // khóa ngoại
+    @JoinColumn(name = "account_id")
+    Account account;
+
+    @ManyToOne
+    @JoinColumn(name = "site_id")
     Site site;
 
     @ManyToOne
-    @JoinColumn(name = "create_by_eid")  // khóa ngoại
+    @JoinColumn(name = "create_by_eid")
     User createdBy;
 
     @ManyToOne
-    @JoinColumn(name = "update_by_eid")  // khóa ngoại
+    @JoinColumn(name = "update_by_eid")
     User updatedBy;
 
     @Column

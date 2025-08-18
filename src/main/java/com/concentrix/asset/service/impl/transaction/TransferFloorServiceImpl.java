@@ -9,6 +9,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransferFloorMapper;
 import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.transaction.TransferFloorService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -37,10 +38,9 @@ public class TransferFloorServiceImpl implements TransferFloorService {
     TransactionRepository transactionRepository;
     TransferFloorMapper transferFloorMapper;
     DeviceRepository deviceRepository;
-    DeviceWarehouseRepository deviceWarehouseRepository;
     FloorRepository floorRepository;
     UserRepository userRepository;
-    TransactionDetailRepository transactionDetailRepository;
+    DeviceService deviceService;
 
     @Override
     public TransferFloorResponse getTransferFloorById(Integer transferFloorId) {
@@ -187,6 +187,7 @@ public class TransferFloorServiceImpl implements TransferFloorService {
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
             if (hasSerial) {
                 device.setCurrentFloor(transaction.getToFloor());
+                device.setHostName(deviceService.generateHostNameForDesktop(device, transaction.getToFloor()));
                 deviceRepository.save(device);
             }
         }

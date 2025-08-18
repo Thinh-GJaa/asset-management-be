@@ -4,14 +4,15 @@ import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
-import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.entity.*;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.DeviceService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -22,18 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ForkJoinPool;
+import java.util.*;
 import java.util.stream.Collectors;
-import com.concentrix.asset.entity.AssetTransaction;
-import com.concentrix.asset.entity.PODetail;
 import java.time.LocalDate;
-import com.concentrix.asset.entity.PurchaseOrder;
-import com.concentrix.asset.entity.User;
+
 import com.concentrix.asset.enums.TransactionType;
-import java.util.Map;
-import java.util.HashMap;
 
 @Slf4j
 @Service
@@ -82,18 +76,31 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Page<DeviceResponse> filterDevices(Pageable pageable, Integer modelId,
-                                              DeviceType type) {
-        Page<Device> devices;
-        if (modelId != null) {
-            devices = deviceRepository.findAllByModel_ModelId(modelId, pageable);
-        } else if (type != null) {
-            devices = deviceRepository.findAllByModel_Type(type, pageable);
-        } else {
-            devices = deviceRepository.findAll(pageable);
-        }
+    public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status, Pageable pageable) {
+        return deviceRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        return devices.map(deviceMapper::toDeviceResponse);
+            if(search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("deviceName")), like),
+                        cb.like(cb.lower(root.get("serialNumber")), like)
+                ));
+            }
+
+            if (type != null) {
+                predicates.add(cb.equal(root.get("model").get("type"), type));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (modelId != null) {
+                predicates.add(cb.equal(root.get("model").get("modelId"), modelId));
+            }
+            predicates.add(cb.isNotNull(root.get("serialNumber")));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(deviceMapper::toDeviceResponse);
     }
 
 
@@ -329,6 +336,58 @@ public class DeviceServiceImpl implements DeviceService {
         return java.util.Arrays.stream(com.concentrix.asset.enums.DeviceStatus.values())
                 .map(Enum::name)
                 .toList();
+    }
+
+    @Override
+    public String generateHostNameForLaptop(Device device) {
+        DeviceType type = device.getModel().getType();
+        int lenSN = device.getSerialNumber().length();
+        String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
+                ? device.getSerialNumber().substring(0, 6)
+                : device.getSerialNumber().substring(lenSN - 6, lenSN);
+        StringBuilder hostName = new StringBuilder();
+
+        if(type == DeviceType.LAPTOP) {
+           hostName.append("VNHCM-LAP");
+           hostName.append(serialNumber);
+           return hostName.toString();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public String generateHostNameForDesktop(Device device, Floor floor) {
+        DeviceType type = device.getModel().getType();
+        int lenSN = device.getSerialNumber().length();
+        String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
+                ? device.getSerialNumber().substring(0, 6)
+                : device.getSerialNumber().substring(lenSN - 6, lenSN);
+        String accountCode = floor.getAccount().getAccountCode();
+
+        StringBuilder hostName = new StringBuilder();
+
+        if (type != DeviceType.DESKTOP) {
+            return null;
+        } else {
+            if (accountCode.equalsIgnoreCase("gra")) {
+                hostName.append("ITVNCNX");
+                hostName.append(serialNumber);
+                hostName.append("-D");
+                return hostName.toString();
+            }
+
+            hostName.append("VN");
+            switch (floor.getSite().getSiteName().toLowerCase()) {
+                case "qtsc1", "qtsc9" -> hostName.append("QUA-");
+                case "onehub" -> hostName.append("ONE-");
+                case "flemington" -> hostName.append("FLE-");
+                case "techvally" -> hostName.append("TEC-");
+            }
+            hostName.append(accountCode);
+            hostName.append(serialNumber);
+        }
+        return hostName.toString();
     }
 
     private String buildTransactionDescription(AssetTransaction tx) {

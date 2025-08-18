@@ -18,6 +18,8 @@ public class UpdateFloorRequest implements Serializable {
 
     Integer siteId;
 
+    Integer accountId;
+
     String description;
 
 }

@@ -3,6 +3,7 @@ package com.concentrix.asset.mapper;
 import com.concentrix.asset.dto.request.CreatePORequest;
 import com.concentrix.asset.dto.response.POResponse;
 import com.concentrix.asset.entity.PurchaseOrder;
+import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

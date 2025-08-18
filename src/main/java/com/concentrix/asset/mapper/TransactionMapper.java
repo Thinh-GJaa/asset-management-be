@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.mapper.helper.DeviceMapperHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = DeviceMapperHelper.class)

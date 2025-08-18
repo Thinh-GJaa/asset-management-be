@@ -15,5 +15,8 @@ public class CreateFloorRequest {
     @NotNull(message = "Site Id cannot be null")
     Integer siteId;
 
+    @NotNull(message = "Account Id cannot be null")
+    Integer accountId;
+
     String description;
 }

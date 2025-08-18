@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.request.CreateAssignmentRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.AssetTransaction;
+import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })

@@ -5,6 +5,7 @@ import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.service.DeviceService;
 import jakarta.validation.Valid;
@@ -40,10 +41,12 @@ public class DeviceController {
     public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDevice(
             @PageableDefault(size = 10, page = 0, sort = "deviceName", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(value = "modelId", required = false) Integer modelId,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) DeviceStatus status,
             @RequestParam(value = "type", required = false) DeviceType type) {
         ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
                 .message("Filter device successfully")
-                .data(deviceService.filterDevices(pageable, modelId, type))
+                .data(deviceService.filterDevices(search, type, modelId,status, pageable))
                 .build();
         return ResponseEntity.ok(response);
     }

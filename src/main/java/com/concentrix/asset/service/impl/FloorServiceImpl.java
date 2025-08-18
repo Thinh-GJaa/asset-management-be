@@ -54,11 +54,15 @@ public class FloorServiceImpl implements FloorService {
     }
 
     @Override
-    public Page<FloorResponse> filterFloor(String search, Integer siteId, Pageable pageable) {
+    public Page<FloorResponse> filterFloor(String search, Integer siteId, Integer accountId, Pageable pageable) {
         return floorRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (siteId != null) {
                 predicates.add(cb.equal(root.get("site").get("siteId"), siteId));
+            }
+
+            if (accountId != null) {
+                predicates.add(cb.equal(root.get("account").get("accountId"), accountId ));
             }
             if (search != null && !search.trim().isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";

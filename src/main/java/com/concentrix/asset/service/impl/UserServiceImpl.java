@@ -226,4 +226,11 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
+    @Override
+    public User getCurrentUser() {
+        String EID = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findById(EID)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+    }
+
 }

@@ -46,10 +46,11 @@ public class FloorController {
     public ResponseEntity<ApiResponse<Page<FloorResponse>>> filterFloor(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Integer siteId,
+            @RequestParam(required = false) Integer accountId,
             @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         ApiResponse<Page<FloorResponse>> apiResponse = ApiResponse.<Page<FloorResponse>>builder()
                 .message("Get all floors successfully")
-                .data(floorService.filterFloor(search, siteId, pageable))
+                .data(floorService.filterFloor(search, siteId, accountId, pageable))
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
