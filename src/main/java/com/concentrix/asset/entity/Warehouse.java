@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entity lưu thông tin các kho chứa thiết bị, thuộc về một site cụ thể.
@@ -37,7 +38,7 @@ public class Warehouse {
     LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "warehouse")
-    java.util.Set<DeviceWarehouse> deviceWarehouses;
+    List<DeviceWarehouse> deviceWarehouses;
 
     @PrePersist
     protected void onCreate() {
