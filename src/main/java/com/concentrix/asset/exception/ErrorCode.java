@@ -34,8 +34,6 @@ public enum ErrorCode {
         RECORD_ALREADY_EXISTS(10702, HttpStatus.CONFLICT, "Record already exists"),
         RECORD_NOT_FOUND(10703, HttpStatus.NOT_FOUND, "Record not found"),
 
-        ENT_FAILED(11204, HttpStatus.PAYMENT_REQUIRED, "Payment for order with ID '{}' failed"),
-
         // Token-related errors
         TOKEN_NOT_FOUND(12100, HttpStatus.UNAUTHORIZED, "Token not found"),
         TOKEN_INVALID(12101, HttpStatus.UNAUTHORIZED, "Token is invalid"),

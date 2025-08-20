@@ -9,10 +9,8 @@ import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.AssignmentMapper;
-import com.concentrix.asset.repository.DeviceRepository;
-import com.concentrix.asset.repository.DeviceWarehouseRepository;
-import com.concentrix.asset.repository.TransactionRepository;
-import com.concentrix.asset.repository.UserRepository;
+import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.UserService;
 import com.concentrix.asset.service.transaction.AssignmentService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +40,8 @@ public class AssignmentServiceImpl implements AssignmentService {
     UserRepository userRepository;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
+    UserService userService;
+    DeviceUserRepository deviceUserRepository;
 
     @Override
     public AssignmentResponse getAssignmentById(Integer AssignmentId) {
@@ -55,16 +55,11 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public AssignmentResponse createAssignment(CreateAssignmentRequest request) {
         AssetTransaction transaction = assignmentMapper.toAssetTransaction(request);
-        transaction.setCreatedBy(getCurrentUser());
+        transaction.setCreatedBy(userService.getCurrentUser());
 
         if (request.getReturnDate() != null && request.getReturnDate().isBefore(LocalDate.now())) {
             throw new CustomException(ErrorCode.INVALID_RETURN_DATE);
         }
-
-        // Gán UserUse từ eid trong request
-        User userUse = userRepository.findById(request.getEid())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
-        transaction.setUserUse(userUse);
 
         // Gom các serialNumber không tìm thấy vào một list
         List<String> serialNotFound = new ArrayList<>();
@@ -194,6 +189,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                 Integer deviceId = device.getDeviceId();
                 Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
                 Integer qty = detail.getQuantity();
+
                 DeviceWarehouse fromStock = deviceWarehouseRepository
                         .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
                         .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
@@ -204,6 +200,22 @@ public class AssignmentServiceImpl implements AssignmentService {
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
+
+                // Cập nhật vào DeviceUser
+                // Nếu không có thì tạo mới
+                DeviceUser deviceUser = deviceUserRepository
+                        .findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
+                        .orElseGet(() -> DeviceUser.builder()
+                                .device(device)
+                                .user(transaction.getUserUse())
+                                .quantity(0)
+                                .build()
+                        );
+                deviceUser.setQuantity(deviceUser.getQuantity() + qty);
+                log.info("[AssignmentServiceImpl] Updating DeviceUser: {} for User: {} with quantity: {}",
+                        device.getSerialNumber(), transaction.getUserUse().getEid(), deviceUser.getQuantity());
+                deviceUserRepository.save(deviceUser);
+
             }
         }
         if (!serialInvalid.isEmpty()) {
