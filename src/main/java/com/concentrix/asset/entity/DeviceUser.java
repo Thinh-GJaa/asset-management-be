@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 public class DeviceUser {
     @Id
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "eid")
     User user;
 
     @Id

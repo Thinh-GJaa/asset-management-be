@@ -14,7 +14,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class DeviceUserId implements Serializable {
-    Integer user;
+    String user;
     Integer device;
 
 }
