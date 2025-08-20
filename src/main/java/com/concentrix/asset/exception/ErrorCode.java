@@ -86,6 +86,8 @@ public enum ErrorCode {
         RETURN_QUANTITY_EXCEEDS_BORROWED(20207, HttpStatus.BAD_REQUEST,
                         "Return quantity exceeds borrowed amount for device '{}'"),
 
+        SEAT_NUMBER_ALREADY_EXISTS(20208, HttpStatus.CONFLICT, "Seat number '{}' already exists"),
+
         // Stock entity errors
         STOCK_NOT_FOUND(20301, HttpStatus.NOT_FOUND, "Stock with ID '{}' not found"),
         STOCK_ALREADY_EXISTS(20302, HttpStatus.CONFLICT, "Stock with name '{}' already exists"),
