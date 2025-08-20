@@ -83,8 +83,30 @@ public class TransferController {
                 transferService.confirmTransfer(id);
 
                 ApiResponse<TransferResponse> response = ApiResponse.<TransferResponse>builder()
-                                .message("Transfer confirmed successfully")
+                                .message("Transfer site confirmed successfully")
                                 .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @PostMapping("/{id}/approve")
+        public ResponseEntity<ApiResponse<Void>> approveTransfer(@PathVariable Integer id) {
+
+                transferService.approveTransfer(id);
+
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                        .message("Transfer site approve successfully")
+                        .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @PostMapping("/approve")
+        public ResponseEntity<ApiResponse<Void>> approveTransferByToken(@RequestParam String token) {
+
+                transferService.approveTransferByToken(token);
+
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                        .message("Transfer site approve successfully")
+                        .build();
                 return ResponseEntity.ok(response);
         }
 
