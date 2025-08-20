@@ -198,8 +198,8 @@ public enum ErrorCode {
         // Custom: Device not found in floor
         INVALID_RETURN_DATE( 21708, HttpStatus.BAD_REQUEST, "Return date must be after the current date"),
 
-        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
-
+        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'"),
+        DEVICE_NOT_ENOUGH_IN_FLOOR(21709, HttpStatus.BAD_REQUEST, "Device '%s' not enough in floor '%s'");
 
         private final int code;
         private final HttpStatus status;

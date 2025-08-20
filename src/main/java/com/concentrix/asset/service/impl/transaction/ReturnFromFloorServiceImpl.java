@@ -37,9 +37,9 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
     ReturnFromFloorMapper returnFromFloorMapper;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
-    FloorRepository floorRepository;
     UserRepository userRepository;
-    TransactionDetailRepository transactionDetailRepository;
+    DeviceFloorRepository deviceFloorRepository;
+
 
     @Override
     public ReturnFromFloorResponse getReturnFromFloorById(Integer returnFromFloorId) {
@@ -189,33 +189,38 @@ public class ReturnFromFloorServiceImpl implements ReturnFromFloorService {
                 device.setStatus(DeviceStatus.IN_STOCK);
                 device.setCurrentWarehouse(transaction.getToWarehouse());
                 device.setCurrentFloor(null);
+                device.setHostName(null);
+                device.setSeatNumber(null);
                 deviceRepository.save(device);
             } else {
                 Integer deviceId = device.getDeviceId();
-                Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
                 Integer qty = detail.getQuantity();
-                DeviceWarehouse fromStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+
+                //Trừ từ DeviceFloor
+                DeviceFloor deviceFloor = deviceFloorRepository
+                        .findByDevice_DeviceIdAndFloor_FloorId(deviceId, transaction.getFromFloor().getFloorId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR,
                                 device.getModel().getModelName(),
                                 transaction.getFromFloor().getFloorName()));
-                if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+
+                if (deviceFloor.getQuantity() < qty) {
+                    throw new CustomException(ErrorCode.DEVICE_NOT_ENOUGH_IN_FLOOR,
+                            device.getModel().getModelName(),
+                            transaction.getFromFloor().getFloorName());
                 }
-                fromStock.setQuantity(fromStock.getQuantity() - qty);
-                deviceWarehouseRepository.save(fromStock);
-                // Cộng về kho
+
+                deviceFloor.setQuantity(deviceFloor.getQuantity() - qty);
+                deviceFloorRepository.save(deviceFloor);
+
+                // Cộng về DeviceWarehouse
                 DeviceWarehouse toStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(toWarehouseId, deviceId)
-                        .orElse(null);
-                if (toStock == null) {
-                    toStock = new DeviceWarehouse();
-                    toStock.setDevice(device);
-                    toStock.setWarehouse(transaction.getToWarehouse());
-                    toStock.setQuantity(qty);
-                } else {
-                    toStock.setQuantity(toStock.getQuantity() + qty);
-                }
+                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(transaction.getToWarehouse().getWarehouseId(), deviceId)
+                        .orElseGet(() -> DeviceWarehouse.builder()
+                                .device(device)
+                                .warehouse(transaction.getToWarehouse())
+                                .quantity(0)
+                                .build());
+                toStock.setQuantity(toStock.getQuantity() + qty);
                 deviceWarehouseRepository.save(toStock);
             }
         }
