@@ -2,6 +2,7 @@ package com.concentrix.asset.controller;
 
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
+import com.concentrix.asset.dto.request.UpdateSeatNumberRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceWithoutSerialSummaryResponse;
@@ -82,12 +83,38 @@ public class DeviceController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping
-    public ResponseEntity<ApiResponse<DeviceResponse>> updateDevice(@Valid @RequestBody UpdateDeviceRequest request) {
-        ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
-                .message("Update device successfully")
-                .data(deviceService.updateDevice(request))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @PatchMapping
+        public ResponseEntity<ApiResponse<DeviceResponse>> updateDevice(
+                        @Valid @RequestBody UpdateDeviceRequest request) {
+                ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
+                                .message("Update device successfully")
+                                .data(deviceService.updateDevice(request))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @PatchMapping("/seat-number")
+        public ResponseEntity<ApiResponse<Void>> updateSeatNumber(
+                        @Valid @RequestBody List<UpdateSeatNumberRequest> request) {
+
+                deviceService.updateSeatNumber(request);
+
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                                .message("Update seat number successfully")
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @GetMapping("/filter/non-seat-number")
+        public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDeviceNonSeatNumber(
+                        @PageableDefault(size = 10, page = 0, sort = "serialNumber", direction = Sort.Direction.DESC) Pageable pageable,
+                        @RequestParam(value = "siteId", required = false) Integer siteId,
+                        @RequestParam(value = "search", required = false) String search,
+                        @RequestParam(value = "floorId", required = false) Integer floorId) {
+                ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
+                                .message("Filter device successfully")
+                                .data(deviceService.filterDevicesNonSeatNumber(search, siteId, floorId, pageable))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 }

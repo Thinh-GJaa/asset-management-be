@@ -1,6 +1,7 @@
 package com.concentrix.asset.service.impl;
 
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
+import com.concentrix.asset.dto.request.UpdateSeatNumberRequest;
 import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
@@ -79,12 +80,11 @@ public class DeviceServiceImpl implements DeviceService {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if(search != null && !search.trim().isEmpty()) {
+            if (search != null && !search.trim().isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("deviceName")), like),
-                        cb.like(cb.lower(root.get("serialNumber")), like)
-                ));
+                        cb.like(cb.lower(root.get("serialNumber")), like)));
             }
 
             if (type != null) {
@@ -101,7 +101,6 @@ public class DeviceServiceImpl implements DeviceService {
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(deviceMapper::toDeviceResponse);
     }
-
 
     @Override
     public List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber) {
@@ -263,7 +262,7 @@ public class DeviceServiceImpl implements DeviceService {
 
         List<Device> devicesByEid = deviceRepository.findAllByCurrentUser_Eid(eid);
 
-        for(Device dv : devicesByEid){
+        for (Device dv : devicesByEid) {
             if (dv.getSerialNumber() != null && !dv.getSerialNumber().isEmpty()) {
                 DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
                         .serialNumber(dv.getSerialNumber())
@@ -285,7 +284,7 @@ public class DeviceServiceImpl implements DeviceService {
             Device dv = (Device) obj[0];
             Integer quantity = ((Long) obj[1]).intValue();
 
-            if(quantity != 0){
+            if (quantity != 0) {
                 DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
                         .serialNumber(dv.getSerialNumber())
                         .deviceName(dv.getDeviceName())
@@ -303,12 +302,12 @@ public class DeviceServiceImpl implements DeviceService {
     public Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable) {
         List<User> users = transactionRepository.findDistinctEidFromTransactions();
 
-        List<DeviceBorrowingInfoResponse> result =  users.parallelStream().map(
+        List<DeviceBorrowingInfoResponse> result = users.parallelStream().map(
                 user -> {
 
                     List<DeviceBorrowingInfoResponse.DeviceInfo> deviceInfos = getBorrowingDevicesByUser(user.getEid());
 
-                    if( deviceInfos.isEmpty() ) {
+                    if (deviceInfos.isEmpty()) {
                         return null;
                     }
 
@@ -316,8 +315,7 @@ public class DeviceServiceImpl implements DeviceService {
                             .eid(user.getEid())
                             .fullName(user.getFullName())
                             .build();
-                }
-        ).filter(Objects::nonNull).toList();
+                }).filter(Objects::nonNull).toList();
 
         return new PageImpl<>(result, pageable, result.size());
     }
@@ -345,13 +343,101 @@ public class DeviceServiceImpl implements DeviceService {
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
         StringBuilder hostName = new StringBuilder();
 
-        if(type == DeviceType.LAPTOP) {
-           hostName.append("VNHCM-LAP");
-           hostName.append(serialNumber);
-           return hostName.toString();
+        if (type == DeviceType.LAPTOP) {
+            hostName.append("VNHCM-LAP");
+            hostName.append(serialNumber);
+            return hostName.toString();
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void updateSeatNumber(List<UpdateSeatNumberRequest> request) {
+
+        // Initialize lists to track serials
+        List<String> existSeatNumber = new ArrayList<>();
+        List<String> notFoundSerials = new ArrayList<>();
+        List<String> notValid = new ArrayList<>();
+
+        // List to hold updated seat numbers
+        List<Device> deviceUpdateList = new ArrayList<>();
+
+        for (UpdateSeatNumberRequest deviceRequest : request) {
+
+            // Kiểm tra serial number có tồn tại không
+            Optional<Device> deviceSerialOpt = deviceRepository.findBySerialNumber(deviceRequest.getSerialNumber());
+            if (deviceSerialOpt.isEmpty()) {
+                notFoundSerials.add(deviceRequest.getSerialNumber());
+                continue; // bỏ qua vòng lặp này, check tiếp cái khác
+            }
+            Device deviceSerial = deviceSerialOpt.get();
+
+            if (deviceSerial.getStatus() != DeviceStatus.IN_FLOOR) {
+                notValid.add(deviceRequest.getSerialNumber());
+                continue; // bỏ qua vòng lặp này, check tiếp cái khác
+            }
+
+            // Kiểm tra seat number đã tồn tại chưa
+            Optional<Device> deviceSeatNumberOpt = deviceRepository.findBySeatNumber(deviceRequest.getSeatNumber());
+            if (deviceSeatNumberOpt.isPresent()
+                    && !deviceSeatNumberOpt.get().getSerialNumber().equals(deviceRequest.getSerialNumber())) {
+                existSeatNumber.add(deviceRequest.getSerialNumber());
+                continue; // bỏ qua vòng lặp này, check tiếp cái khác
+            }
+            // Update seat number
+            deviceSerial.setSeatNumber(deviceRequest.getSeatNumber());
+            deviceUpdateList.add(deviceSerial);
+        }
+
+        // Sau vòng lặp, nếu có lỗi thì throw
+        if (!notFoundSerials.isEmpty()) {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(", ", notFoundSerials));
+        }
+
+        if (!existSeatNumber.isEmpty()) {
+            throw new CustomException(ErrorCode.SEAT_NUMBER_ALREADY_EXISTS, String.join(", ", existSeatNumber));
+        }
+
+        if (!notValid.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(", ", notValid));
+        }
+
+        // Nếu không có lỗi thì lưu batch
+        deviceRepository.saveAll(deviceUpdateList);
+
+    }
+
+    @Override
+    public Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
+            Pageable pageable) {
+        return deviceRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isNull(root.get("seatNumber"))); // Chỉ lấy những thiết bị không có seat number
+            predicates.add(cb.isNotNull(root.get("serialNumber"))); // Chỉ lấy những thiết bị có serial number
+            predicates.add(cb.equal(root.get("status"), DeviceStatus.IN_FLOOR)); // Chỉ lấy những thiết bị có trạng thái
+                                                                                 // IN_FLOOR
+
+            if (search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("deviceName")), like),
+                        cb.like(cb.lower(root.get("serialNumber")), like),
+                        cb.like(cb.lower(root.get("currentFloor").get("floorName")), like),
+                        cb.like(cb.lower(root.get("currentFloor").get("site").get("siteName")), like)));
+            }
+
+            if (siteId != null) {
+                predicates.add(cb.equal(root.get("currentFloor").get("site").get("siteId"), siteId));
+            }
+
+            if (floorId != null) {
+                predicates.add(cb.equal(root.get("currentFloor").get("floorId"), floorId));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable).map(deviceMapper::toDeviceResponse);
     }
 
     @Override

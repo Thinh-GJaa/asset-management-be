@@ -8,6 +8,7 @@ import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.Floor;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
+import com.concentrix.asset.dto.request.UpdateSeatNumberRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,23 +19,13 @@ public interface DeviceService {
 
         DeviceResponse updateDevice(UpdateDeviceRequest request);
 
-        Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId,DeviceStatus status, Pageable pageable);
+        Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
+                        Pageable pageable);
 
-        /**
-         * Lấy lịch sử vòng đời thiết bị (mô tả dạng chuỗi từng transaction)
-         */
         List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber);
 
-        /**
-         * Lấy danh sách user và các thiết bị họ đang mượn (có quantity với thiết bị
-         * không serial)
-         */
         List<DeviceBorrowingInfoResponse> getAllUserBorrowingDevices();
 
-        /**
-         * Lấy danh sách thiết bị mà 1 user đang mượn (có quantity với thiết bị không
-         * serial)
-         */
         List<DeviceBorrowingInfoResponse.DeviceInfo> getBorrowingDevicesByUser(String eid);
 
         Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable);
@@ -47,6 +38,8 @@ public interface DeviceService {
 
         String generateHostNameForLaptop(Device device);
 
+        void updateSeatNumber(List<UpdateSeatNumberRequest> request);
 
-
+        Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
+                        Pageable pageable);
 }
