@@ -44,6 +44,7 @@ public class UseFloorServiceImpl implements UseFloorService {
     UserRepository userRepository;
     WarehouseRepository warehouseRepository;
     DeviceService deviceService;
+    DeviceFloorRepository deviceFloorRepository;
 
     @Override
     public UseFloorResponse getUseFloorById(Integer useFloorId) {
@@ -154,7 +155,7 @@ public class UseFloorServiceImpl implements UseFloorService {
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateStockForUseFloor(transaction);
+        updateForUseFloor(transaction);
 
         return useFloorMapper.toUseFloorResponse(transaction);
     }
@@ -195,7 +196,7 @@ public class UseFloorServiceImpl implements UseFloorService {
     }
 
     // Trừ kho khi chuyển lên sàn (cả serial và không serial)
-    private void updateStockForUseFloor(AssetTransaction transaction) {
+    private void updateForUseFloor(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
             Device device = detail.getDevice();
 
@@ -223,6 +224,19 @@ public class UseFloorServiceImpl implements UseFloorService {
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
+
+                // Cập nhật vào DeviceFloor
+                // Nếu không có thì tạo mới
+                DeviceFloor deviceFloor = deviceFloorRepository
+                        .findByDevice_DeviceIdAndFloor_FloorId(deviceId, transaction.getToFloor().getFloorId())
+                        .orElseGet(() -> DeviceFloor.builder()
+                                .device(device)
+                                .floor(transaction.getToFloor())
+                                .quantity(0)
+                                .build()
+                        );
+                deviceFloor.setQuantity(deviceFloor.getQuantity() + qty);
+                deviceFloorRepository.save(deviceFloor);
             }
         }
     }

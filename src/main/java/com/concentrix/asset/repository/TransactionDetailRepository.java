@@ -44,8 +44,10 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (td.transaction.transactionType = 'USE_FLOOR' or td.transaction.transactionType = 'TRANSFER_FLOOR')
             AND (:siteId IS NULL OR td.transaction.toFloor.site.siteId = :siteId)
       """)
-  Integer sumFloorInBySite(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
+  Integer sumFloorInBySite(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId,
+          @Param("siteId") Integer siteId);
 
   // Lấy total device without serial return_from_floor
   @Query("""
@@ -56,8 +58,10 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (td.transaction.transactionType = 'RETURN_FROM_FLOOR' or td.transaction.transactionType = 'TRANSFER_FLOOR')
             AND (:siteId IS NULL OR td.transaction.fromFloor.site.siteId = :siteId)
       """)
-  Integer sumFloorOutBySite(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
+  Integer sumFloorOutBySite(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId,
+          @Param("siteId") Integer siteId);
 
   // Lấy total device without serial assignment
   @Query("""
@@ -67,8 +71,9 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND (td.transaction.transactionType = 'ASSIGNMENT')
       """)
-  Integer sumAssignment(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId);
+  Integer sumAssignment(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Lấy total device without serial return_from_user
   @Query("""
@@ -78,8 +83,9 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND (td.transaction.transactionType = 'RETURN_FROM_USER')
       """)
-  Integer sumReturnFromUser(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId);
+  Integer sumReturnFromUser(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Lấy total device without serial on_the-move
   @Query("""
@@ -89,10 +95,10 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND td.transaction.transactionType = 'TRANSFER_SITE'
             AND td.transaction.transactionStatus IN ('PENDING', 'APPROVED')
-            AND (:siteId IS NULL OR td.transaction.fromWarehouse.site.siteId = :siteId)
       """)
-  Integer sumOnTheMove(@Param("type") com.concentrix.asset.enums.DeviceType type,
-      @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
+  Integer sumOnTheMove(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Get total device without serial disposal
   @Query("""
@@ -101,10 +107,10 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:type IS NULL OR td.device.model.type = :type)
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND td.transaction.transactionType = 'DISPOSAL'
-            AND (:siteId IS NULL OR td.transaction.fromWarehouse.site.siteId = :siteId)
       """)
-  Integer sumDisposed(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
+  Integer sumDisposedByType_Model(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Lấy total device without serial e_waste
   @Query("""
@@ -115,8 +121,10 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND td.transaction.transactionType = 'E_WASTE'
             AND (:siteId IS NULL OR td.transaction.fromWarehouse.site.siteId = :siteId)
       """)
-  Integer sumEWaste(@Param("type") DeviceType type,
-      @Param("modelId") Integer modelId, @Param("siteId") Integer siteId);
+  Integer sumEWasteBySite_Type_Model(
+          @Param("siteId") Integer siteId,
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Lấy total device without serial repair
   @Query("""
@@ -126,7 +134,9 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
             AND td.transaction.transactionType = 'REPAIR'
       """)
-  Integer sumRepair(@Param("type") DeviceType type, @Param("modelId") Integer modelId);
+  Integer sumRepair(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Lấy total device without serial return_from_repair
   @Query("""
@@ -136,7 +146,9 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND (:type IS NULL OR td.device.model.type = :type)
             AND (:modelId IS NULL OR td.device.model.modelId = :modelId)
       """)
-  Integer sumReturnFromRepair(@Param("type") DeviceType type, @Param("modelId") Integer modelId);
+  Integer sumReturnFromRepair(
+          @Param("type") DeviceType type,
+          @Param("modelId") Integer modelId);
 
   // Tổng quantity USE_FLOOR cho tất cả site
   @Query("""
@@ -207,8 +219,7 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
           SELECT COALESCE(SUM(td.quantity), 0) FROM TransactionDetail td
           WHERE (td.device.serialNumber IS NULL)
             AND td.transaction.transactionType = 'TRANSFER_SITE'
-            AND (td.transaction.transactionStatus IN ('PENDING', 'APPROVED'))
+            AND td.transaction.transactionStatus IN ('PENDING', 'APPROVED')
       """)
   Integer sumAllOnTheMove();
-
 }

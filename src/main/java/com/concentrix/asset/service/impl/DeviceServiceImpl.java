@@ -69,7 +69,6 @@ public class DeviceServiceImpl implements DeviceService {
 
         deviceMapper.updateDevice(device, request);
         device = deviceRepository.save(device);
-        log.info("[DeviceServiceImpl] Updated device with ID: {}", device.getDeviceId());
         return deviceMapper.toDeviceResponse(device);
 
     }
@@ -280,7 +279,6 @@ public class DeviceServiceImpl implements DeviceService {
         }
 
         List<Object[]> devicesWithoutSerial = transactionDetailRepository.getDeviceAndQuantityByEid(eid);
-        log.info("[DeviceServiceImpl] Found {}  serial for user {}", devicesWithoutSerial, eid);
         for (Object[] obj : devicesWithoutSerial) {
             Device dv = (Device) obj[0];
             Integer quantity = ((Long) obj[1]).intValue();

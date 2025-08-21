@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entity lưu thông tin người dùng/nhân viên sử dụng thiết bị.
@@ -76,6 +77,9 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "update_by_eid")
     User updatedBy;
+
+    @OneToMany(mappedBy = "user")
+    List<DeviceUser> deviceUsers;
 
     @Column
     LocalDateTime createdAt;

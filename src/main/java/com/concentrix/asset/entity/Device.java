@@ -37,7 +37,7 @@ public class Device {
     @Column
     String hostName;
 
-    @Column
+    @Column(unique = true)
     String seatNumber;
 
     @Enumerated(EnumType.STRING)
@@ -52,15 +52,21 @@ public class Device {
     Warehouse currentWarehouse;
 
     @ManyToOne
-    @JoinColumn(name = "floor_id", nullable = true)
+    @JoinColumn(name = "floor_id")
     Floor currentFloor;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id")
     User currentUser;
 
     @OneToMany(mappedBy = "device")
     List<DeviceWarehouse> deviceWarehouses;
+
+    @OneToMany(mappedBy = "device")
+    List<DeviceUser> deviceUsers;
+
+    @OneToMany(mappedBy = "device")
+    List<DeviceFloor> deviceFloors;
 
     @OneToMany(mappedBy = "device")
     List<PODetail> poDetails;

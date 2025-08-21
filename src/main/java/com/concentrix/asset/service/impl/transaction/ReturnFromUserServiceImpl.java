@@ -44,6 +44,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     DeviceWarehouseRepository deviceWarehouseRepository;
     TransactionDetailRepository transactionDetailRepository;
     AssignmentMapper assignmentMapper;
+    DeviceUserRepository deviceUserRepository;
+
 
     @Override
     public ReturnFromUserResponse getReturnFromUserById(Integer returnId) {
@@ -205,7 +207,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                 device.setCurrentFloor(null);
                 deviceRepository.save(device);
             } else {
-                // Non-serial: cộng kho về warehouse
+                // Non-serial
+                // Cộng số lượng vào kho đích
                 Integer deviceId = device.getDeviceId();
                 Integer toWarehouseId = transaction.getToWarehouse().getWarehouseId();
                 Integer qty = detail.getQuantity();
@@ -221,6 +224,18 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                     toStock.setQuantity(toStock.getQuantity() + qty);
                 }
                 deviceWarehouseRepository.save(toStock);
+
+                // Cập nhật số lượng mượn của user
+                DeviceUser deviceUser = deviceUserRepository.findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVALID_DEVICE_USER, device.getModel().getModelName()));
+
+                if( deviceUser.getQuantity() < qty) {
+                    throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED, device.getModel().getModelName());
+                } else {
+                    deviceUser.setQuantity(deviceUser.getQuantity() - qty);
+                    deviceUserRepository.save(deviceUser);
+                }
+
             }
         }
     }

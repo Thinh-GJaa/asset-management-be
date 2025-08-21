@@ -23,10 +23,10 @@ public interface DeviceWarehouseRepository extends JpaRepository<DeviceWarehouse
                               AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
                               AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
                         """)
-        Integer sumQuantityInStockBySite(
+        Integer sumStockBySite_Type_Model(
+                        @Param("siteId") Integer siteId,
                         @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId,
-                        @Param("siteId") Integer siteId);
+                        @Param("modelId") Integer modelId);
 
         @Query("SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw")
         int sumAllStock();

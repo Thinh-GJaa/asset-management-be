@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entity lưu thông tin các sàn làm việc (floor), thuộc về một site cụ thể.
@@ -43,6 +44,9 @@ public class Floor {
 
     @Column
     LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "floor")
+    List<DeviceFloor> deviceFloors;
 
     @PrePersist
     protected void onCreate() {

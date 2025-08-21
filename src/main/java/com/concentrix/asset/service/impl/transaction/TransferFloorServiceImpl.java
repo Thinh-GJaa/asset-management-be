@@ -41,6 +41,7 @@ public class TransferFloorServiceImpl implements TransferFloorService {
     FloorRepository floorRepository;
     UserRepository userRepository;
     DeviceService deviceService;
+    DeviceFloorRepository deviceFloorRepository;
 
     @Override
     public TransferFloorResponse getTransferFloorById(Integer transferFloorId) {
@@ -140,7 +141,7 @@ public class TransferFloorServiceImpl implements TransferFloorService {
         transaction.setDetails(details);
 
         transaction = transactionRepository.save(transaction);
-        updateStockForTransferFloor(transaction);
+        updateForTransferFloor(transaction);
 
         return transferFloorMapper.toTransferFloorResponse(transaction);
     }
@@ -181,14 +182,37 @@ public class TransferFloorServiceImpl implements TransferFloorService {
     }
 
     // Cập nhật trạng thái thiết bị sau khi chuyển sàn
-    private void updateStockForTransferFloor(AssetTransaction transaction) {
+    private void updateForTransferFloor(AssetTransaction transaction) {
         for (TransactionDetail detail : transaction.getDetails()) {
             Device device = detail.getDevice();
             boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
             if (hasSerial) {
                 device.setCurrentFloor(transaction.getToFloor());
                 device.setHostName(deviceService.generateHostNameForDesktop(device, transaction.getToFloor()));
+                device.setSeatNumber(null);
                 deviceRepository.save(device);
+            } else {
+                DeviceFloor deviceFloorTo = deviceFloorRepository
+                        .findByDevice_DeviceIdAndFloor_FloorId(device.getDeviceId(), transaction.getToFloor().getFloorId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getModel().getModelName()));
+
+                if (deviceFloorTo.getQuantity() < detail.getQuantity()) {
+                    throw new CustomException(ErrorCode.DEVICE_NOT_ENOUGH_IN_FLOOR, device.getModel().getModelName(), deviceFloorTo.getFloor().getFloorName());
+                } else {
+                    deviceFloorTo.setQuantity(deviceFloorTo.getQuantity() - detail.getQuantity());
+                }
+
+                DeviceFloor deviceFloorFrom = deviceFloorRepository
+                        .findByDevice_DeviceIdAndFloor_FloorId(device.getDeviceId(), transaction.getFromFloor().getFloorId())
+                        .orElseGet(() -> DeviceFloor.builder()
+                                .device(device)
+                                .floor(transaction.getFromFloor())
+                                .quantity(0)
+                                .build()
+                        );
+                deviceFloorFrom.setQuantity(deviceFloorFrom.getQuantity() + detail.getQuantity());
+                deviceFloorRepository.save(deviceFloorFrom);
+                deviceFloorRepository.save(deviceFloorTo);
             }
         }
     }

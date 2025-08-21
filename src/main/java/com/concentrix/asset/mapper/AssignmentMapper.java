@@ -4,14 +4,16 @@ import com.concentrix.asset.dto.request.CreateAssignmentRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.AssetTransaction;
+import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
+@Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class, IdMapperHelper.class})
 public interface AssignmentMapper {
 
     @Mapping(target = "transactionType", expression = "java(com.concentrix.asset.enums.TransactionType.ASSIGNMENT)")
     @Mapping(target = "fromWarehouse", source = "fromWarehouseId", qualifiedByName = "warehouseIdToWarehouse")
+    @Mapping(target = "userUse", source = "eid", qualifiedByName = "userEidToUser")
     AssetTransaction toAssetTransaction(CreateAssignmentRequest request);
 
     @Mappings({

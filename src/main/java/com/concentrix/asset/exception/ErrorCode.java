@@ -34,8 +34,6 @@ public enum ErrorCode {
         RECORD_ALREADY_EXISTS(10702, HttpStatus.CONFLICT, "Record already exists"),
         RECORD_NOT_FOUND(10703, HttpStatus.NOT_FOUND, "Record not found"),
 
-        ENT_FAILED(11204, HttpStatus.PAYMENT_REQUIRED, "Payment for order with ID '{}' failed"),
-
         // Token-related errors
         TOKEN_NOT_FOUND(12100, HttpStatus.UNAUTHORIZED, "Token not found"),
         TOKEN_INVALID(12101, HttpStatus.UNAUTHORIZED, "Token is invalid"),
@@ -202,8 +200,8 @@ public enum ErrorCode {
         // Custom: Device not found in floor
         INVALID_RETURN_DATE( 21708, HttpStatus.BAD_REQUEST, "Return date must be after the current date"),
 
-        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'");
-
+        DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '%s' not found in floor '%s'"),
+        DEVICE_NOT_ENOUGH_IN_FLOOR(21709, HttpStatus.BAD_REQUEST, "Device '%s' not enough in floor '%s'");
 
         private final int code;
         private final HttpStatus status;
