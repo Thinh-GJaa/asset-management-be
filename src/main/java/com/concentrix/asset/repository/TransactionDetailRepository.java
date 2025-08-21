@@ -222,5 +222,4 @@ public interface TransactionDetailRepository extends JpaRepository<TransactionDe
             AND td.transaction.transactionStatus IN ('PENDING', 'APPROVED')
       """)
   Integer sumAllOnTheMove();
-
 }

@@ -18,6 +18,7 @@ import java.util.Optional;
 
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpecificationExecutor<Device> {
+
         Optional<Device> findBySerialNumber(String serialNumber);
 
         // Lọc theo modelId
@@ -48,7 +49,6 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
       @Param("siteId") Integer siteId,
       @Param("type") DeviceType type,
       @Param("modelId") Integer modelId);
-
 
         @Query("""
                             SELECT COUNT(d) FROM Device d
@@ -165,5 +165,6 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                         @Param("status") DeviceStatus status,
                         @Param("type") DeviceType type,
                         @Param("modelId") Integer modelId);
+
 
 }

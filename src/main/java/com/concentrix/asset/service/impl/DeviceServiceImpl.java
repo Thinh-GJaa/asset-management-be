@@ -42,8 +42,6 @@ public class DeviceServiceImpl implements DeviceService {
     ModelRepository modelRepository;
     TransactionDetailRepository transactionDetailRepository;
     PODetailRepository poDetailRepository;
-    SiteRepository siteRepository;
-    DeviceWarehouseRepository deviceWarehouseRepository;
     TransactionRepository transactionRepository;
 
     @Override
@@ -76,7 +74,8 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status, Pageable pageable) {
+    public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
+            Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
