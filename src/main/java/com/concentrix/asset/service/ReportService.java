@@ -21,9 +21,9 @@ public interface ReportService {
     List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, Integer accountId, DeviceType type,
             Integer modelId);
 
-    StatusSummaryResponse getStatusSummaryWithSerial(DeviceStatus status);
-
-    StatusSummaryResponse getStatusSummaryWithoutSerial(DeviceStatus status);
+//    StatusSummaryResponse getStatusSummaryWithSerial(DeviceStatus status);
+//
+//    StatusSummaryResponse getStatusSummaryWithoutSerial(DeviceStatus status);
 
     List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status);
 
