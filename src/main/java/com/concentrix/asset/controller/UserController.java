@@ -3,31 +3,29 @@ package com.concentrix.asset.controller;
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
+import com.concentrix.asset.dto.request.UserImportRequest;
+import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
-import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
-import com.concentrix.asset.service.UserService;
+import com.concentrix.asset.enums.Role;
 import com.concentrix.asset.service.DeviceService;
+import com.concentrix.asset.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import com.concentrix.asset.dto.request.UserImportRequest;
 import java.util.Map;
 
 @RestController
@@ -71,11 +69,12 @@ public class UserController {
         @GetMapping("/filter")
         public ResponseEntity<ApiResponse<Page<UserResponse>>> filterUser(
                         @RequestParam(required = false) String search,
-                        @RequestParam(required = false) com.concentrix.asset.enums.Role role,
+                        @RequestParam(required = false) Role role,
+                        @RequestParam(required = false) Integer accountId,
                         @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
                 ApiResponse<Page<UserResponse>> response = ApiResponse.<Page<UserResponse>>builder()
                                 .message("Get all users successfully")
-                                .data(userService.filterUser(search, role, pageable))
+                                .data(userService.filterUser(search, role, accountId, pageable))
                                 .build();
                 return ResponseEntity.ok(response);
         }
