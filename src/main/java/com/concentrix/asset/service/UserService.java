@@ -3,7 +3,6 @@ package com.concentrix.asset.service;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
 import com.concentrix.asset.dto.request.UserImportRequest;
-import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
@@ -24,7 +23,7 @@ public interface UserService {
 
     UserResponse updateUser(UpdateUserRequest request);
 
-    Page<UserResponse> filterUser(String search, Role role, Pageable pageable);
+    Page<UserResponse> filterUser(String search, Role role, Integer accountId, Pageable pageable);
 
     Map<String, Object> importUsers(List<UserImportRequest> importRequests);
 
