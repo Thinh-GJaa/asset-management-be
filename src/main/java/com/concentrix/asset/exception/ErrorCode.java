@@ -97,6 +97,7 @@ public enum ErrorCode {
         ACCOUNT_ALREADY_EXISTS(20402, HttpStatus.CONFLICT, "Account with username '{}' already exists"),
         ACCOUNT_NAME_ALREADY_EXISTS(20403, HttpStatus.CONFLICT, "Account with name '{}' already exists"),
         ACCOUNT_CODE_ALREADY_EXISTS(20404, HttpStatus.CONFLICT, "Account with code '{}' already exists"),
+        ACCOUNT_NAME_NOT_FOUND(20405, HttpStatus.NOT_FOUND, "Account with name '{}' not found"),
 
 
         // DeviceType entity errors

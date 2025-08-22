@@ -3,7 +3,6 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateUserRequest;
 import com.concentrix.asset.dto.request.UpdateUserRequest;
 import com.concentrix.asset.dto.request.UserImportRequest;
-import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
 import com.concentrix.asset.dto.response.TransactionItemsResponse;
 import com.concentrix.asset.dto.response.TransactionResponse;
 import com.concentrix.asset.dto.response.UserResponse;
@@ -14,6 +13,7 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransactionMapper;
 import com.concentrix.asset.mapper.UserMapper;
+import com.concentrix.asset.repository.AccountRepository;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.UserService;
@@ -42,6 +42,7 @@ public class UserServiceImpl implements UserService {
     TransactionRepository transactionRepository;
     TransactionMapper transactionMapper;
     PasswordEncoder passwordEncoder;
+    AccountRepository accountRepository;
 
     @Override
     public UserResponse getUserById(String eid) {
@@ -58,36 +59,31 @@ public class UserServiceImpl implements UserService {
                     throw new CustomException(ErrorCode.USER_ALREADY_EXISTS, request.getEid());
                 });
 
-        if (userRepository.findBySso(request.getSSO()).isPresent()) {
-            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSSO());
+        if (userRepository.findBySso(request.getSso()).isPresent()) {
+            throw new CustomException(ErrorCode.SSO_ALREADY_EXISTS, request.getSso());
         }
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS, request.getEmail());
         }
 
         User user = userMapper.toUser(request);
-        if (request.getRole() == Role.ADMIN) {
-            user = setRoleOther(user);
-        } else {
-            user = setRole(user, request.getRole(), true); // Create password for non-admin users
-        }
+
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    private User setRole(User user, Role role, boolean createPassword) {
+    private void setRole(User user, Role role, boolean createPassword) {
         user.setRole(role);
         if (createPassword) {
-            user.setPassword(passwordEncoder.encode(user.getSso())); // Clear password for non-admin users
+            user.setPassword(passwordEncoder.encode("Concentrix@1234")); // Clear password for non-admin users
         }
-        return user;
     }
 
-    private User setRoleOther(User user) {
-        user.setRole(Role.OTHER);
-        return user;
-    }
+//    private User setRoleOther(User user) {
+//        user.setRole(Role.OTHER);
+//        return user;
+//    }
 
     @Override
     public UserResponse updateUser(UpdateUserRequest request) {
@@ -97,6 +93,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.findById(EID)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+
         User user = userRepository.findById(request.getEid())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
 
@@ -112,26 +109,30 @@ public class UserServiceImpl implements UserService {
 
         user = userMapper.updateUser(user, request);
 
-        if (request.getRole() != Role.OTHER)
-            user = setRole(user, request.getRole(), true); // Update password only for non-admin users
+        // Keep existing password for admin users
+        setRole(user, request.getRole(), request.getRole() != Role.OTHER && user.getPassword() == null);
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
 
     @Override
-    public Page<UserResponse> filterUser(String search, Role role, Pageable pageable) {
+    public Page<UserResponse> filterUser(String search, Role role, Integer accountId, Pageable pageable) {
         return userRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("fullName")), like),
+                        cb.like(cb.lower(root.get("eid")), like),
                         cb.like(cb.lower(root.get("sso")), like),
                         cb.like(cb.lower(root.get("msa")), like)));
             }
             if (role != null) {
                 predicates.add(cb.equal(root.get("role"), role));
+            }
+            if (accountId != null) {
+                predicates.add(cb.equal(root.get("account").get("accountId"), accountId));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(userMapper::toUserResponse);
@@ -148,58 +149,32 @@ public class UserServiceImpl implements UserService {
     public Map<String, Object> importUsers(List<UserImportRequest> importRequests) {
         int created = 0;
         int updated = 0;
-        List<String> emailErrors = new java.util.ArrayList<>();
+        List<User> users = new ArrayList<>();
+
         for (UserImportRequest req : importRequests) {
-            if (req.getEmail() == null || req.getEid() == null)
+            if (req.getEid() == null || req.getEmail() == null)
                 continue;
-            // Check email trùng với user khác eid
-            var emailUserOpt = userRepository.findByEmail(req.getEmail());
-            if (emailUserOpt.isPresent() && !emailUserOpt.get().getEid().equals(req.getEid())) {
-                emailErrors.add(req.getEmail());
-                continue;
-            }
+
             // Nếu eid đã tồn tại: cập nhật các trường ánh xạ
             var userOpt = userRepository.findById(req.getEid());
+
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                user.setFullName(req.getFullName());
-                user.setJobTitle(req.getJobTitle());
-                user.setEmail(req.getEmail());
-                user.setSso(req.getSso());
-                user.setMsa(req.getMsa());
-                user.setLocation(req.getLocation());
-                user.setCompany(req.getCompany());
-                user.setCostCenter(req.getCostCenter());
-                user.setMsaClient(req.getMsaClient());
-                user.setManagerEmail(req.getManagerEmail());
-                if (req.getIsActive() != null)
-                    user.setActive(req.getIsActive());
-                userRepository.save(user);
-                updated++;
+                user = userMapper.updateUser(user, req);
+                users.add(user);
+                updated ++;
             } else {
-                // Tạo mới user
-                User user = User.builder()
-                        .eid(req.getEid())
-                        .fullName(req.getFullName())
-                        .jobTitle(req.getJobTitle())
-                        .email(req.getEmail())
-                        .sso(req.getSso())
-                        .msa(req.getMsa())
-                        .location(req.getLocation())
-                        .company(req.getCompany())
-                        .costCenter(req.getCostCenter())
-                        .msaClient(req.getMsaClient())
-                        .managerEmail(req.getManagerEmail())
-                        .isActive(req.getIsActive() != null ? req.getIsActive() : true)
-                        .build();
-                userRepository.save(user);
-                created++;
+                User user = userMapper.ToUser(req);
+                users.add(user);
+                created ++;
             }
         }
+
+        userRepository.saveAll(users);
+
         Map<String, Object> result = new HashMap<>();
         result.put("created", created);
         result.put("updated", updated);
-        result.put("emailErrors", emailErrors);
         return result;
     }
 

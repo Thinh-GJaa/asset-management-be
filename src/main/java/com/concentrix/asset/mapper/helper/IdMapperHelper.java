@@ -10,10 +10,12 @@ import com.concentrix.asset.repository.SiteRepository;
 import com.concentrix.asset.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class IdMapperHelper {
@@ -45,4 +47,17 @@ public class IdMapperHelper {
         return userRepository.findById(userEid)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, userEid));
     }
+
+    @Named("msaClientToAccount")
+    public Account msaClientToAccount(String msaClient) {
+        if (msaClient == null || msaClient.isBlank())
+            return null;
+
+        log.info("[msaClientToAccount] Fetching account for MSA client: {}", msaClient);
+
+        return accountRepository.findByAccountName(msaClient)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NAME_NOT_FOUND, msaClient));
+    }
+
+
 }

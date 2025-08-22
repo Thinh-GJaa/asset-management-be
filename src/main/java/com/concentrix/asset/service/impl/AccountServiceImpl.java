@@ -66,13 +66,13 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(request.getAccountId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND, request.getAccountId()));
 
-        if(accountRepository.findByAccountName(request.getAccountName()) != null &&
-                !accountRepository.findByAccountName(request.getAccountName()).getAccountId().equals(request.getAccountId())) {
+        if(accountRepository.findByAccountName(request.getAccountName()).isPresent() &&
+                !accountRepository.findByAccountName(request.getAccountName()).get().getAccountId().equals(request.getAccountId())) {
             throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
         }
 
-        if(accountRepository.findByAccountCode(request.getAccountCode()) != null &&
-                !accountRepository.findByAccountCode(request.getAccountCode()).getAccountId().equals(request.getAccountId())) {
+        if(accountRepository.findByAccountCode(request.getAccountCode()).isPresent() &&
+                !accountRepository.findByAccountCode(request.getAccountCode()).get().getAccountId().equals(request.getAccountId())) {
             throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
         }
 
