@@ -212,10 +212,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                                 .build()
                         );
                 deviceUser.setQuantity(deviceUser.getQuantity() + qty);
-                log.info("[AssignmentServiceImpl] Updating DeviceUser: {} for User: {} with quantity: {}",
-                        device.getSerialNumber(), transaction.getUserUse().getEid(), deviceUser.getQuantity());
                 deviceUserRepository.save(deviceUser);
-
             }
         }
         if (!serialInvalid.isEmpty()) {
