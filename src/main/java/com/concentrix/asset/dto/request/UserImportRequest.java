@@ -1,19 +1,23 @@
 package com.concentrix.asset.dto.request;
 
+import com.concentrix.asset.enums.Role;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class UserImportRequest {
-    private String eid;
-    private String fullName;
-    private String jobTitle;
-    private String email;
-    private String sso;
-    private String msa;
-    private String location;
-    private String company;
-    private String costCenter;
-    private String msaClient;
-    private String managerEmail;
-    private Boolean isActive;
+    String eid;
+    String fullName;
+    String jobTitle;
+    String email;
+    String sso;
+    String msa;
+    String location;
+    String company;
+    String costCenter;
+    String msaClient;
+    String managerEmail;
+    Boolean isActive;
+    Role role;
 } 
