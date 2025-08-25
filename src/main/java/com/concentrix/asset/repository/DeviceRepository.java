@@ -1,7 +1,6 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.Model;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.domain.Page;
@@ -10,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -166,5 +164,14 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                         @Param("type") DeviceType type,
                         @Param("modelId") Integer modelId);
 
+
+    @Query("""
+        SELECT COUNT(d)
+            FROM Device d
+                WHERE d.model.type = :type
+                AND d.status IN ('IN_STOCK', 'IN_FLOOR', 'ON_THE_MOVE', 'ASSIGNED')
+                AND d.serialNumber IS NOT NULL
+    """)
+    Integer totalDeviceInUseAndInStock(DeviceType type);
 
 }
