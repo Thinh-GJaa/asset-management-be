@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cglib.core.Local;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Setter
 @Getter
@@ -27,6 +29,11 @@ public class POItem implements Serializable {
     @NotNull(message = "Quantity cannot be null")
     @Min(value = 1, message = "Quantity must be at least 1")
     Integer quantity;
+
+    LocalDate startDate;
+
+    LocalDate endDate;
+
 
 }
 
