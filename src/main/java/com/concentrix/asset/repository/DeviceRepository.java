@@ -1,16 +1,12 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.Model;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,152 +15,146 @@ import java.util.Optional;
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpecificationExecutor<Device> {
 
-        Optional<Device> findBySerialNumber(String serialNumber);
+    Optional<Device> findBySerialNumber(String serialNumber);
 
-        // Lọc theo modelId
-        Page<Device> findAllByModel_ModelId(Integer modelId, Pageable pageable);
+    List<Device> findAllByCurrentUser_Eid(String eid);
 
-        List<Device> findAllByCurrentUser_Eid(String eid);
+    Optional<Device> findFirstByModel_ModelId(Integer modelId);
 
-        // Lọc theo DeviceType (type của model)
-        Page<Device> findAllByModel_Type(DeviceType type, Pageable pageable);
+    Integer countByStatusAndSerialNumberIsNotNull(DeviceStatus status);
 
-        Optional<Device> findFirstByModel_ModelId(Integer modelId);
+    List<Device> findAllBySerialNumberIsNotNull();
 
-        Integer countByStatusAndSerialNumberIsNotNull(DeviceStatus status);
+    Optional<Device> findBySeatNumber(String seatNumber);
 
-        List<Device> findAllBySerialNumberIsNotNull();
+    @Query("""
+                SELECT COUNT(d) FROM Device d
+                WHERE (:type IS NULL OR d.model.type = :type)
+                  AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND d.status = 'IN_STOCK'
+                  AND d.serialNumber IS NOT NULL
+            """)
+    int countAssetInStock(
+            @Param("siteId") Integer siteId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-  Optional<Device> findBySeatNumber(String seatNumber);
-
-  @Query("""
-          SELECT COUNT(d) FROM Device d
-          WHERE (:type IS NULL OR d.model.type = :type)
-            AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-            AND d.status = 'IN_STOCK'
-            AND d.serialNumber IS NOT NULL
-      """)
-  int countAssetInStock(
-      @Param("siteId") Integer siteId,
-      @Param("type") DeviceType type,
-      @Param("modelId") Integer modelId);
-
-        @Query("""
-                            SELECT COUNT(d) FROM Device d
-                            WHERE (:type IS NULL OR d.model.type = :type)
-                              AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-                              AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                              AND d.status = 'E_WASTE'
-                              AND d.serialNumber IS NOT NULL
-        """)
-        int countAssetEWaste(
-                        @Param("siteId") Integer siteId,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+    @Query("""
+                                SELECT COUNT(d) FROM Device d
+                                WHERE (:type IS NULL OR d.model.type = :type)
+                                  AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                                  AND d.status = 'E_WASTE'
+                                  AND d.serialNumber IS NOT NULL
+            """)
+    int countAssetEWaste(
+            @Param("siteId") Integer siteId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
 
-        @Query("""
-                            SELECT COUNT(d) FROM Device d
-                            WHERE (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
-                              AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
-                              AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
-                              AND (:type IS NULL OR d.model.type = :type)
-                              AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                              AND d.status = 'IN_FLOOR'
-                              AND d.serialNumber IS NOT NULL
-        """)
+    @Query("""
+                                SELECT COUNT(d) FROM Device d
+                                WHERE (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
+                                  AND (:ownerId IS NULL OR d.currentFloor.account.owner.eid = :ownerId)
+                                  AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
+                                  AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
+                                  AND (:type IS NULL OR d.model.type = :type)
+                                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                                  AND d.status = 'IN_FLOOR'
+                                  AND d.serialNumber IS NOT NULL
+            """)
+    int countAssetInFloor(
+            @Param("siteId") Integer siteId,
+            @Param("ownerId") Integer ownerId,
+            @Param("accountId") Integer accountId,
+            @Param("floorId") Integer floorId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        int countAssetInFloor(
-                        @Param("siteId") Integer siteId,
-                        @Param("accountId") Integer accountId,
-                        @Param("floorId") Integer floorId,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+    @Query("""
+                SELECT COUNT(d) FROM Device d
+                WHERE d.status = :status
+                  AND (:type IS NULL OR d.model.type = :type)
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND d.serialNumber IS NOT NULL
+            """)
+    int countAssetByStatus(
+            @Param("status") DeviceStatus status,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        @Query("""
-                            SELECT COUNT(d) FROM Device d
-                            WHERE d.status = :status
-                              AND (:type IS NULL OR d.model.type = :type)
-                              AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                              AND d.serialNumber IS NOT NULL
-                        """)
+    @Query("""
+            SELECT d FROM Device d
+            WHERE d.status = 'IN_STOCK'
+                AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                AND (:type IS NULL OR d.model.type = :type)
+                AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                AND d.serialNumber IS NOT NULL
 
-        int countAssetByStatus(
-                        @Param("status") DeviceStatus status,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+            """)
+    List<Device> findDevicesInStockForReport(
+            @Param("siteId") Integer siteId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        @Query("""
-                        SELECT d FROM Device d
-                        WHERE d.status = 'IN_STOCK'
-                            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                            AND (:type IS NULL OR d.model.type = :type)
-                            AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-                            AND d.serialNumber IS NOT NULL
+    @Query("""
+            SELECT d FROM Device d
+            WHERE d.status = 'E_WASTE'
+                AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                AND (:type IS NULL OR d.model.type = :type)
+                AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                AND d.serialNumber IS NOT NULL
 
-                        """)
+            """)
+    List<Device> findDevicesEWasteForReport(
+            @Param("siteId") Integer siteId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        List<Device> findDevicesInStockForReport(
-                        @Param("siteId") Integer siteId,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+    @Query("""
+            SELECT d FROM Device d
+            WHERE d.status = 'IN_FLOOR'
+                AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                AND (:type IS NULL OR d.model.type = :type)
+                AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
+                AND (:ownerId IS NULL OR d.currentFloor.account.owner.eid = :ownerId)
+                AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
+                AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
+                AND d.serialNumber IS NOT NULL
+            """)
+    List<Device> findDevicesInFloorForReport(
+            @Param("siteId") Integer siteId,
+            @Param("floorId") Integer floorId,
+            @Param("ownerId") Integer ownerId,
+            @Param("accountId") Integer accountId,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        @Query("""
-                        SELECT d FROM Device d
-                        WHERE d.status = 'E_WASTE'
-                            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                            AND (:type IS NULL OR d.model.type = :type)
-                            AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-                            AND d.serialNumber IS NOT NULL
+    @Query("""
+            SELECT d FROM Device d
+            WHERE d.status = 'ON_THE_MOVE'
+                AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                AND (:type IS NULL OR d.model.type = :type)
+                AND d.serialNumber IS NOT NULL
 
-                        """)
+            """)
+    List<Device> findDevicesOnTheMoveForReport(
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
-        List<Device> findDevicesEWasteForReport(
-                @Param("siteId") Integer siteId,
-                @Param("type") DeviceType type,
-                @Param("modelId") Integer modelId);
-
-        @Query("""
-                        SELECT d FROM Device d
-                        WHERE d.status = 'IN_FLOOR'
-                            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                            AND (:type IS NULL OR d.model.type = :type)
-                            AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
-                            AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
-                            AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
-                            AND d.serialNumber IS NOT NULL
-                        """)
-        List<Device> findDevicesInFloorForReport(
-                        @Param("siteId") Integer siteId,
-                        @Param("floorId") Integer floorId,
-                        @Param("accountId") Integer accountId,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
-
-        @Query("""
-                        SELECT d FROM Device d
-                        WHERE d.status = 'ON_THE_MOVE'
-                            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                            AND (:type IS NULL OR d.model.type = :type)
-                            AND d.serialNumber IS NOT NULL
-
-                        """)
-        List<Device> findDevicesOnTheMoveForReport(
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
-
-        @Query("""
-                        SELECT d FROM Device d
-                        WHERE d.status = :status
-                            AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                            AND (:type IS NULL OR d.model.type = :type)
-                            AND d.serialNumber IS NOT NULL
-                        """)
-        List<Device> findDevicesStatusForReport(
-                        @Param("status") DeviceStatus status,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+    @Query("""
+            SELECT d FROM Device d
+            WHERE d.status = :status
+                AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                AND (:type IS NULL OR d.model.type = :type)
+                AND d.serialNumber IS NOT NULL
+            """)
+    List<Device> findDevicesStatusForReport(
+            @Param("status") DeviceStatus status,
+            @Param("type") DeviceType type,
+            @Param("modelId") Integer modelId);
 
 
 }
