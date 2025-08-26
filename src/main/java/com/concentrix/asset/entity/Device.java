@@ -5,8 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Entity lưu thông tin từng thiết bị cụ thể (serial, trạng thái, model, vị trí
@@ -42,6 +42,12 @@ public class Device {
 
     @Enumerated(EnumType.STRING)
     DeviceStatus status;
+
+    @Column
+    LocalDate startDate; //Thời gian bắt đầu tính bảo hành
+
+    @Column
+    LocalDate endDate; //Thời gian kết thúc bảo hành
 
     @ManyToOne
     @JoinColumn(name = "model_id")
