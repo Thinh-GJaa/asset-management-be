@@ -56,7 +56,7 @@ public class ReportController {
             @RequestParam(value = "modelId", required = false) Integer modelId,
             @RequestParam(value = "isOutOfWarranty", required = false) boolean isOutOfWarranty) {
         List<TypeSummaryResponse> result = reportService.getWithSerialSummary(
-                siteId, status, floorId, ownerId, accountId, type, modelId);
+                siteId, status, floorId, ownerId, accountId, type, modelId, isOutOfWarranty);
         ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
                 .<List<TypeSummaryResponse>>builder()
                 .message("Get with serial summary successfully")
