@@ -3,10 +3,12 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateAccountRequest;
 import com.concentrix.asset.dto.request.UpdateAccountRequest;
 import com.concentrix.asset.dto.response.AccountResponse;
+import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.entity.Account;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.AccountMapper;
+import com.concentrix.asset.mapper.UserMapper;
 import com.concentrix.asset.repository.AccountRepository;
 import com.concentrix.asset.service.AccountService;
 import com.concentrix.asset.service.UserService;
@@ -32,6 +34,7 @@ public class AccountServiceImpl implements AccountService {
     AccountRepository accountRepository;
     AccountMapper accountMapper;
     UserService userService;
+    UserMapper userMapper;
 
     @Override
     public AccountResponse getAccountById(Integer accountId) {
@@ -44,11 +47,11 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse createAccount(CreateAccountRequest request) {
 
-        if(accountRepository.findByAccountName(request.getAccountName()) != null) {
+        if(accountRepository.findByAccountName(request.getAccountName()).isPresent()) {
             throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
         }
 
-        if(accountRepository.findByAccountCode(request.getAccountCode()) != null) {
+        if(accountRepository.findByAccountCode(request.getAccountCode()).isPresent()) {
             throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
         }
 
@@ -100,6 +103,13 @@ public class AccountServiceImpl implements AccountService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(accountMapper::toAccountResponse);
+    }
+
+    @Override
+    public List<UserResponse> getOwners() {
+        return accountRepository.findAllOwner().stream()
+                .map(userMapper::toUserResponse)
+                .toList();
     }
 
 
