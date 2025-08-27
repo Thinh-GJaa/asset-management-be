@@ -121,6 +121,8 @@ public class POServiceImpl implements POService {
                 .serialNumber(item.getSerialNumber())
                 .model(model)
                 .deviceName(item.getDeviceName())
+                .startDate(item.getStartDate())
+                .endDate(item.getEndDate())
                 .currentWarehouse(purchaseOrder.getWarehouse())
                 .status(DeviceStatus.IN_STOCK)
                 .build();
