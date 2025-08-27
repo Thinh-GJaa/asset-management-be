@@ -15,13 +15,15 @@ public interface ReportService {
     Map<String, Map<String, Integer>> getStatusSummaryAllSite();
 
     List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status, DeviceType type,
-                                                                         Integer modelId);
+            Integer modelId);
 
-    List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
-                                                   DeviceType type, Integer modelId, boolean isOutOfWarranty);
+    List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status, Integer floorId,
+            Integer ownerId, Integer accountId,
+            DeviceType type, Integer modelId, boolean isOutOfWarranty);
 
-    List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId, DeviceType type,
-                                                Integer modelId, boolean isOutOfWarranty);
+    List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId,
+            Integer accountId, DeviceType type,
+            Integer modelId, boolean isOutOfWarranty);
 
     List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status);
 

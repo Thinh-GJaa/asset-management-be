@@ -67,10 +67,9 @@ public class ReportServiceImpl implements ReportService {
         return result;
     }
 
-
     @Override
     public List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status,
-                                                                                DeviceType type, Integer modelId) {
+            DeviceType type, Integer modelId) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<SiteDeviceWithoutSerialSummaryResponse> result = new ArrayList<>();
 
@@ -123,7 +122,6 @@ public class ReportServiceImpl implements ReportService {
                         result.add(siteSummary);
                     }
                 }
-
 
             }
             default -> {
@@ -183,7 +181,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
-                                                          Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId) {
+            Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
+            boolean isOutOfWarranty) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<Site> sites = (siteId == null) ? siteRepository.findAll()
                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
@@ -288,18 +287,19 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-                                                       Integer ownerId, Integer accountId, DeviceType type, Integer modelId) {
+            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, boolean isOutOfWarranty) {
 
         List<Device> devices = new ArrayList<>();
         switch (status) {
-            case IN_STOCK -> devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId);
+            case IN_STOCK -> devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty);
 
             case IN_FLOOR ->
-                    devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type, modelId);
+                devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type,
+                        modelId, isOutOfWarranty);
 
-            case E_WASTE -> devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId);
+            case E_WASTE -> devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty);
 
-            default -> devices = deviceRepository.findDevicesStatusForReport(status, type, modelId);
+            default -> devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty);
 
         }
 
@@ -330,15 +330,15 @@ public class ReportServiceImpl implements ReportService {
                                 .filter(d -> d.getModel().getType() == type
                                         && d.getStatus() == status
                                         && ((d.getCurrentWarehouse() != null
-                                        && d.getCurrentWarehouse()
-                                        .getSite()
-                                        .getSiteId()
-                                        .equals(site.getSiteId()))
-                                        || (d.getCurrentFloor() != null
-                                        && d.getCurrentFloor()
-                                        .getSite()
-                                        .getSiteId()
-                                        .equals(site.getSiteId()))))
+                                                && d.getCurrentWarehouse()
+                                                        .getSite()
+                                                        .getSiteId()
+                                                        .equals(site.getSiteId()))
+                                                || (d.getCurrentFloor() != null
+                                                        && d.getCurrentFloor()
+                                                                .getSite()
+                                                                .getSiteId()
+                                                                .equals(site.getSiteId()))))
                                 .count();
                         typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                                 .type(type.name())
@@ -350,16 +350,16 @@ public class ReportServiceImpl implements ReportService {
                             .filter(d -> !mainTypes.contains(d.getModel().getType())
                                     && d.getStatus() == status
                                     && ((d.getCurrentWarehouse() != null
-                                    && d.getCurrentWarehouse()
-                                    .getSite()
-                                    .getSiteId()
-                                    .equals(site.getSiteId()))
-                                    || (d.getCurrentFloor() != null
-                                    && d
-                                    .getCurrentFloor()
-                                    .getSite()
-                                    .getSiteId()
-                                    .equals(site.getSiteId()))))
+                                            && d.getCurrentWarehouse()
+                                                    .getSite()
+                                                    .getSiteId()
+                                                    .equals(site.getSiteId()))
+                                            || (d.getCurrentFloor() != null
+                                                    && d
+                                                            .getCurrentFloor()
+                                                            .getSite()
+                                                            .getSiteId()
+                                                            .equals(site.getSiteId()))))
                             .count();
                     typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                             .type("OTHER")
@@ -475,8 +475,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private List<SiteTypeChartResponse.TypeCount> buildTypeCounts(Collection<DeviceType> types,
-                                                                  DeviceStatus status,
-                                                                  Integer siteId) {
+            DeviceStatus status,
+            Integer siteId) {
         List<SiteTypeChartResponse.TypeCount> result = new ArrayList<>();
         for (DeviceType type : types) {
             int count = getDeviceCountByStatus(status, type, siteId);

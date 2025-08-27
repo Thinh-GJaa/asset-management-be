@@ -13,39 +13,39 @@ import java.util.Optional;
 @Repository
 public interface DeviceWarehouseRepository extends JpaRepository<DeviceWarehouse, DeviceWarehouseId> {
 
-        Optional<DeviceWarehouse> findByWarehouse_WarehouseIdAndDevice_DeviceId(Integer warehouseId, Integer deviceId);
+  Optional<DeviceWarehouse> findByWarehouse_WarehouseIdAndDevice_DeviceId(Integer warehouseId, Integer deviceId);
 
-        // Lấy total device without serial in stock theo site, model, type
-        @Query("""
-                            SELECT COALESCE(SUM(dw.quantity), 0)
-                            FROM DeviceWarehouse dw
-                            WHERE (:type IS NULL OR dw.device.model.type = :type)
-                              AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
-                              AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
-                        """)
-        Integer sumStockBySite_Type_Model(
-                        @Param("siteId") Integer siteId,
-                        @Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId);
+  // Lấy total device without serial in stock theo site, model, type
+  @Query("""
+          SELECT COALESCE(SUM(dw.quantity), 0)
+          FROM DeviceWarehouse dw
+          WHERE (:type IS NULL OR dw.device.model.type = :type)
+            AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
+            AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
+      """)
+  Integer sumStockBySite_Type_Model(
+      @Param("siteId") Integer siteId,
+      @Param("type") DeviceType type,
+      @Param("modelId") Integer modelId);
 
-        @Query("SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw")
-        int sumAllStock();
+  @Query("SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw")
+  int sumAllStock();
 
-        @Query("""
-                            SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw
-                            WHERE dw.device.serialNumber IS NOT NULL AND dw.device.serialNumber <> ''
-                            AND (:type IS NULL OR dw.device.model.type = :type)
-                            AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
-                            AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
-                        """)
-        Integer sumQuantityInStockWithSerialBySite(@Param("type") DeviceType type,
-                        @Param("modelId") Integer modelId,
-                        @Param("siteId") Integer siteId);
+  @Query("""
+          SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw
+          WHERE dw.device.serialNumber IS NOT NULL AND dw.device.serialNumber <> ''
+          AND (:type IS NULL OR dw.device.model.type = :type)
+          AND (:modelId IS NULL OR dw.device.model.modelId = :modelId)
+          AND (:siteId IS NULL OR dw.warehouse.site.siteId = :siteId)
+      """)
+  Integer sumQuantityInStockWithSerialBySite(@Param("type") DeviceType type,
+      @Param("modelId") Integer modelId,
+      @Param("siteId") Integer siteId);
 
-        // Tổng quantity in stock cho tất cả site (with serial)
-        @Query("""
-                            SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw
-                            WHERE dw.device.serialNumber IS NOT NULL AND dw.device.serialNumber <> ''
-                        """)
-        Integer sumAllStockWithSerial();
+  // Tổng quantity in stock cho tất cả site (with serial)
+  @Query("""
+          SELECT COALESCE(SUM(dw.quantity), 0) FROM DeviceWarehouse dw
+          WHERE dw.device.serialNumber IS NOT NULL AND dw.device.serialNumber <> ''
+      """)
+  Integer sumAllStockWithSerial();
 }

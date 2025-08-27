@@ -53,7 +53,6 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             @Param("type") DeviceType type,
             @Param("modelId") Integer modelId);
 
-
     @Query("""
                                 SELECT COUNT(d) FROM Device d
                                 WHERE (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
@@ -86,43 +85,63 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             @Param("modelId") Integer modelId);
 
     @Query("""
-            SELECT d FROM Device d
-            WHERE d.status = 'IN_STOCK'
-                AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                AND (:type IS NULL OR d.model.type = :type)
-                AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-                AND d.serialNumber IS NOT NULL
-
+                SELECT d FROM Device d
+                WHERE d.status = 'IN_STOCK'
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND (:type IS NULL OR d.model.type = :type)
+                  AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                  AND d.serialNumber IS NOT NULL
+                  AND (
+                        :isOutOfWarranty IS NULL
+                        OR (
+                            (:isOutOfWarranty = TRUE AND d.endDate IS NOT NULL AND d.endDate < CURRENT_DATE)
+                            OR 
+                            (:isOutOfWarranty = FALSE AND (d.endDate IS NULL OR d.endDate >= CURRENT_DATE))
+                        )
+                      )
             """)
     List<Device> findDevicesInStockForReport(
             @Param("siteId") Integer siteId,
             @Param("type") DeviceType type,
-            @Param("modelId") Integer modelId);
+            @Param("modelId") Integer modelId,
+            @Param("isOutOfWarranty") Boolean isOutOfWarranty);
+
 
     @Query("""
-            SELECT d FROM Device d
-            WHERE d.status = 'E_WASTE'
-                AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                AND (:type IS NULL OR d.model.type = :type)
-                AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
-                AND d.serialNumber IS NOT NULL
-
+                SELECT d FROM Device d
+                WHERE d.status = 'E_WASTE'
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND (:type IS NULL OR d.model.type = :type)
+                  AND (:siteId IS NULL OR d.currentWarehouse.site.siteId = :siteId)
+                  AND d.serialNumber IS NOT NULL
+                  AND (
+                        :isOutOfWarranty IS NULL 
+                        OR (:isOutOfWarranty = true AND d.endDate IS NOT NULL AND d.endDate < CURRENT_DATE) 
+                        OR (:isOutOfWarranty = false AND (d.endDate IS NULL OR d.endDate >= CURRENT_DATE))
+                      )
             """)
     List<Device> findDevicesEWasteForReport(
             @Param("siteId") Integer siteId,
             @Param("type") DeviceType type,
-            @Param("modelId") Integer modelId);
+            @Param("modelId") Integer modelId,
+            @Param("isOutOfWarranty") Boolean isOutOfWarranty);
+
 
     @Query("""
-            SELECT d FROM Device d
-            WHERE d.status = 'IN_FLOOR'
-                AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                AND (:type IS NULL OR d.model.type = :type)
-                AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
-                AND (:ownerId IS NULL OR d.currentFloor.account.owner.eid = :ownerId)
-                AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
-                AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
-                AND d.serialNumber IS NOT NULL
+                SELECT d FROM Device d
+                WHERE d.status = 'IN_FLOOR'
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND (:type IS NULL OR d.model.type = :type)
+                  AND (:floorId IS NULL OR d.currentFloor.floorId = :floorId)
+                  AND (:ownerId IS NULL OR d.currentFloor.account.owner.eid = :ownerId)
+                  AND (:accountId IS NULL OR d.currentFloor.account.accountId = :accountId)
+                  AND (:siteId IS NULL OR d.currentFloor.site.siteId = :siteId)
+                  AND d.serialNumber IS NOT NULL
+                  AND (
+                        :isOutOfWarranty IS NULL 
+                        OR (:isOutOfWarranty = true AND d.endDate IS NOT NULL AND d.endDate < CURRENT_DATE) 
+                        OR (:isOutOfWarranty = false AND (d.endDate IS NULL OR d.endDate >= CURRENT_DATE))
+                      )
             """)
     List<Device> findDevicesInFloorForReport(
             @Param("siteId") Integer siteId,
@@ -130,7 +149,9 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             @Param("ownerId") Integer ownerId,
             @Param("accountId") Integer accountId,
             @Param("type") DeviceType type,
-            @Param("modelId") Integer modelId);
+            @Param("modelId") Integer modelId,
+            @Param("isOutOfWarranty") Boolean isOutOfWarranty);
+
 
     @Query("""
             SELECT d FROM Device d
@@ -138,23 +159,27 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                 AND (:modelId IS NULL OR d.model.modelId = :modelId)
                 AND (:type IS NULL OR d.model.type = :type)
                 AND d.serialNumber IS NOT NULL
-
             """)
     List<Device> findDevicesOnTheMoveForReport(
             @Param("type") DeviceType type,
             @Param("modelId") Integer modelId);
 
+
     @Query("""
-            SELECT d FROM Device d
-            WHERE d.status = :status
-                AND (:modelId IS NULL OR d.model.modelId = :modelId)
-                AND (:type IS NULL OR d.model.type = :type)
-                AND d.serialNumber IS NOT NULL
+              SELECT d FROM Device d
+              WHERE d.status = :status
+                  AND (:modelId IS NULL OR d.model.modelId = :modelId)
+                  AND (:type IS NULL OR d.model.type = :type)
+                  AND d.serialNumber IS NOT NULL
+                  AND (:isOutOfWarranty IS NULL
+                        OR (:isOutOfWarranty = true AND d.endDate IS NOT NULL AND d.endDate < CURRENT_DATE)
+                        OR (:isOutOfWarranty = false AND (d.endDate IS NULL OR d.endDate >= CURRENT_DATE))
+            )
             """)
     List<Device> findDevicesStatusForReport(
             @Param("status") DeviceStatus status,
             @Param("type") DeviceType type,
-            @Param("modelId") Integer modelId);
-
+            @Param("modelId") Integer modelId,
+            @Param("isOutOfWarranty") Boolean isOutOfWarranty);
 
 }
