@@ -15,6 +15,7 @@ public class ModelResponse implements Serializable {
     String modelName;
     String manufacturer;
     String description;
+    String size;
     DeviceType type;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

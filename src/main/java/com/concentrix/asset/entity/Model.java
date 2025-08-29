@@ -33,6 +33,9 @@ public class Model {
         DeviceType type;
 
         @Column
+        String size;
+
+        @Column
         String description;
 
         @Column
