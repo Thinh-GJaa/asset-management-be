@@ -15,6 +15,8 @@ public enum DeviceType {
     ROUTER(true),
     AP(true),
     SERVER(true),
+    IPHONE(true),
+    CHROME_BOOK(true),
     POWER_MODULE(true),
 
     // Accessories không có serial
@@ -42,6 +44,7 @@ public enum DeviceType {
     TOKEN(false),
     UBIKEY(false),
     USB(false),
+    SPEAKER(false),
     USB_WIFI(false),
     VOICE(false),
     HDD_SERVER_HP(false);
