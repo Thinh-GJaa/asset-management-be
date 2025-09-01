@@ -18,7 +18,6 @@ public class CreateModelRequest {
     @NotNull(message = "Device type is required")
     DeviceType type;
 
-    @NotNull(message = "Model size is required")
     String size;
 
     String description;
