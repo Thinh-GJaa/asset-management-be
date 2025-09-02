@@ -51,10 +51,6 @@ public class AccountServiceImpl implements AccountService {
             throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
         }
 
-        if(accountRepository.findByAccountCode(request.getAccountCode()).isPresent()) {
-            throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
-        }
-
         Account account = accountMapper.toAccount(request);
         account.setCreatedBy(userService.getCurrentUser());
 

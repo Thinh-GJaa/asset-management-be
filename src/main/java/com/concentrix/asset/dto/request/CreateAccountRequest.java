@@ -14,7 +14,6 @@ public class CreateAccountRequest {
     @NotBlank(message = "Account code is required")
     String accountCode;
 
-    @NotBlank(message = "Owner EID is required")
     String ownerEid; // EID of the user who will be the owner
 
     String description;

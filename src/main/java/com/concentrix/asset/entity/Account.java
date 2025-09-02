@@ -28,7 +28,7 @@ public class Account {
     @Column(unique = true)
     String accountName;
 
-    @Column(unique = true)
+    @Column
     String accountCode;
 
     @ManyToOne
