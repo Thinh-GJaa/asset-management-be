@@ -443,7 +443,11 @@ public class DeviceServiceImpl implements DeviceService {
         String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
                 ? device.getSerialNumber().substring(0, 6)
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
-        String accountCode = floor.getAccount().getAccountCode();
+
+
+        String accountCode = floor.getAccount() != null
+            ? floor.getAccount().getAccountCode()
+            :"";
 
         StringBuilder hostName = new StringBuilder();
 
