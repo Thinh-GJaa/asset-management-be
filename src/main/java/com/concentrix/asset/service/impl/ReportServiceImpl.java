@@ -182,7 +182,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
             Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
-            boolean isOutOfWarranty) {
+            Boolean isOutOfWarranty) {
+        log.info("[ReportServiceImpl] isOutOfWarranty: {} ", isOutOfWarranty);
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<Site> sites = (siteId == null) ? siteRepository.findAll()
                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
@@ -206,7 +207,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetInStock(
-                                    site.getSiteId(), t, model.getModelId());
+                                    site.getSiteId(), t, model.getModelId(), isOutOfWarranty);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -222,8 +223,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetInFloor(
-                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId());
-
+                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId(), isOutOfWarranty);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -240,7 +240,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetEWaste(
-                                    site.getSiteId(), t, model.getModelId());
+                                    site.getSiteId(), t, model.getModelId(), isOutOfWarranty);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -254,7 +254,7 @@ public class ReportServiceImpl implements ReportService {
 
                     default -> {
                         int quantity = deviceRepository.countAssetByStatus(status, t,
-                                model.getModelId());
+                                model.getModelId(), isOutOfWarranty);
                         if (quantity > 0) {
                             modelTotal += quantity;
                         }
@@ -287,7 +287,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, boolean isOutOfWarranty) {
+            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty) {
 
         List<Device> devices = new ArrayList<>();
         switch (status) {
