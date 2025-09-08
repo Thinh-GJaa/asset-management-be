@@ -54,7 +54,7 @@ public class ReportController {
                         @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId,
-                        @RequestParam(value = "isOutOfWarranty", required = false) boolean isOutOfWarranty) {
+                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty) {
                 List<TypeSummaryResponse> result = reportService.getWithSerialSummary(
                                 siteId, status, floorId, ownerId, accountId, type, modelId, isOutOfWarranty);
                 ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
@@ -74,7 +74,7 @@ public class ReportController {
                         @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId,
-                        @RequestParam(value = "isOutOfWarranty", required = false) boolean isOutOfWarranty) {
+                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty) {
                 List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, ownerId,
                                 accountId, type,
                                 modelId, isOutOfWarranty);
