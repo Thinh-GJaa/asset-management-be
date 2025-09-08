@@ -182,4 +182,13 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             @Param("modelId") Integer modelId,
             @Param("isOutOfWarranty") Boolean isOutOfWarranty);
 
+    @Query("""
+        SELECT COUNT(d)
+            FROM Device d
+                WHERE d.model.type = :type
+                AND d.status IN ('IN_STOCK', 'IN_FLOOR', 'ON_THE_MOVE', 'ASSIGNED')
+                AND d.serialNumber IS NOT NULL
+    """)
+    Integer totalDeviceInUseAndInStock(DeviceType type);
+
 }
