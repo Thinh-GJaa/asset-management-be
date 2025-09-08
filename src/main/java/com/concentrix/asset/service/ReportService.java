@@ -19,11 +19,11 @@ public interface ReportService {
 
     List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status, Integer floorId,
             Integer ownerId, Integer accountId,
-            DeviceType type, Integer modelId, boolean isOutOfWarranty);
+            DeviceType type, Integer modelId, Boolean isOutOfWarranty);
 
     List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId,
             Integer accountId, DeviceType type,
-            Integer modelId, boolean isOutOfWarranty);
+            Integer modelId, Boolean isOutOfWarranty);
 
     List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status);
 
