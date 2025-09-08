@@ -53,7 +53,7 @@ public class LowStockServiceImpl implements LowStockService {
                     for (DeviceType type : typesWithSerial) {
                         try {
                             int total = deviceRepository.totalDeviceInUseAndInStock(type);
-                            int available = deviceRepository.countAssetInStock(site.getSiteId(), type, null);
+                            int available = deviceRepository.countAssetInStock(site.getSiteId(), type, null, null);
 
                             if (total > 0 && available / (double) total <= LOW_STOCK_THRESHOLD_WITH_SERIAL) {
                                 lowStockTypes.add(LowStockResponse.LowStockType.builder()
