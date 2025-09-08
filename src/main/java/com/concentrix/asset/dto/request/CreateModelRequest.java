@@ -1,7 +1,6 @@
 package com.concentrix.asset.dto.request;
 
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.ModelSize;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -19,6 +18,7 @@ public class CreateModelRequest {
     @NotNull(message = "Device type is required")
     DeviceType type;
 
-    @NotBlank(message = "Description is required")
+    String size;
+
     String description;
 }

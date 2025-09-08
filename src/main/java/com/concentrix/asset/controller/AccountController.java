@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateAccountRequest;
 import com.concentrix.asset.dto.request.UpdateAccountRequest;
 import com.concentrix.asset.dto.response.AccountResponse;
+import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,6 +68,18 @@ public class AccountController {
                 .message("Get all accounts successfully")
                 .data(accountService.filterAccount(search, pageable))
                 .build();
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+    @GetMapping("/owners")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getOwners(){
+
+        ApiResponse<List<UserResponse>> apiResponse = ApiResponse.<List<UserResponse>>builder()
+                .message("Get owners account successfully")
+                .data(accountService.getOwners())
+                .build();
+
         return ResponseEntity.ok(apiResponse);
 
     }

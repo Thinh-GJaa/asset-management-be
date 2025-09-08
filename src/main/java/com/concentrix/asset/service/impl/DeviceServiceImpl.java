@@ -335,17 +335,14 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public String generateHostNameForLaptop(Device device) {
-        DeviceType type = device.getModel().getType();
-        int lenSN = device.getSerialNumber().length();
-        String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
-                ? device.getSerialNumber().substring(0, 6)
-                : device.getSerialNumber().substring(lenSN - 6, lenSN);
-        StringBuilder hostName = new StringBuilder();
-
-        if (type == DeviceType.LAPTOP) {
-            hostName.append("VNHCM-LAP");
-            hostName.append(serialNumber);
-            return hostName.toString();
+        if (device.getModel().getType() == DeviceType.LAPTOP) {
+            DeviceType type = device.getModel().getType();
+            int lenSN = device.getSerialNumber().length();
+            String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
+                    ? device.getSerialNumber().substring(0, 6)
+                    : device.getSerialNumber().substring(lenSN - 6, lenSN);
+            return "VNHCM-LAP" +
+                    serialNumber;
         } else {
             return null;
         }
@@ -446,7 +443,11 @@ public class DeviceServiceImpl implements DeviceService {
         String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
                 ? device.getSerialNumber().substring(0, 6)
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
-        String accountCode = floor.getAccount().getAccountCode();
+
+
+        String accountCode = floor.getAccount() != null
+            ? floor.getAccount().getAccountCode()
+            :"";
 
         StringBuilder hostName = new StringBuilder();
 

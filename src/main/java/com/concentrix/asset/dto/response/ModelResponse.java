@@ -6,8 +6,6 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.concentrix.asset.enums.ModelSize;
-
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class ModelResponse implements Serializable {
@@ -15,6 +13,7 @@ public class ModelResponse implements Serializable {
     String modelName;
     String manufacturer;
     String description;
+    String size;
     DeviceType type;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
