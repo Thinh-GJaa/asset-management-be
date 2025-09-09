@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -182,11 +183,15 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
             Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
-            boolean isOutOfWarranty) {
+            Boolean isOutOfWarranty, String ageRange) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<Site> sites = (siteId == null) ? siteRepository.findAll()
                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
         List<TypeSummaryResponse> typeSummaries = new ArrayList<>();
+
+        LocalDate[] dateRange = getDateRangeFromAgeRange(ageRange);
+        LocalDate startDate = dateRange[0];
+        LocalDate endDate = dateRange[1];
 
         for (DeviceType t : types) {
             if (type != null && !t.equals(type)) {
@@ -206,7 +211,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetInStock(
-                                    site.getSiteId(), t, model.getModelId());
+                                    site.getSiteId(), t, model.getModelId(), isOutOfWarranty, startDate, endDate);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -222,8 +227,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetInFloor(
-                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId());
-
+                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId(), isOutOfWarranty, startDate, endDate);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -240,7 +244,7 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetEWaste(
-                                    site.getSiteId(), t, model.getModelId());
+                                    site.getSiteId(), t, model.getModelId(), isOutOfWarranty, startDate, endDate);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -254,7 +258,7 @@ public class ReportServiceImpl implements ReportService {
 
                     default -> {
                         int quantity = deviceRepository.countAssetByStatus(status, t,
-                                model.getModelId());
+                                model.getModelId(), isOutOfWarranty, startDate, endDate);
                         if (quantity > 0) {
                             modelTotal += quantity;
                         }
@@ -287,19 +291,23 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, boolean isOutOfWarranty) {
+            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange) {
+
+        LocalDate[] dateRange = getDateRangeFromAgeRange(ageRange);
+        LocalDate startDate = dateRange[0];
+        LocalDate endDate = dateRange[1];
 
         List<Device> devices = new ArrayList<>();
         switch (status) {
-            case IN_STOCK -> devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty);
+            case IN_STOCK -> devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
 
             case IN_FLOOR ->
                 devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type,
-                        modelId, isOutOfWarranty);
+                        modelId, isOutOfWarranty, startDate, endDate);
 
-            case E_WASTE -> devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty);
+            case E_WASTE -> devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
 
-            default -> devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty);
+            default -> devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty, startDate, endDate);
 
         }
 
@@ -503,4 +511,43 @@ public class ReportServiceImpl implements ReportService {
             case E_WASTE -> transactionDetailRepository.sumEWasteBySite_Type_Model(siteId, type, null);
         };
     }
+
+    public LocalDate[] getDateRangeFromAgeRange(String ageRange) {
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if (ageRange == null) {
+            return new LocalDate[]{startDate, endDate};
+        }
+
+        switch (ageRange) {
+            case "<=1" ->
+                    startDate = LocalDate.now().minusYears(1);
+            case "1-2" -> {
+                startDate = LocalDate.now().minusYears(2);
+                endDate   = LocalDate.now().minusYears(1);
+            }
+            case "2-3" -> {
+                startDate = LocalDate.now().minusYears(3);
+                endDate   = LocalDate.now().minusYears(2);
+            }
+            case "3-4" -> {
+                startDate = LocalDate.now().minusYears(4);
+                endDate   = LocalDate.now().minusYears(3);
+            }
+            case "4-5" -> {
+                startDate = LocalDate.now().minusYears(5);
+                endDate   = LocalDate.now().minusYears(4);
+            }
+            case "5-6" -> {
+                startDate = LocalDate.now().minusYears(6);
+                endDate   = LocalDate.now().minusYears(5);
+            }
+            case ">6" ->
+                    endDate = LocalDate.now().minusYears(6);
+        }
+
+        return new LocalDate[]{startDate, endDate};
+    }
+
 }
