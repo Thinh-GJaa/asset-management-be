@@ -54,9 +54,10 @@ public class ReportController {
                         @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId,
-                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty) {
+                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty,
+                        @RequestParam(value = "ageRange", required = false) String ageRange) {
                 List<TypeSummaryResponse> result = reportService.getWithSerialSummary(
-                                siteId, status, floorId, ownerId, accountId, type, modelId, isOutOfWarranty);
+                                siteId, status, floorId, ownerId, accountId, type, modelId, isOutOfWarranty, ageRange);
                 ApiResponse<List<TypeSummaryResponse>> response = ApiResponse
                                 .<List<TypeSummaryResponse>>builder()
                                 .message("Get with serial summary successfully")
@@ -74,10 +75,10 @@ public class ReportController {
                         @RequestParam(value = "accountId", required = false) Integer accountId,
                         @RequestParam(value = "type", required = false) DeviceType type,
                         @RequestParam(value = "modelId", required = false) Integer modelId,
-                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty) {
-                List<DeviceResponse> result = reportService.getDeviceListForReport(siteId, status, floorId, ownerId,
-                                accountId, type,
-                                modelId, isOutOfWarranty);
+                        @RequestParam(value = "isOutOfWarranty", required = false) Boolean isOutOfWarranty,
+                        @RequestParam(value = "ageRange", required = false) String ageRange) {
+                List<DeviceResponse> result = reportService.getDeviceListForReport(
+                        siteId, status, floorId, ownerId, accountId, type, modelId, isOutOfWarranty, ageRange);
                 ApiResponse<List<DeviceResponse>> response = ApiResponse.<List<DeviceResponse>>builder()
                                 .message("Get device list for report successfully")
                                 .data(result)
