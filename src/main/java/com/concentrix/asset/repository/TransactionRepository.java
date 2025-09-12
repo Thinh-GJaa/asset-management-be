@@ -22,6 +22,8 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
 
     Page<AssetTransaction> findALLByTransactionType(TransactionType transactionType, Pageable pageable);
 
+    List<AssetTransaction> findAllByUserUseIsNotNull();
+
     Page<AssetTransaction> findAllByTransactionTypeAndTransactionStatus(
             TransactionType transactionType,
             TransactionStatus transactionStatus,
