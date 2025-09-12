@@ -48,6 +48,8 @@ public class LowStockServiceImpl implements LowStockService {
 
             for (Site site : sites) {
                 try {
+                    if(site.getSiteName().equalsIgnoreCase("tmp"))
+                        continue;
                     // Xử lý cho loại có serial
                     List<LowStockResponse.LowStockType> lowStockTypes = new ArrayList<>();
                     for (DeviceType type : typesWithSerial) {
