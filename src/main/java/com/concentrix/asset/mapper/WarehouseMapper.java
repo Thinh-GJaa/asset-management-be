@@ -16,5 +16,6 @@ public interface WarehouseMapper {
     Warehouse toWarehouse(CreateWarehouseRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "site", source = "siteId", qualifiedByName = "siteIdToSite")
     void updateWarehouse(@MappingTarget Warehouse warehouse, UpdateWarehouseRequest request);
 }
