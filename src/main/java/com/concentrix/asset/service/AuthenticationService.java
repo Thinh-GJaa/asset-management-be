@@ -1,5 +1,6 @@
 package com.concentrix.asset.service;
 
+import com.concentrix.asset.dto.request.ChangePasswordRequest;
 import com.concentrix.asset.dto.request.LoginRequest;
 import com.concentrix.asset.dto.response.LoginResponse;
 import com.concentrix.asset.dto.response.RefreshResponse;
@@ -19,7 +20,7 @@ public interface AuthenticationService {
     RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response)
             throws ParseException, JOSEException ;
 
-
+    void changePassword(ChangePasswordRequest request);
 
 }
 

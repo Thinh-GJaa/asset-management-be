@@ -1,6 +1,7 @@
 package com.concentrix.asset.controller;
 
 import com.concentrix.asset.dto.ApiResponse;
+import com.concentrix.asset.dto.request.ChangePasswordRequest;
 import com.concentrix.asset.dto.request.LoginRequest;
 import com.concentrix.asset.dto.response.LoginResponse;
 import com.concentrix.asset.service.AuthenticationService;
@@ -65,6 +66,15 @@ public class AuthenticationController {
                 authenticationService.logout(httpServletRequest, httpServletResponse);
                 ApiResponse<Void> response = ApiResponse.<Void>builder()
                                 .message("Logout successful")
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @PostMapping("change-password")
+        public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+                authenticationService.changePassword(request);
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                                .message("Change password successful")
                                 .build();
                 return ResponseEntity.ok(response);
         }

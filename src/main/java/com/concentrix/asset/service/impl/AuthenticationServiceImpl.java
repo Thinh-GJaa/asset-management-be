@@ -1,5 +1,6 @@
 package com.concentrix.asset.service.impl;
 
+import com.concentrix.asset.dto.request.ChangePasswordRequest;
 import com.concentrix.asset.dto.request.LoginRequest;
 import com.concentrix.asset.dto.response.LoginResponse;
 import com.concentrix.asset.dto.response.RefreshResponse;
@@ -10,6 +11,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.repository.InvalidatedTokenRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.AuthenticationService;
+import com.concentrix.asset.service.UserService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -44,6 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
+    UserService userService;
     InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
@@ -146,6 +149,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw e;
         }
     }
+
+
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        User user = userService.getCurrentUser();
+
+        if(!request.getNewPassword().equals(request.getConfirmPassword()))
+            throw new CustomException(ErrorCode.CONFIRM_PASSWORD_NOT_MATCH);
+
+        if(!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword()))
+            throw new CustomException(ErrorCode.CURRENT_PASSWORD_INCORRECT);
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+
+
+
+
 
     private String getRefreshTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() == null)
