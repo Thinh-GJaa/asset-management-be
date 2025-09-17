@@ -152,7 +152,7 @@ public class AssignmentServiceImpl implements AssignmentService {
 
         // Kiểm tra xem có phải là ASSIGNMENT transaction không
         if (assignment.getTransactionType() != TransactionType.ASSIGNMENT) {
-            throw new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND);
+            throw new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND, assignmentId);
         }
 
         return assignmentMapper.toAssetHandoverResponse(assignment);

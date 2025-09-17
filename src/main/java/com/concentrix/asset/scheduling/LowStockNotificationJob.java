@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -23,11 +23,11 @@ public class LowStockNotificationJob {
     UserService userService;
     LowStockService lowStockService;
 
-//    @Scheduled(cron = "0 0 15 * * ?") // 8:00 AM hàng ngày
+    //    @Scheduled(cron = "0 0 8 * * ?") // 8:00 AM hàng ngày
     public void sendLowStockNotifications() {
 
         String to = "xthinh04052002@gmail.com";
-        String subject = "Test cron job";
+        String subject = "Low Stock Devices Report";
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
             emailService.sendEmail(to, subject, body, null);
@@ -39,34 +39,98 @@ public class LowStockNotificationJob {
 
     public String buildLowStockHtmlTable(List<LowStockResponse> lowStockList) {
         StringBuilder html = new StringBuilder();
-        html.append("<html><body>");
-        html.append("<h2>Low Stock Devices Report</h2>");
+        html.append("<html><head><meta charset='utf-8'><style>")
+                .append("body{font-family:Arial,Helvetica,sans-serif;color:#333}")
+                .append("h2{color:#2c3e50;margin-bottom:4px}")
+                .append(".subtitle{color:#555;font-size:13px;margin-top:0;margin-bottom:12px}")
+                .append("table{border-collapse:collapse;width:100%}")
+                .append("th,td{border:1px solid #e6e6e6;padding:10px;text-align:center}")
+                .append("th{background:#2f4b5a;color:#fff;font-weight:600}")
+                .append("tr:nth-child(even){background:#fbfbfb}")
+                .append(".deviceCell{text-align:left;padding-left:12px;font-weight:600}")
+                // thêm class highlight
+                .append(".highlightCell{background:#eaf6ff;font-weight:bold;color:#2c3e50}")
+                .append("</style></head><body><div class='container'>")
+                .append("<h2>📊 Low Stock Devices Report</h2>");
 
-        for (LowStockResponse site : lowStockList) {
-            html.append("<h3>Site: ").append(site.getSiteName())
-                    .append(" (ID: ").append(site.getSiteId()).append(")</h3>");
-
-            html.append("<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>")
-                    .append("<tr style='background-color:#f2f2f2;'>")
-                    .append("<th>Device Type</th>")
-                    .append("<th>Total</th>")
-                    .append("<th>Available</th>")
-                    .append("</tr>");
-
-            for (LowStockResponse.LowStockType type : site.getLowStockTypes()) {
-                html.append("<tr>")
-                        .append("<td>").append(type.getType()).append("</td>")
-                        .append("<td>").append(type.getTotal()).append("</td>")
-                        .append("<td>").append(type.getAvailable()).append("</td>")
-                        .append("</tr>");
-            }
-
-            html.append("</table><br/>");
+        if (lowStockList == null || lowStockList.isEmpty()) {
+            html.append("<p>Not found data.</p></div></body></html>");
+            return html.toString();
         }
 
-        html.append("</body></html>");
+        // canonical key -> display name
+        Map<String, String> deviceDisplay = new LinkedHashMap<>();
+        Map<String, Integer> totalMap = new LinkedHashMap<>();
+        Map<String, Map<String, Integer>> availableMap = new LinkedHashMap<>();
+        LinkedHashSet<String> siteNames = new LinkedHashSet<>();
+
+        for (LowStockResponse site : lowStockList) {
+            String siteName = site.getSiteName().trim();
+            siteNames.add(siteName);
+
+            for (LowStockResponse.LowStockType t : site.getLowStockTypes()) {
+                String display = t.getType().toString();
+                String key = display.toUpperCase();
+
+                deviceDisplay.putIfAbsent(key, display);
+                totalMap.put(key, totalMap.getOrDefault(key, 0) + t.getTotal());
+
+                Map<String, Integer> bySite = availableMap.computeIfAbsent(key, k -> new LinkedHashMap<>());
+                bySite.put(siteName, t.getAvailable());
+            }
+        }
+
+        // Header
+        html.append("<table><thead><tr>")
+                .append("<th>Device Type (Total)</th>");
+        for (String s : siteNames) {
+            html.append("<th>").append(escapeHtml(s)).append("</th>");
+        }
+        html.append("</tr></thead><tbody>");
+
+        // Rows
+        for (String key : deviceDisplay.keySet()) {
+            int total = totalMap.getOrDefault(key, 0);
+            String display = deviceDisplay.get(key);
+
+            html.append("<tr>")
+                    .append("<td class='deviceCell'>").append(escapeHtml(display))
+                    .append(" (").append(total).append(")</td>");
+
+            for (String site : siteNames) {
+                String cellValue = "---"; // mặc định là không có
+                Map<String, Integer> bySite = availableMap.get(key);
+                boolean hasData = false;
+                if (bySite != null && bySite.containsKey(site)) {
+                    cellValue = String.valueOf(bySite.get(site)); // có dữ liệu, kể cả = 0
+                    hasData = true;
+                }
+
+                if (hasData) {
+                    html.append("<td class='highlightCell'>").append(cellValue).append("</td>");
+                } else {
+                    html.append("<td>").append(cellValue).append("</td>");
+                }
+            }
+
+            html.append("</tr>");
+        }
+
+        html.append("</tbody></table></div></body></html>");
         return html.toString();
     }
+
+    private String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
+
+
 
 
 }
