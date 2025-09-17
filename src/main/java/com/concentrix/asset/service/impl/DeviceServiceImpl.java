@@ -445,9 +445,11 @@ public class DeviceServiceImpl implements DeviceService {
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
 
 
-        String accountCode = floor.getAccount() != null
-            ? floor.getAccount().getAccountCode()
-            :"";
+        if(floor.getAccount() == null || floor.getAccount().getAccountCode() == null){
+            return null;
+        }
+
+        String accountCode = floor.getAccount().getAccountCode();
 
         StringBuilder hostName = new StringBuilder();
 
