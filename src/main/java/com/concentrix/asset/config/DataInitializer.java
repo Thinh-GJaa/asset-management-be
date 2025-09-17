@@ -18,13 +18,13 @@ public class DataInitializer {
                 User admin = User.builder()
                         .eid(adminEid)
                         .fullName("Administrator")
-                        .email("admin@example.com")
-                        .password(passwordEncoder.encode("Admin@1234"))
+                        .jobTitle("Administrator Asset Management System")
+                        .email("admin_ams@concentrix.com")
+                        .password(passwordEncoder.encode("Adm1n@1234"))
                         .role(Role.ADMIN)
                         .isActive(true)
                         .build();
                 userRepository.save(admin);
-                System.out.println("Default admin user created: admin/admin123");
             }
         };
     }
