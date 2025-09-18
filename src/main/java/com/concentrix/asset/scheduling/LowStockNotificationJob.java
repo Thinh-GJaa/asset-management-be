@@ -27,7 +27,7 @@ public class LowStockNotificationJob {
     public void sendLowStockNotifications() {
 
         String to = "xthinh04052002@gmail.com";
-        String subject = "Low Stock Devices Report";
+        String subject = "[AMS_VN]Low Stock Devices Report";
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
             emailService.sendEmail(to, subject, body, null);
