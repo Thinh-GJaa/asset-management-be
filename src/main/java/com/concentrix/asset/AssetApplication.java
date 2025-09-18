@@ -8,4 +8,5 @@ public class AssetApplication {
     public static void main(String[] args) {
         SpringApplication.run(AssetApplication.class, args);
     }
+
 }
