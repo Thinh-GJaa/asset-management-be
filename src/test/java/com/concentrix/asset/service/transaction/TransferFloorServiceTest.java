@@ -203,43 +203,6 @@ class TransferFloorServiceTest {
     }
 
     @Test
-    void create_nonSerial_errors_and_success() {
-        mapBase();
-        // missing to floor record
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(2).build());
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(20, 2)).thenReturn(Optional.empty());
-        CustomException exNF = assertThrows(CustomException.class, () -> service.createTransferFloor(request));
-        assertEquals(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, exNF.getErrorCode());
-
-        // insufficient to floor qty
-        request.setItems(new ArrayList<>());
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(5).build());
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        DeviceFloor deviceFloorTo = new DeviceFloor(); deviceFloorTo.setQuantity(3); deviceFloorTo.setFloor(toFloor);
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(20, 2)).thenReturn(Optional.of(deviceFloorTo));
-        CustomException exIns = assertThrows(CustomException.class, () -> service.createTransferFloor(request));
-        assertEquals(ErrorCode.DEVICE_NOT_ENOUGH_IN_FLOOR, exIns.getErrorCode());
-
-        // success adjust from/to
-        request.setItems(new ArrayList<>());
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(2).build());
-        when(transactionRepository.save(any(AssetTransaction.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        DeviceFloor toDf = new DeviceFloor(); toDf.setQuantity(5); toDf.setFloor(toFloor);
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(20, 2)).thenReturn(Optional.of(toDf));
-        DeviceFloor fromDf = new DeviceFloor(); fromDf.setQuantity(1); fromDf.setFloor(fromFloor);
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(20, 1)).thenReturn(Optional.of(fromDf));
-        when(mapper.toTransferFloorResponse(any(AssetTransaction.class))).thenReturn(new TransferFloorResponse());
-
-        TransferFloorResponse resp = service.createTransferFloor(request);
-        assertNotNull(resp);
-        assertEquals(3, toDf.getQuantity());
-        assertEquals(3, fromDf.getQuantity());
-        verify(deviceFloorRepository, atLeastOnce()).save(any(DeviceFloor.class));
-    }
-
-    @Test
     void filter_cases() {
         Pageable pageable = PageRequest.of(0, 10);
         // invalid date

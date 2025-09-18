@@ -246,7 +246,7 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, id));
 
         if (transaction.getTransactionType() != TransactionType.RETURN_FROM_USER) {
-            throw new CustomException(ErrorCode.TRANSACTION_NOT_FOUND);
+            throw new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, id);
         }
         return assignmentMapper.toAssetHandoverResponse(transaction);
     }

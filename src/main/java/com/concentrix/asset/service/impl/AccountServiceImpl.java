@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -65,13 +66,15 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(request.getAccountId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND, request.getAccountId()));
 
-        if(accountRepository.findByAccountName(request.getAccountName()).isPresent() &&
-                !accountRepository.findByAccountName(request.getAccountName()).get().getAccountId().equals(request.getAccountId())) {
+        Optional<Account> byAccountName = accountRepository.findByAccountName(request.getAccountName());
+        if(byAccountName.isPresent() &&
+                !byAccountName.get().getAccountId().equals(request.getAccountId())) {
             throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
         }
 
-        if(accountRepository.findByAccountCode(request.getAccountCode()).isPresent() &&
-                !accountRepository.findByAccountCode(request.getAccountCode()).get().getAccountId().equals(request.getAccountId())) {
+        Optional<Account> byAccountCode = accountRepository.findByAccountCode(request.getAccountCode());
+        if(byAccountCode.isPresent() &&
+                !byAccountCode.get().getAccountId().equals(request.getAccountId())) {
             throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
         }
 
