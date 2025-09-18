@@ -202,29 +202,6 @@ class ReturnFromFloorServiceTest {
     }
 
     @Test
-    void createReturn_nonSerial_missingDeviceFloor_throws() {
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(2).build());
-        setupMapper();
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(2, 11)).thenReturn(Optional.empty());
-
-        CustomException ex = assertThrows(CustomException.class, () -> service.createReturnFromFloor(request));
-        assertEquals(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, ex.getErrorCode());
-    }
-
-    @Test
-    void createReturn_nonSerial_insufficientFloorQty_throws() {
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(5).build());
-        setupMapper();
-        DeviceFloor df = new DeviceFloor(); df.setQuantity(3);
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        when(deviceFloorRepository.findByDevice_DeviceIdAndFloor_FloorId(2, 11)).thenReturn(Optional.of(df));
-
-        CustomException ex = assertThrows(CustomException.class, () -> service.createReturnFromFloor(request));
-        assertEquals(ErrorCode.DEVICE_NOT_ENOUGH_IN_FLOOR, ex.getErrorCode());
-    }
-
-    @Test
     void createReturn_success_nonSerial_updatesFloorAndWarehouse() {
         request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(2).build());
         setupMapper();

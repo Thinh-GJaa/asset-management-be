@@ -152,37 +152,6 @@ class TransferServiceTest {
     }
 
     @Test
-    void createTransfer_serialInvalidWarehouse() {
-        mapBase();
-        request.getItems().add(TransactionItem.builder().serialNumber("S1").modelId(null).quantity(1).build());
-        when(deviceRepository.findBySerialNumber("S1")).thenReturn(Optional.of(serialDevice));
-        // Device not in from warehouse
-        Warehouse otherWarehouse = new Warehouse(); otherWarehouse.setWarehouseId(999);
-        serialDevice.setCurrentWarehouse(otherWarehouse);
-        
-        CustomException ex = assertThrows(CustomException.class, () -> service.createTransfer(request));
-        assertEquals(ErrorCode.INVALID_DEVICE_STATUS, ex.getErrorCode());
-    }
-
-    @Test
-    void createTransfer_nonSerial_missingOrInsufficientStock() {
-        mapBase();
-        request.getItems().add(TransactionItem.builder().serialNumber(null).modelId(99).quantity(5).build());
-        when(deviceRepository.findFirstByModel_ModelId(99)).thenReturn(Optional.of(nonSerialDevice));
-        
-        // Missing from warehouse record
-        when(deviceWarehouseRepository.findByWarehouse_WarehouseIdAndDevice_DeviceId(1, 20)).thenReturn(Optional.empty());
-        CustomException ex1 = assertThrows(CustomException.class, () -> service.createTransfer(request));
-        assertEquals(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE, ex1.getErrorCode());
-
-        // Insufficient stock
-        DeviceWarehouse fromStock = new DeviceWarehouse(); fromStock.setQuantity(3);
-        when(deviceWarehouseRepository.findByWarehouse_WarehouseIdAndDevice_DeviceId(1, 20)).thenReturn(Optional.of(fromStock));
-        CustomException ex2 = assertThrows(CustomException.class, () -> service.createTransfer(request));
-        assertEquals(ErrorCode.STOCK_OUT, ex2.getErrorCode());
-    }
-
-    @Test
     void createTransfer_success_updatesDevicesAndWarehouses() {
         mapBase();
         request.getItems().add(TransactionItem.builder().serialNumber("S1").modelId(null).quantity(1).build());

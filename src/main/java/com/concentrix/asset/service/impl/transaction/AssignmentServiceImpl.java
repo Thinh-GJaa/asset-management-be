@@ -148,7 +148,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public AssetHandoverResponse getAssetHandoverByAssignmentId(Integer assignmentId) {
         AssetTransaction assignment = transactionRepository.findById(assignmentId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.ASSIGNMENT_NOT_FOUND, assignmentId));
 
         // Kiểm tra xem có phải là ASSIGNMENT transaction không
         if (assignment.getTransactionType() != TransactionType.ASSIGNMENT) {

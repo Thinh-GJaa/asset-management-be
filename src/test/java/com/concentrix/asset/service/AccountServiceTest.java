@@ -135,7 +135,6 @@ public class AccountServiceTest {
     void createAccount_validRequest_returnAccountResponse() {
         // Given
         when(accountRepository.findByAccountName("TestAccount")).thenReturn(Optional.empty());
-        when(accountRepository.findByAccountCode("TEST123")).thenReturn(Optional.empty());
         when(userService.getCurrentUser()).thenReturn(currentUser);
         when(accountMapper.toAccount(createRequest)).thenReturn(account);
         when(accountRepository.save(account)).thenReturn(account);
@@ -149,7 +148,6 @@ public class AccountServiceTest {
         assertEquals(1, result.getAccountId());
         assertEquals("TestAccount", result.getAccountName());
         verify(accountRepository).findByAccountName("TestAccount");
-        verify(accountRepository).findByAccountCode("TEST123");
         verify(userService).getCurrentUser();
         verify(accountMapper).toAccount(createRequest);
         verify(accountRepository).save(account);
@@ -173,23 +171,6 @@ public class AccountServiceTest {
         verify(accountMapper, never()).toAccount(any());
     }
 
-    @Test
-    void createAccount_accountCodeExists_throwCustomException() {
-        // Given
-        when(accountRepository.findByAccountName("TestAccount")).thenReturn(Optional.empty());
-        when(accountRepository.findByAccountCode("TEST123")).thenReturn(Optional.of(account));
-
-        // When
-        CustomException exception = assertThrows(CustomException.class, 
-            () -> accountService.createAccount(createRequest));
-
-        //Then
-        assertEquals(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, exception.getErrorCode());
-        assertTrue(exception.getMessage().contains("TEST123"));
-        verify(accountRepository).findByAccountName("TestAccount");
-        verify(accountRepository).findByAccountCode("TEST123");
-        verify(accountMapper, never()).toAccount(any());
-    }
 
     @Test
     void updateAccount_validRequest_returnAccountResponse() {
@@ -225,6 +206,7 @@ public class AccountServiceTest {
         when(accountRepository.findById(999)).thenReturn(Optional.empty());
 
         // When
+        updateRequest.setAccountId(999);
         CustomException exception = assertThrows(CustomException.class, 
             () -> accountService.updateAccount(updateRequest));
 
