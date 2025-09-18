@@ -184,7 +184,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(eid)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, eid));
 
-        List<AssetTransaction> transactions = transactionRepository.findAllByUserUse_Eid(eid);
+        List<AssetTransaction> transactions = new ArrayList<>(transactionRepository.findAllByUserUse_Eid(eid));
 
         transactions.sort((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()));
 
