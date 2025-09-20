@@ -54,8 +54,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(CreateUserRequest request) {
 
-        userRepository.findById(request.getEid())
-                .ifPresent(user -> {
+        userRepository.findById(request.getEid()).ifPresent(
+                user -> {
                     throw new CustomException(ErrorCode.USER_ALREADY_EXISTS, request.getEid());
                 });
 
@@ -88,11 +88,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateUser(UpdateUserRequest request) {
 
-        var context = SecurityContextHolder.getContext();
-        String EID = context.getAuthentication().getName();
-
-        userRepository.findById(EID)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
+        User userLogin = getCurrentUser();
 
         User user = userRepository.findById(request.getEid())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
@@ -162,11 +158,11 @@ public class UserServiceImpl implements UserService {
                 User user = userOpt.get();
                 user = userMapper.updateUser(user, req);
                 users.add(user);
-                updated ++;
+                updated++;
             } else {
                 User user = userMapper.ToUser(req);
                 users.add(user);
-                created ++;
+                created++;
             }
         }
 
