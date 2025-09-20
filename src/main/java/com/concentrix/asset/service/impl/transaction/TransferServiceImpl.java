@@ -166,9 +166,10 @@ public class TransferServiceImpl implements TransferService {
         }
 
         User currentUser = userService.getCurrentUser();
-        if(!transaction.getToWarehouse().getSite().getSiteId().equals(
-                currentUser.getSite().getSiteId()))
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        Site currentUserSite = currentUser.getSite();
+        if(currentUserSite == null
+            || !transaction.getToWarehouse().getSite().getSiteId().equals(currentUserSite.getSiteId()))
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
 
         transaction.setTransactionStatus(TransactionStatus.CONFIRMED);
         transaction.setConfirmedBy(userService.getCurrentUser());
@@ -333,7 +334,6 @@ public class TransferServiceImpl implements TransferService {
                 + "<div class='container'>"
                 + "<div class='header'>"
                 + "<h1>" + escapeHtml(title) + "</h1>"
-                + "<p>Transfer ID: #" + transaction.getTransactionId() + "</p>"
                 + "</div>"
                 + "<div class='content'>";
     }
