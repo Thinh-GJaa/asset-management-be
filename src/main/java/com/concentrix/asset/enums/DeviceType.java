@@ -47,7 +47,7 @@ public enum DeviceType {
     SPEAKER(false),
     USB_WIFI(false),
     VOICE(false),
-    HDD_SERVER_HP(false);
+    SERVER_HDD(false);
 
     private final boolean hasSerial;
 
