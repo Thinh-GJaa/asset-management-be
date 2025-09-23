@@ -83,6 +83,17 @@ public class DeviceController {
                 return ResponseEntity.ok(response);
         }
 
+    @GetMapping("/serial/{serialNumber}")
+    public ResponseEntity<ApiResponse<Boolean>> isDeviceBySerialWithoutInStock(
+            @PathVariable String serialNumber) {
+        ApiResponse<Boolean> response = ApiResponse
+                .<Boolean>builder()
+                .message("Is device in stock")
+                .data(deviceService.isDeviceBySerialInStock(serialNumber))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
         @PatchMapping
         public ResponseEntity<ApiResponse<DeviceResponse>> updateDevice(
                         @Valid @RequestBody UpdateDeviceRequest request) {
