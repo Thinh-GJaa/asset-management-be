@@ -28,10 +28,15 @@ jobs:
       - name: Display Environment Variables
         run: |
           echo "=== Environment Variables Debug ==="
+          echo "Checking SONAR_TOKEN..."
           echo "SONAR_TOKEN: ${SONAR_TOKEN:0:10}..." # Chỉ hiển thị 10 ký tự đầu
+          echo "Checking SONAR_HOST_URL..."
           echo "SONAR_HOST_URL: $SONAR_HOST_URL"
+          echo "Checking SONAR_ORGANIZATION..."
           echo "SONAR_ORGANIZATION: $SONAR_ORGANIZATION"
+          echo "Checking SONAR_PROJECT_KEY..."
           echo "SONAR_PROJECT_KEY: $SONAR_PROJECT_KEY"
+          echo "Checking GitHub context..."
           echo "GITHUB_REF_NAME: ${{ github.ref_name }}"
           echo "GITHUB_SHA: ${{ github.sha }}"
           echo "=================================="
@@ -46,14 +51,50 @@ jobs:
       - name: Build & run tests
         run: mvn -B clean verify --file pom.xml
 
+      - name: SonarCloud Configuration Check
+        run: |
+          echo "=== SonarCloud Configuration Debug ==="
+          echo "Validating SonarCloud configuration..."
+          echo "Checking SONAR_PROJECT_KEY..."
+          echo "SONAR_PROJECT_KEY: $SONAR_PROJECT_KEY"
+          echo "Checking SONAR_ORGANIZATION..."
+          echo "SONAR_ORGANIZATION: $SONAR_ORGANIZATION"
+          echo "Checking SONAR_HOST_URL..."
+          echo "SONAR_HOST_URL: $SONAR_HOST_URL"
+          echo "Checking SONAR_TOKEN length..."
+          echo "SONAR_TOKEN length: ${#SONAR_TOKEN}"
+          echo "Checking branch name..."
+          echo "Branch name: ${{ github.ref_name }}"
+          echo "======================================"
+          
+          echo "Validating required fields..."
+          if [ -z "$SONAR_PROJECT_KEY" ] || [ -z "$SONAR_ORGANIZATION" ] || [ -z "$SONAR_TOKEN" ]; then
+            echo "❌ Missing required SonarCloud configuration!"
+            echo "Please check your GitHub Secrets:"
+            echo "- SONAR_TOKEN: ${SONAR_TOKEN:+SET}${SONAR_TOKEN:-NOT SET}"
+            echo "- SONAR_PROJECT_KEY: ${SONAR_PROJECT_KEY:+SET}${SONAR_PROJECT_KEY:-NOT SET}"
+            echo "- SONAR_ORGANIZATION: ${SONAR_ORGANIZATION:+SET}${SONAR_ORGANIZATION:-NOT SET}"
+            exit 1
+          fi
+          
+          echo "✅ All SonarCloud secrets are configured"
+
       - name: SonarCloud Scan
         run: |
+          echo "Starting SonarCloud scan..."
+          echo "Using project key: $SONAR_PROJECT_KEY"
+          echo "Using organization: $SONAR_ORGANIZATION"
+          echo "Using host URL: $SONAR_HOST_URL"
+          echo "Using branch: ${{ github.ref_name }}"
+          
           mvn sonar:sonar \
-            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-            -Dsonar.organization=$SONAR_ORGANIZATION \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+            -Dsonar.organization="$SONAR_ORGANIZATION" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.login="$SONAR_TOKEN" \
+            -Dsonar.branch.name="${{ github.ref_name }}"
+          
+          echo "SonarCloud scan completed!"
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
@@ -69,6 +110,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Display Docker Hub Configuration
+        run: |
+          echo "=== Docker Hub Configuration Debug ==="
+          echo "Checking Docker Hub credentials..."
+          echo "DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}"
+          echo "Checking DOCKERHUB_PASSWORD..."
+          echo "DOCKERHUB_PASSWORD: ${DOCKERHUB_PASSWORD:0:10}..." # Chỉ hiển thị 10 ký tự đầu
+          echo "Checking GitHub SHA..."
+          echo "GITHUB_SHA: ${{ github.sha }}"
+          echo "====================================="
+          
+          echo "Validating Docker Hub credentials..."
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_PASSWORD }}" ]; then
+            echo "❌ Missing Docker Hub credentials!"
+            echo "Please check your GitHub Secrets:"
+            echo "- DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME:+SET}}${{ secrets.DOCKERHUB_USERNAME:-NOT SET}}"
+            echo "- DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD:+SET}}${{ secrets.DOCKERHUB_PASSWORD:-NOT SET}}"
+            exit 1
+          fi
+          
+          echo "✅ Docker Hub credentials are configured"
+
       - name: Download JAR artifact
         uses: actions/download-artifact@v4
         with:
@@ -78,11 +141,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Prepare Docker Login
+        run: |
+          echo "Preparing to login to Docker Hub..."
+          echo "Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Prepare Docker Build
+        run: |
+          echo "Preparing to build and push Docker image..."
+          echo "Image tags will be:"
+          echo "- ${{ secrets.DOCKERHUB_USERNAME }}/ams:backend"
+          echo "- ${{ secrets.DOCKERHUB_USERNAME }}/ams:backend-${{ github.sha }}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
