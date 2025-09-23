@@ -19,16 +19,13 @@ public class CreateUserRequest {
     @NotBlank(message = "Full name is required")
     String fullName;
 
-    @NotBlank(message = "Email is required")
-    String email;
-
     @NotBlank(message = "SSO is required")
     String sso;
 
-    @NotBlank(message = "MSA is required")
+    String email;
+
     String msa;
 
-    @NotBlank(message = "Job title is required")
     String jobTitle;
 
     Role role;

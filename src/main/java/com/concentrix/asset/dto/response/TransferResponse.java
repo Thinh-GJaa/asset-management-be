@@ -23,6 +23,7 @@ public class TransferResponse implements Serializable {
     WarehouseResponse fromWarehouse;
     UserResponse createdBy;
     UserResponse userUse;
+    UserResponse confirmedBy;
     TransactionStatus status;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

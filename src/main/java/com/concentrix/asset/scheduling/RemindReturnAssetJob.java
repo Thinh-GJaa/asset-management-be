@@ -35,9 +35,11 @@ public class RemindReturnAssetJob {
             Map<Device, Integer> deviceRemainings = entry.getValue();
             String html = buildReturnReminderHtml(user, deviceRemainings);
             try {
-//                emailService.sendEmail(user.getEmail(), "[AMS] Device Return Reminder", html, null);
-                emailService.sendEmail("xthinh04052002@gmail.com", "[AMS_VN] Device Return Reminder", html, null);
-            }catch (Exception e){
+                String subject = "[AMS_VN] Device Return Reminder";
+                // emailService.sendEmail(user.getEmail(), "[AMS] Device Return Reminder", html,
+                // null);
+                emailService.sendEmail("xthinh04052002@gmail.com", subject, html, null);
+            } catch (Exception e) {
                 log.error("Failed to send return reminder email to user: {}", user.getEmail(), e);
             }
         }
@@ -47,36 +49,41 @@ public class RemindReturnAssetJob {
      * Build HTML content for device return reminder email for a user
      */
     private String buildReturnReminderHtml(User user, Map<Device, Integer> deviceRemainings) {
-    StringBuilder html = new StringBuilder();
-    html.append("<div style='font-family:Arial,sans-serif;max-width:800px;margin:40px auto;background:#fff;padding:40px 32px;border-radius:16px;box-shadow:0 4px 24px #e0e7ef;'>");
-    html.append("<h2 style='color:#2563eb;text-align:center;font-size:2rem;margin-bottom:16px;'>Dear ").append(user.getFullName()).append("!</h2>");
-    html.append("<p style='font-size:18px;text-align:center;margin-bottom:32px;'>Below is the list of devices you need to return today:</p>");
-    html.append("<div style='overflow-x:auto;'>");
-    html.append("<table style='width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;box-shadow:0 2px 8px #e0e7ef;font-size:17px;'>");
-    html.append("<thead><tr style='background:#2563eb;color:#fff;'>");
-    html.append("<th style='padding:16px 12px;text-align:left;'>Type</th>");
-    html.append("<th style='padding:16px 12px;text-align:left;'>Model</th>");
-    html.append("<th style='padding:16px 12px;text-align:left;'>Serial</th>");
-    html.append("<th style='padding:16px 12px;text-align:center;'>Remaining Quantity</th>");
-    html.append("</tr></thead><tbody>");
-    for (Map.Entry<Device, Integer> d : deviceRemainings.entrySet()) {
-        Device device = d.getKey();
-        Integer remain = d.getValue();
-        html.append("<tr style='border-bottom:1px solid #e5e7eb;'>")
-            .append("<td style='padding:14px 12px;'>").append(device.getModel().getType()).append("</td>")
-            .append("<td style='padding:14px 12px;'>")
-            .append(device.getModel() != null ? device.getModel().getModelName() : "---").append("</td>")
-            .append("<td style='padding:14px 12px;'>")
-            .append(device.getSerialNumber() != null ? device.getSerialNumber() : "---").append("</td>")
-            .append("<td style='padding:14px 12px;text-align:center;font-weight:bold;color:#ef4444;font-size:18px;'>")
-            .append(remain).append("</td>")
-            .append("</tr>");
-    }
-    html.append("</tbody></table>");
-    html.append("</div>");
-    html.append("<p style='margin-top:32px;font-size:16px;color:#334155;text-align:center;'>Please return the devices on time to avoid any impact on your work. Thank you!</p>");
-    html.append("</div>");
-    return html.toString();
+        StringBuilder html = new StringBuilder();
+        html.append(
+                "<div style='font-family:Arial,sans-serif;max-width:800px;margin:40px auto;background:#fff;padding:40px 32px;border-radius:16px;box-shadow:0 4px 24px #e0e7ef;'>");
+        html.append("<h2 style='color:#2563eb;text-align:center;font-size:2rem;margin-bottom:16px;'>Dear ")
+                .append(user.getFullName()).append("!</h2>");
+        html.append(
+                "<p style='font-size:18px;text-align:center;margin-bottom:32px;'>Below is the list of devices you need to return today:</p>");
+        html.append("<div style='overflow-x:auto;'>");
+        html.append(
+                "<table style='width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;box-shadow:0 2px 8px #e0e7ef;font-size:17px;'>");
+        html.append("<thead><tr style='background:#2563eb;color:#fff;'>");
+        html.append("<th style='padding:16px 12px;text-align:left;'>Type</th>");
+        html.append("<th style='padding:16px 12px;text-align:left;'>Model</th>");
+        html.append("<th style='padding:16px 12px;text-align:left;'>Serial</th>");
+        html.append("<th style='padding:16px 12px;text-align:center;'>Remaining Quantity</th>");
+        html.append("</tr></thead><tbody>");
+        for (Map.Entry<Device, Integer> d : deviceRemainings.entrySet()) {
+            Device device = d.getKey();
+            Integer remain = d.getValue();
+            html.append("<tr style='border-bottom:1px solid #e5e7eb;'>")
+                    .append("<td style='padding:14px 12px;'>").append(device.getModel().getType()).append("</td>")
+                    .append("<td style='padding:14px 12px;'>")
+                    .append(device.getModel() != null ? device.getModel().getModelName() : "---").append("</td>")
+                    .append("<td style='padding:14px 12px;'>")
+                    .append(device.getSerialNumber() != null ? device.getSerialNumber() : "---").append("</td>")
+                    .append("<td style='padding:14px 12px;text-align:center;font-weight:bold;color:#ef4444;font-size:18px;'>")
+                    .append(remain).append("</td>")
+                    .append("</tr>");
+        }
+        html.append("</tbody></table>");
+        html.append("</div>");
+        html.append(
+                "<p style='margin-top:32px;font-size:16px;color:#334155;text-align:center;'>Please return the devices on time to avoid any impact on your work. Thank you!</p>");
+        html.append("</div>");
+        return html.toString();
     }
 
 }
