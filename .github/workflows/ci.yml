@@ -89,7 +89,7 @@ jobs:
             exit 1
           fi
           
-          echo "✅ All SonarCloud secrets are configured"
+          echo "✅All SonarCloud secrets are configured"
 
       - name: SonarCloud Scan
         run: |
