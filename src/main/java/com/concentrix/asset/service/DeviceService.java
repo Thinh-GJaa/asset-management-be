@@ -23,6 +23,7 @@ public interface DeviceService {
                         Pageable pageable);
 
         List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber);
+        boolean isDeviceBySerialInStock(String serialNumber);
 
         List<DeviceBorrowingInfoResponse> getAllUserBorrowingDevices();
 

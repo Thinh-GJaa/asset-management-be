@@ -1,5 +1,6 @@
 package com.concentrix.asset.dto.response;
 
+import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import com.fasterxml.jackson.annotation.JsonInclude;

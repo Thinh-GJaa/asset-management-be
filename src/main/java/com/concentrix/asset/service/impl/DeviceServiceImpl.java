@@ -30,6 +30,8 @@ import java.time.LocalDate;
 
 import com.concentrix.asset.enums.TransactionType;
 
+import static com.concentrix.asset.enums.DeviceStatus.*;
+
 @Slf4j
 @Service
 @Transactional
@@ -146,6 +148,19 @@ public class DeviceServiceImpl implements DeviceService {
             history.add(0, poMovement);
         }
         return history;
+    }
+
+    @Override
+    public boolean isDeviceBySerialInStock(String serialNumber) {
+        Optional<Device> device = deviceRepository.findBySerialNumber(serialNumber);
+        if(device.isPresent()) {
+            switch (device.get().getStatus()) {
+                case IN_FLOOR, ASSIGNED, REPAIR, E_WASTE, DISPOSED, ON_THE_MOVE -> throw new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_STOCK, serialNumber);
+            }
+            return true;
+        } else {
+            throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, serialNumber);
+        }
     }
 
     @Override
