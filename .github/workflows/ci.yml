@@ -71,9 +71,21 @@ jobs:
           if [ -z "$SONAR_PROJECT_KEY" ] || [ -z "$SONAR_ORGANIZATION" ] || [ -z "$SONAR_TOKEN" ]; then
             echo "❌ Missing required SonarCloud configuration!"
             echo "Please check your GitHub Secrets:"
-            echo "- SONAR_TOKEN: ${SONAR_TOKEN:+SET}${SONAR_TOKEN:-NOT SET}"
-            echo "- SONAR_PROJECT_KEY: ${SONAR_PROJECT_KEY:+SET}${SONAR_PROJECT_KEY:-NOT SET}"
-            echo "- SONAR_ORGANIZATION: ${SONAR_ORGANIZATION:+SET}${SONAR_ORGANIZATION:-NOT SET}"
+            if [ -z "$SONAR_TOKEN" ]; then
+              echo "- SONAR_TOKEN: NOT SET"
+            else
+              echo "- SONAR_TOKEN: SET"
+            fi
+            if [ -z "$SONAR_PROJECT_KEY" ]; then
+              echo "- SONAR_PROJECT_KEY: NOT SET"
+            else
+              echo "- SONAR_PROJECT_KEY: SET"
+            fi
+            if [ -z "$SONAR_ORGANIZATION" ]; then
+              echo "- SONAR_ORGANIZATION: NOT SET"
+            else
+              echo "- SONAR_ORGANIZATION: SET"
+            fi
             exit 1
           fi
           
@@ -125,8 +137,16 @@ jobs:
           if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_PASSWORD }}" ]; then
             echo "❌ Missing Docker Hub credentials!"
             echo "Please check your GitHub Secrets:"
-            echo "- DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME:+SET}}${{ secrets.DOCKERHUB_USERNAME:-NOT SET}}"
-            echo "- DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD:+SET}}${{ secrets.DOCKERHUB_PASSWORD:-NOT SET}}"
+            if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+              echo "- DOCKERHUB_USERNAME: NOT SET"
+            else
+              echo "- DOCKERHUB_USERNAME: SET"
+            fi
+            if [ -z "${{ secrets.DOCKERHUB_PASSWORD }}" ]; then
+              echo "- DOCKERHUB_PASSWORD: NOT SET"
+            else
+              echo "- DOCKERHUB_PASSWORD: SET"
+            fi
             exit 1
           fi
           
