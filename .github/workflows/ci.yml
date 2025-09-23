@@ -25,6 +25,17 @@ jobs:
         with:
           fetch-depth: 0 # cần cho SonarCloud
 
+      - name: Display Environment Variables
+        run: |
+          echo "=== Environment Variables Debug ==="
+          echo "SONAR_TOKEN: ${SONAR_TOKEN:0:10}..." # Chỉ hiển thị 10 ký tự đầu
+          echo "SONAR_HOST_URL: $SONAR_HOST_URL"
+          echo "SONAR_ORGANIZATION: $SONAR_ORGANIZATION"
+          echo "SONAR_PROJECT_KEY: $SONAR_PROJECT_KEY"
+          echo "GITHUB_REF_NAME: ${{ github.ref_name }}"
+          echo "GITHUB_SHA: ${{ github.sha }}"
+          echo "=================================="
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
