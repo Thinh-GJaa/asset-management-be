@@ -81,5 +81,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/ams:backend
-            ${{ secrets.DOCKERHUB_USERNAME }}/ams:backend-${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ams:backend${{ github.ref_name == 'main' && '' || '-test' }}
+            ${{ github.ref_name == 'main' && format('{0}/ams:backend-{1}', secrets.DOCKERHUB_USERNAME, github.sha) || '' }}
