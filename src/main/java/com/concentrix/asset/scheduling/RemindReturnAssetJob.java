@@ -1,11 +1,9 @@
 package com.concentrix.asset.scheduling;
 
-import com.concentrix.asset.dto.response.LowStockResponse;
 import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.service.EmailService;
 import com.concentrix.asset.service.ReturnRemindService;
-import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -26,8 +22,8 @@ public class RemindReturnAssetJob {
     EmailService emailService;
     ReturnRemindService returnRemindService;
 
-    // Scheduled: chạy 8h sáng mỗi ngày
-    @Scheduled(cron = "0 0 8 * * *")
+    // Scheduled: chạy 9h sáng mỗi ngày
+    @Scheduled(cron = "0 0 9 * * *")
     public void sendReturnReminders() {
         Map<User, Map<Device, Integer>> pendingReturns = returnRemindService.calculatePendingReturnsForAllUsers();
         for (Map.Entry<User, Map<Device, Integer>> entry : pendingReturns.entrySet()) {
@@ -36,11 +32,9 @@ public class RemindReturnAssetJob {
             String html = buildReturnReminderHtml(user, deviceRemainings);
             try {
                 String subject = "[AMS_VN] Device Return Reminder";
-                // emailService.sendEmail(user.getEmail(), "[AMS] Device Return Reminder", html,
-                // null);
-                emailService.sendEmail("xthinh04052002@gmail.com", subject, html, null);
+                emailService.sendEmail(user.getEmail(), subject, html, null);
             } catch (Exception e) {
-                log.error("Failed to send return reminder email to user: {}", user.getEmail(), e);
+                log.error("[SCHEDULER] Failed to send email to {}: {}", user.getEmail(), e.getMessage());
             }
         }
     }
