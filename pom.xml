@@ -13,6 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>asset</name>
 	<description>Asset management</description>
+	<packaging>jar</packaging>
 	<url/>
 	<licenses>
 		<license/>

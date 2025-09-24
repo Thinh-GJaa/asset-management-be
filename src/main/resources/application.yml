@@ -8,23 +8,40 @@ spring:
     name: asset-management
 
   datasource:
-    url: jdbc:mysql://localhost:3306/asset_db?createDatabaseIfNotExist=true&serverTimezone=Asia/Ho_Chi_Minh
-    username: root
-    password: root
+    url: jdbc:mysql://database:3306/asset_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&autoReconnect=true
+    username: asset
+    password: asset
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
       hibernate:
         jdbc:
-          time_zone: Asia/Ho_Chi_Minh
-  jackson:
-    time-zone: Asia/Ho_Chi_Minh
-    date-format: dd-MM-yyyy HH:mm:ss
+          'time_zone': Asia/Ho_Chi_Minh
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: xthinh04052002@gmail.com
+    password: ydrorszesavmhorv
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 
 jwt:

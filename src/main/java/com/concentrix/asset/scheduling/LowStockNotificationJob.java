@@ -26,7 +26,7 @@ public class LowStockNotificationJob {
     //    @Scheduled(cron = "0 0 8 * * ?") // 8:00 AM hàng ngày
     public void sendLowStockNotifications() {
 
-        String to = "xthinh04052002@gmail.com";
+        String to = "thinh.nguyenxuan@concentrix.com";
         String subject = "[AMS_VN]Low Stock Devices Report";
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
