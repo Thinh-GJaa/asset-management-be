@@ -51,7 +51,7 @@ public class LowStockNotificationJob {
                 // thêm class highlight
                 .append(".highlightCell{background:#eaf6ff;font-weight:bold;color:#2c3e50}")
                 .append("</style></head><body><div class='container'>")
-                .append("<h2>📊 Low Stock Devices Report</h2>");
+                .append("<h2>Low Stock Devices Report</h2>");
 
         if (lowStockList == null || lowStockList.isEmpty()) {
             html.append("<p>Not found data.</p></div></body></html>");
