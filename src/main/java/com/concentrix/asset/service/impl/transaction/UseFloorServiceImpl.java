@@ -133,7 +133,7 @@ public class UseFloorServiceImpl implements UseFloorService {
                                     finalTransaction.getFromWarehouse().getWarehouseName());
                         }
                         if (fromStock.getQuantity() < qty) {
-                            throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+                            throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
                         }
                     }
                     TransactionDetail detail = new TransactionDetail();
@@ -220,7 +220,7 @@ public class UseFloorServiceImpl implements UseFloorService {
                                 device.getModel().getModelName(),
                                 transaction.getFromWarehouse().getWarehouseName()));
                 if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);

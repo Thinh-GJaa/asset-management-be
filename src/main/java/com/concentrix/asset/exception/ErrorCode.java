@@ -10,7 +10,7 @@ public enum ErrorCode {
 
         SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
 
-        STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}'"),
+        STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}', current stock is {}"),
         DEVICE_NOT_FOUND_IN_WAREHOUSE(10004, HttpStatus.NOT_FOUND, "Device '{}' not found in warehouse '{}'"),
         // Authentication and authorization errors
         PASSWORD_INCORRECT(10400, HttpStatus.UNAUTHORIZED, "Password incorrect"),

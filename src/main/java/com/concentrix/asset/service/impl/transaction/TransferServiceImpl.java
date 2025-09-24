@@ -272,7 +272,7 @@ public class TransferServiceImpl implements TransferService {
                             transaction.getFromWarehouse().getWarehouseName());
                 }
                 if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName());
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
@@ -533,7 +533,7 @@ public class TransferServiceImpl implements TransferService {
             // List<String> ccList = userRepository.findEmailByRoleAndSite_SiteId(
             // Role.IT, transaction.getToWarehouse().getSite().getSiteId());
 
-            List<String> emails = userRepository.findEmailByRoleAndSite_SiteId(
+            List<String> emails = userRepository.findEmailByRoleAndSiteId(
                     Role.LEADER, transaction.getToWarehouse().getSite().getSiteId());
 
             String toEmail = emails.stream().findFirst().orElse(null);

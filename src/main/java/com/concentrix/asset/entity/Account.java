@@ -13,7 +13,9 @@ import java.util.List;
 /**
  * Entity đại diện cho phiếu giao dịch (transaction slip/header).
  */
-@Data
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

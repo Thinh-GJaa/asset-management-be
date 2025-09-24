@@ -11,7 +11,8 @@ import java.util.List;
 /**
  * Entity lưu thông tin người dùng/nhân viên sử dụng thiết bị.
  */
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

@@ -196,7 +196,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                                 device.getModel().getModelName(),
                                 transaction.getFromWarehouse().getWarehouseName()));
                 if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, deviceId);
+                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
                 }
                 fromStock.setQuantity(fromStock.getQuantity() - qty);
                 deviceWarehouseRepository.save(fromStock);
