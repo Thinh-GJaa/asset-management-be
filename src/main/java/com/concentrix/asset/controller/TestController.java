@@ -3,6 +3,7 @@ package com.concentrix.asset.controller;
 import com.concentrix.asset.scheduling.LowStockNotificationJob;
 import com.concentrix.asset.scheduling.RemindReturnAssetJob;
 import com.concentrix.asset.service.ReturnRemindService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +16,13 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/test")
-public class TestController{
+public class TestController {
 
     LowStockNotificationJob lowStockNotificationJob;
     RemindReturnAssetJob remindReturnAssetJob;
 
     @GetMapping("/low-stock")
-    public void testLowStock() {
+    public void testLowStock() throws MessagingException {
         lowStockNotificationJob.sendLowStockNotifications();
     }
 
