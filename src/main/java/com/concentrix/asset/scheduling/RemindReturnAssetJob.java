@@ -26,6 +26,9 @@ public class RemindReturnAssetJob {
     @Scheduled(cron = "0 0 9 * * *")
     public void sendReturnReminders() {
         Map<User, Map<Device, Integer>> pendingReturns = returnRemindService.calculatePendingReturnsForAllUsers();
+        if(pendingReturns.isEmpty()){
+            log.info("[SCHEDULER] No pending returns found");
+        }
         for (Map.Entry<User, Map<Device, Integer>> entry : pendingReturns.entrySet()) {
             User user = entry.getKey();
             Map<Device, Integer> deviceRemainings = entry.getValue();
