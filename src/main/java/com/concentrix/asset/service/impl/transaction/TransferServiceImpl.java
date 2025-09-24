@@ -17,6 +17,7 @@ import com.concentrix.asset.service.transaction.TransferService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -51,6 +52,7 @@ public class TransferServiceImpl implements TransferService {
 
 
     @Value("${app.notification.owner-email}")
+    @NonFinal
     String ownerEmail;
 
     @Override
