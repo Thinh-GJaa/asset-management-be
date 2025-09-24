@@ -2,38 +2,56 @@ package com.concentrix.asset.scheduling;
 
 
 import com.concentrix.asset.dto.response.LowStockResponse;
+import com.concentrix.asset.enums.Role;
+import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.EmailService;
 import com.concentrix.asset.service.LowStockService;
 import com.concentrix.asset.service.UserService;
+import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Slf4j
-@RequiredArgsConstructor
 @Component
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE) // bỏ makeFinal
 public class LowStockNotificationJob {
 
-    EmailService emailService;
-    UserService userService;
-    LowStockService lowStockService;
+    final EmailService emailService;
+    final UserService userService;
+    final UserRepository userRepository;
+    final LowStockService lowStockService;
 
-    //    @Scheduled(cron = "0 0 8 * * ?") // 8:00 AM hàng ngày
-    public void sendLowStockNotifications() {
+    @Value("${app.notification.owner-email}")
+    String ownerEmail;
 
-        String to = "congthang.van@concentrix.com";
+    @Value("${app.notification.system-alert-email}")
+    String systemAlertEmail;
+
+    // Scheduled: chạy 10h sáng mỗi thứ 2
+    @Scheduled(cron = "0 0 10 ? * MON")
+    public void sendLowStockNotifications() throws MessagingException {
         String subject = "[AMS_VN]Low Stock Devices Report";
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
-            emailService.sendEmail(to, subject, body, null);
-            log.info("[SCHEDULER] Email sent to {}", to);
+            List<String> ccList = userRepository.findEmailByRoleAndSiteId(Role.LEADER, null);
+            emailService.sendEmail(ownerEmail, subject, body, ccList);
+            log.info("[SCHEDULER] Email sent to {}", ownerEmail);
         } catch (Exception e) {
-            log.error("[SCHEDULER] Failed to send email to {}: {}", to, e.getMessage());
+            log.error("[SCHEDULER] Failed to send email to {}: {}", ownerEmail, e.getMessage());
+
+            String subjectError = "[AMS_VN]Low Stock Devices Report Error";
+            String bodyError = "Failed to send email low stock devices report";
+            emailService.sendEmail(systemAlertEmail, subjectError, bodyError, null);
+            emailService.sendEmail("congthang.van@concentrix.com", subjectError, bodyError, null);
         }
     }
 
