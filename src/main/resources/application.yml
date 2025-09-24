@@ -49,3 +49,8 @@ jwt:
   valid-duration: 86400 # second 24h
   refreshable-duration: 2592000 #seconds 30 ngày
   issuer: "Thinh_GJaa"
+
+app:
+  notification:
+    owner-email: ${APP_OWNER_EMAIL:hoaivu.truong@concentrix.com}
+    system-alert-email: ${APP_SYSTEM_ALERT_EMAIL:thinh.nguyenxuan@concentrix.com}
