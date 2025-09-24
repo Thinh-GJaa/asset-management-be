@@ -30,7 +30,7 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
     EmailService emailService;
 
     public Map<User, Map<Device, Integer>> calculatePendingReturnsForAllUsers() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now().plusDays(2); // Remind 2 days before return
         List<AssetTransaction> allTransactions = transactionRepository.findAllByUserUseIsNotNull();
 
         // 1. Lấy các transaction có returnDate = hôm nay và có user/eid
@@ -45,12 +45,11 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
             List<AssetTransaction> dueTxs = entry.getValue();
             // 2. Tìm min createDate của user
             LocalDate minCreateDate = dueTxs.stream()
-                    .map(AssetTransaction::getCreatedAt)   // LocalDateTime
+                    .map(AssetTransaction::getCreatedAt) // LocalDateTime
                     .filter(Objects::nonNull)
                     .map(LocalDateTime::toLocalDate)
                     .min(LocalDate::compareTo)
                     .orElse(today);
-
 
             // 3. Lấy tất cả transaction của user từ minCreateDate đến hôm nay của user
             List<AssetTransaction> periodTxs = allTransactions.stream()
