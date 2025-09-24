@@ -18,6 +18,7 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,9 +47,11 @@ public class TransferServiceImpl implements TransferService {
     EmailService emailService;
     UserRepository userRepository;
 
-    // String emailMrVu = "hoaivu.truong@concentrix.com";
-    String emailMrVu = "xthinh04052002@gmail.com";
-    String url_base = "http://localhost:3000/transactions/confirm-transfer-site";
+//    String url_base = "http://localhost:3000/transactions/confirm-transfer-site";
+
+
+    @Value("${app.notification.owner-email}")
+    String ownerEmail;
 
     @Override
     public TransferResponse getTransferById(Integer transferId) {
@@ -137,7 +140,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
         User currentUser = userService.getCurrentUser();
-        if(!currentUser.getEmail().equals(emailMrVu))
+        if(!currentUser.getEmail().equals(ownerEmail))
             throw new CustomException(ErrorCode.UNAUTHORIZED);
 
         transaction.setTransactionStatus(TransactionStatus.APPROVED);
@@ -294,7 +297,6 @@ public class TransferServiceImpl implements TransferService {
         return buildEmailHeader(notificationType, transaction) +
                 buildTransferInfoSection(transaction, notificationType) +
                 buildTransferItemsSection(transaction) +
-                buildActionSection(notificationType, transaction) +
                 buildEmailFooter();
     }
 
@@ -350,35 +352,35 @@ public class TransferServiceImpl implements TransferService {
         return "📋 Site Transfer Notification";
     }
 
-    /**
-     * Build action button based on notification type
-     */
-    private String buildActionButton(String notificationType, AssetTransaction transaction) {
-        String buttonHtml = "";
-
-        if ("CREATED".equals(notificationType)) {
-            // For created transfer, show approve button
-            buttonHtml = "<a href='" + url_base + "' class='action-button approve'>👁️ View</a>";
-        } else if ("APPROVED".equals(notificationType)) {
-            // For approved transfer, show view detail button
-            buttonHtml = "<a href='" + url_base + "' class='action-button view'>👁️ View</a>";
-        }
-
-        return buttonHtml;
-    }
-
-    /**
-     * Build call-to-action section placed above the footer
-     */
-    private String buildActionSection(String notificationType, AssetTransaction transaction) {
-        String button = buildActionButton(notificationType, transaction);
-        if (button == null || button.isEmpty()) {
-            return "";
-        }
-        return "<div class='info-section' style='text-align:center;margin-top:8px'>" +
-                button +
-                "</div>";
-    }
+//    /**
+//     * Build action button based on notification type
+//     */
+//    private String buildActionButton(String notificationType, AssetTransaction transaction) {
+//        String buttonHtml = "";
+//
+//        if ("CREATED".equals(notificationType)) {
+//            // For created transfer, show approve button
+//            buttonHtml = "<a href='" + url_base + "' class='action-button approve'>👁️ View</a>";
+//        } else if ("APPROVED".equals(notificationType)) {
+//            // For approved transfer, show view detail button
+//            buttonHtml = "<a href='" + url_base + "' class='action-button view'>👁️ View</a>";
+//        }
+//
+//        return buttonHtml;
+//    }
+//
+//    /**
+//     * Build call-to-action section placed above the footer
+//     */
+//    private String buildActionSection(String notificationType, AssetTransaction transaction) {
+//        String button = buildActionButton(notificationType, transaction);
+//        if (button == null || button.isEmpty()) {
+//            return "";
+//        }
+//        return "<div class='info-section' style='text-align:center;margin-top:8px'>" +
+//                button +
+//                "</div>";
+//    }
 
     /**
      * Build transfer information section
@@ -511,7 +513,7 @@ public class TransferServiceImpl implements TransferService {
             String subject = "[AMS_VN] New Site Transfer Request - #" + transaction.getTransactionId();
             String htmlBody = buildTransferNotificationHTML(transaction, "CREATED");
 
-            emailService.sendEmail(emailMrVu, subject, htmlBody, null);
+            emailService.sendEmail(ownerEmail, subject, htmlBody, null);
 
             log.info("[TransferServiceImpl] Transfer created email sent for transfer #{}",
                     transaction.getTransactionId());
@@ -538,7 +540,7 @@ public class TransferServiceImpl implements TransferService {
 
             String toEmail = emails.stream().findFirst().orElse(null);
 
-            emailService.sendEmail(emailMrVu, subject, htmlBody, ccList);
+            emailService.sendEmail(ownerEmail, subject, htmlBody, ccList);
             log.info("[TransferServiceImpl] Transfer approved email sent for transfer #{}",
                     transaction.getTransactionId());
 
