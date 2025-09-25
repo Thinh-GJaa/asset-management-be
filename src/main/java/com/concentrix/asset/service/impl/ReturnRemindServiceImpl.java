@@ -30,12 +30,14 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
     EmailService emailService;
 
     public Map<User, Map<Device, Integer>> calculatePendingReturnsForAllUsers() {
-        LocalDate today = LocalDate.now().plusDays(2); // Remind 2 days before return
+        LocalDate today = LocalDate.now();
         List<AssetTransaction> allTransactions = transactionRepository.findAllByUserUseIsNotNull();
 
-        // 1. Lấy các transaction có returnDate = hôm nay và có user/eid
+        // 1. Lấy các transaction có returnDate trong khoảng từ hôm nay trở về trước
+        // (bao gồm cả quá hạn)
+        // và có user/eid để nhắc trả thiết bị
         Map<User, List<AssetTransaction>> userDueTxs = allTransactions.stream()
-                .filter(tx -> tx.getReturnDate() != null && tx.getReturnDate().isEqual(today))
+                .filter(tx -> tx.getReturnDate() != null && !tx.getReturnDate().isAfter(today))
                 .collect(Collectors.groupingBy(AssetTransaction::getUserUse));
 
         Map<User, Map<Device, Integer>> result = new HashMap<>();
@@ -43,7 +45,21 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
         for (Map.Entry<User, List<AssetTransaction>> entry : userDueTxs.entrySet()) {
             User user = entry.getKey();
             List<AssetTransaction> dueTxs = entry.getValue();
-            // 2. Tìm min createDate của user
+
+            // 2. Kiểm tra xem có nên nhắc user hay không
+            // Nhắc trước 3 ngày hoặc từ ngày returnDate trở đi
+            boolean shouldRemind = dueTxs.stream()
+                    .anyMatch(tx -> {
+                        LocalDate returnDate = tx.getReturnDate();
+                        LocalDate remindStartDate = returnDate.minusDays(3);
+                        return !today.isBefore(remindStartDate);
+                    });
+
+            if (!shouldRemind) {
+                continue; // Bỏ qua user này nếu chưa đến thời điểm nhắc
+            }
+
+            // 3. Tìm min createDate của user
             LocalDate minCreateDate = dueTxs.stream()
                     .map(AssetTransaction::getCreatedAt) // LocalDateTime
                     .filter(Objects::nonNull)
@@ -51,7 +67,7 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
                     .min(LocalDate::compareTo)
                     .orElse(today);
 
-            // 3. Lấy tất cả transaction của user từ minCreateDate đến hôm nay của user
+            // 4. Lấy tất cả transaction của user từ minCreateDate đến hôm nay của user
             List<AssetTransaction> periodTxs = allTransactions.stream()
                     .filter(tx -> tx.getUserUse() != null && tx.getUserUse().equals(user))
                     .filter(tx -> tx.getCreatedAt() != null
@@ -61,7 +77,7 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
                             (tx.getTransactionType() == TransactionType.ASSIGNMENT && tx.getReturnDate() != null))
                     .toList();
 
-            // 4. Gom theo device và tính tổng số lượng còn thiếu
+            // 5. Gom theo device và tính tổng số lượng còn thiếu
             Map<Device, Integer> assigned = new HashMap<>();
             Map<Device, Integer> returned = new HashMap<>();
             for (AssetTransaction tx : periodTxs) {

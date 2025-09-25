@@ -25,6 +25,7 @@ public class RemindReturnAssetJob {
     // Scheduled: chạy 9h sáng mỗi ngày
     @Scheduled(cron = "0 0 9 * * *")
     public void sendReturnReminders() {
+        log.info("[SCHEDULER] Sending return reminders");
         Map<User, Map<Device, Integer>> pendingReturns = returnRemindService.calculatePendingReturnsForAllUsers();
         if(pendingReturns.isEmpty()){
             log.info("[SCHEDULER] No pending returns found");
