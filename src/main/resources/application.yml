@@ -23,19 +23,22 @@ spring:
         jdbc:
           time_zone: ${APP_TIMEZONE:Asia/Ho_Chi_Minh}
 
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
-    password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
-    default-encoding: UTF-8
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
+  spring:
+    mail:
+      host: ${MAIL_HOST:smtp.gmail.com}
+      port: ${MAIL_PORT:587} # mặc định 587, có thể override thành 465
+      username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
+      password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
+      default-encoding: UTF-8
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: ${MAIL_STARTTLS_ENABLE:true}
+              required: ${MAIL_STARTTLS_REQUIRED:true}
+            ssl:
+              enable: ${MAIL_SSL_ENABLE:false}
 
 management:
   endpoints:
