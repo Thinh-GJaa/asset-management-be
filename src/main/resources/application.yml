@@ -56,3 +56,8 @@ app:
   notification:
     owner-email: ${APP_OWNER_EMAIL:thinh.nguyenxuan@concentrix.com}
     system-alert-email: ${APP_SYSTEM_ALERT_EMAIL:thinh.nguyenxuan@concentrix.com}
+
+  password:
+    default: ${APP_PASSWORD_DEFAULT:Concentrix@1234}
+    default-admin: ${APP_PASSWORD_DEFAULT_ADMIN:Concentrix@12345678}
+
