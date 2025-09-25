@@ -6,6 +6,7 @@ import com.concentrix.asset.dto.response.LoginResponse;
 import com.concentrix.asset.dto.response.RefreshResponse;
 import com.concentrix.asset.entity.InvalidatedToken;
 import com.concentrix.asset.entity.User;
+import com.concentrix.asset.enums.Role;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.repository.InvalidatedTokenRepository;
@@ -69,6 +70,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND, request.getEmail()));
+
+        if(Role.OTHER.equals(user.getRole()))
+            throw new CustomException(ErrorCode.UNAUTHENTICATED);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.warn("[AUTHENTICATION SERVICE] Invalid password for user: {}", request.getEmail());
