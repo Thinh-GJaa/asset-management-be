@@ -1,33 +1,33 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /api/v1
+    context-path: ${CONTEXT_PATH:/api/v1}
 
 spring:
   application:
-    name: asset-management
+    name: ${SPRING_APP_NAME:ams}
 
   datasource:
-    url: jdbc:mysql://database:3306/asset_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&autoReconnect=true
-    username: asset
-    password: asset
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DB:asset_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=${APP_TIMEZONE:Asia/Ho_Chi_Minh}&autoReconnect=true
+    username: ${MYSQL_USER:asset}
+    password: ${MYSQL_PASSWORD:asset}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
       hibernate:
         jdbc:
-          'time_zone': Asia/Ho_Chi_Minh
+          time_zone: ${APP_TIMEZONE:Asia/Ho_Chi_Minh}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: xthinh04052002@gmail.com
-    password: ydrorszesavmhorv
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
+    password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
     default-encoding: UTF-8
     properties:
       mail:
@@ -43,12 +43,11 @@ management:
       exposure:
         include: "*"
 
-
 jwt:
-  signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
-  valid-duration: 86400 # second 24h
-  refreshable-duration: 2592000 #seconds 30 ngày
-  issuer: "Thinh_GJaa"
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
+  valid-duration: ${JWT_VALID_DURATION:86400} # 24h
+  refreshable-duration: ${JWT_REFRESHABLE_DURATION:2592000} # 30 ngày
+  issuer: ${JWT_ISSUER:Thinh_GJaa}
 
 app:
   notification:
