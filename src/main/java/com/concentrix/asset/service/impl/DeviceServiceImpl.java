@@ -2,12 +2,13 @@ package com.concentrix.asset.service.impl;
 
 import com.concentrix.asset.dto.request.UpdateDeviceRequest;
 import com.concentrix.asset.dto.request.UpdateSeatNumberRequest;
-import com.concentrix.asset.dto.response.DeviceResponse;
-import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
 import com.concentrix.asset.dto.response.DeviceBorrowingInfoResponse;
+import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
+import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
+import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
@@ -23,12 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.time.LocalDate;
-
-import com.concentrix.asset.enums.TransactionType;
 
 @Slf4j
 @Service
@@ -43,6 +42,7 @@ public class DeviceServiceImpl implements DeviceService {
     TransactionDetailRepository transactionDetailRepository;
     PODetailRepository poDetailRepository;
     TransactionRepository transactionRepository;
+    DeviceUserRepository deviceUserRepository;
 
     @Override
     public DeviceResponse getDeviceById(Integer deviceId) {
@@ -75,7 +75,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
-            Pageable pageable) {
+                                              Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -123,7 +123,7 @@ public class DeviceServiceImpl implements DeviceService {
                     .build();
         }
         List<DeviceMovementHistoryResponse> history = details.stream()
-                .map(detail -> detail.getTransaction())
+                .map(TransactionDetail::getTransaction)
                 .map(tx -> DeviceMovementHistoryResponse.builder()
                         .description(buildTransactionDescription(tx))
                         .createdAt(tx.getCreatedAt())
@@ -233,7 +233,7 @@ public class DeviceServiceImpl implements DeviceService {
                                 .modelId(
                                         device.getModel() != null
                                                 ? device.getModel().getModelId() == null ? null
-                                                        : device.getModel().getModelId()
+                                                : device.getModel().getModelId()
                                                 : null)
                                 .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
                                 .build();
@@ -257,11 +257,11 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public List<DeviceBorrowingInfoResponse.DeviceInfo> getBorrowingDevicesByUser(String eid) {
 
-        List<DeviceBorrowingInfoResponse.DeviceInfo> result = new java.util.ArrayList<>();
+        List<DeviceBorrowingInfoResponse.DeviceInfo> result = new ArrayList<>();
 
-        List<Device> devicesByEid = deviceRepository.findAllByCurrentUser_Eid(eid);
+        List<Device> devicesWithSerial = deviceRepository.findAllByCurrentUser_Eid(eid);
 
-        for (Device dv : devicesByEid) {
+        for (Device dv : devicesWithSerial) {
             if (dv.getSerialNumber() != null && !dv.getSerialNumber().isEmpty()) {
                 DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
                         .serialNumber(dv.getSerialNumber())
@@ -270,7 +270,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                                : dv.getModel().getModelId()
+                                        : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .build();
@@ -278,22 +278,28 @@ public class DeviceServiceImpl implements DeviceService {
             }
         }
 
-        List<Object[]> devicesWithoutSerial = transactionDetailRepository.getDeviceAndQuantityByEid(eid);
-        for (Object[] obj : devicesWithoutSerial) {
-            Device dv = (Device) obj[0];
-            Integer quantity = ((Long) obj[1]).intValue();
+        List<DeviceUser> devicesWithoutSerial = deviceUserRepository.findAllByUser_Eid(eid);
+        for (DeviceUser du : devicesWithoutSerial) {
+            Device dv = du.getDevice();
+            Integer quantity = du.getQuantity();
 
-            if (quantity != 0) {
+            if (quantity != null && quantity > 0) {
                 DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo.builder()
                         .serialNumber(dv.getSerialNumber())
                         .deviceName(dv.getDeviceName())
-                        .modelId(dv.getModel().getModelId())
-                        .modelName(dv.getModel().getModelName())
+                        .modelId(
+                                dv.getModel() != null
+                                        ? dv.getModel().getModelId() == null ? null
+                                        : dv.getModel().getModelId()
+                                        : null)
+                        .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .quantity(quantity)
                         .build();
                 result.add(deviceInfo);
             }
+
         }
+
         return result;
     }
 
@@ -406,14 +412,14 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
-            Pageable pageable) {
+                                                           Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(cb.isNull(root.get("seatNumber"))); // Chỉ lấy những thiết bị không có seat number
             predicates.add(cb.isNotNull(root.get("serialNumber"))); // Chỉ lấy những thiết bị có serial number
             predicates.add(cb.equal(root.get("status"), DeviceStatus.IN_FLOOR)); // Chỉ lấy những thiết bị có trạng thái
-                                                                                 // IN_FLOOR
+            // IN_FLOOR
 
             if (search != null && !search.trim().isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
@@ -445,7 +451,7 @@ public class DeviceServiceImpl implements DeviceService {
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
 
 
-        if(floor.getAccount() == null || floor.getAccount().getAccountCode() == null){
+        if (floor.getAccount() == null || floor.getAccount().getAccountCode() == null) {
             return null;
         }
 

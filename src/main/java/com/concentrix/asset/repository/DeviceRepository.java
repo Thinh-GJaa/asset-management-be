@@ -255,17 +255,6 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    // @Query("""
-    // SELECT d FROM Device d
-    // WHERE d.status = 'ON_THE_MOVE'
-    // AND (:modelId IS NULL OR d.model.modelId = :modelId)
-    // AND (:type IS NULL OR d.model.type = :type)
-    // AND d.serialNumber IS NOT NULL
-    // """)
-    // List<Device> findDevicesOnTheMoveForReport(
-    // @Param("type") DeviceType type,
-    // @Param("modelId") Integer modelId);
-
     @Query("""
                                                               SELECT d FROM Device d
                                                               WHERE d.status = :status
