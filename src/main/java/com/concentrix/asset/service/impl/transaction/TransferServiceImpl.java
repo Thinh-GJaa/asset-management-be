@@ -351,36 +351,6 @@ public class TransferServiceImpl implements TransferService {
         return "📋 Site Transfer Notification";
     }
 
-//    /**
-//     * Build action button based on notification type
-//     */
-//    private String buildActionButton(String notificationType, AssetTransaction transaction) {
-//        String buttonHtml = "";
-//
-//        if ("CREATED".equals(notificationType)) {
-//            // For created transfer, show approve button
-//            buttonHtml = "<a href='" + url_base + "' class='action-button approve'>👁️ View</a>";
-//        } else if ("APPROVED".equals(notificationType)) {
-//            // For approved transfer, show view detail button
-//            buttonHtml = "<a href='" + url_base + "' class='action-button view'>👁️ View</a>";
-//        }
-//
-//        return buttonHtml;
-//    }
-//
-//    /**
-//     * Build call-to-action section placed above the footer
-//     */
-//    private String buildActionSection(String notificationType, AssetTransaction transaction) {
-//        String button = buildActionButton(notificationType, transaction);
-//        if (button == null || button.isEmpty()) {
-//            return "";
-//        }
-//        return "<div class='info-section' style='text-align:center;margin-top:8px'>" +
-//                button +
-//                "</div>";
-//    }
-
     /**
      * Build transfer information section
      */
@@ -539,7 +509,7 @@ public class TransferServiceImpl implements TransferService {
 
             String toEmail = emails.stream().findFirst().orElse(null);
 
-            emailService.sendEmail(ownerEmail, subject, htmlBody, ccList);
+            emailService.sendEmail(toEmail, subject, htmlBody, ccList);
             log.info("[TransferServiceImpl] Transfer approved email sent for transfer #{}",
                     transaction.getTransactionId());
 
