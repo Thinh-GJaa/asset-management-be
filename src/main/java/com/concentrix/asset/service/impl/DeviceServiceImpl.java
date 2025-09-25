@@ -8,7 +8,6 @@ import com.concentrix.asset.dto.response.DeviceResponse;
 import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.DeviceMapper;
@@ -24,8 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,13 +102,13 @@ public class DeviceServiceImpl implements DeviceService {
     public List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber) {
         Device device = deviceRepository.findBySerialNumber(serialNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, serialNumber));
-        final LocalDate purchaseDate;
+//        final LocalDate purchaseDate;
         PODetail poDetail = poDetailRepository.findByDevice_DeviceIdAndDevice_SerialNumberNotNull(device.getDeviceId());
-        if (poDetail != null && poDetail.getPurchaseOrder() != null) {
-            purchaseDate = poDetail.getPurchaseOrder().getCreatedAt();
-        } else {
-            purchaseDate = null;
-        }
+//        if (poDetail != null && poDetail.getPurchaseOrder() != null) {
+//            purchaseDate = poDetail.getPurchaseOrder().getCreatedAt();
+//        } else {
+//            purchaseDate = null;
+//        }
         List<TransactionDetail> details = transactionDetailRepository
                 .findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(device.getDeviceId());
         DeviceMovementHistoryResponse.UserResponse poUser = null;
@@ -146,112 +143,6 @@ public class DeviceServiceImpl implements DeviceService {
             history.add(0, poMovement);
         }
         return history;
-    }
-
-    @Override
-    public List<DeviceBorrowingInfoResponse> getAllUserBorrowingDevices() {
-        List<Device> allDevices = deviceRepository.findAll();
-        Map<String, DeviceBorrowingInfoResponse> userMap = new HashMap<>();
-        for (Device device : allDevices) {
-            boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            List<TransactionDetail> allDetails = transactionDetailRepository
-                    .findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(device.getDeviceId());
-            if (hasSerial) {
-                // Xử lý như cũ cho serial
-                TransactionDetail lastDetail = allDetails.isEmpty() ? null : allDetails.get(allDetails.size() - 1);
-                if (lastDetail == null)
-                    continue;
-                AssetTransaction lastTx = lastDetail.getTransaction();
-                if (lastTx == null)
-                    continue;
-                if (lastTx.getTransactionType() == TransactionType.ASSIGNMENT && lastTx.getUserUse() != null) {
-                    boolean returned = false;
-                    for (TransactionDetail detail : allDetails) {
-                        AssetTransaction tx = detail.getTransaction();
-                        if (tx.getTransactionId() > lastTx.getTransactionId()
-                                && tx.getTransactionType() == TransactionType.RETURN_FROM_USER) {
-                            returned = true;
-                            break;
-                        }
-                    }
-                    if (!returned) {
-                        User user = lastTx.getUserUse();
-                        String eid = user.getEid();
-                        DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo
-                                .builder()
-                                .serialNumber(device.getSerialNumber())
-                                .deviceName(device.getDeviceName())
-                                .quantity(1)
-                                .modelId(
-                                        device.getModel() != null
-                                                ? device.getModel().getModelId()
-                                                : null)
-                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
-                                .build();
-                        DeviceBorrowingInfoResponse info = userMap.get(eid);
-                        if (info == null) {
-                            info = DeviceBorrowingInfoResponse.builder()
-                                    .eid(user.getEid())
-                                    .fullName(user.getFullName())
-                                    .devices(new java.util.ArrayList<>())
-                                    .build();
-                            userMap.put(eid, info);
-                        }
-                        info.getDevices().add(deviceInfo);
-                    }
-                }
-            } else {
-                // Gom theo user, tính tổng ASSIGNMENT - RETURN_FROM_USER
-                Map<String, Integer> assignMap = new HashMap<>();
-                Map<String, LocalDateTime> assignTimeMap = new HashMap<>();
-                for (TransactionDetail detail : allDetails) {
-                    AssetTransaction tx = detail.getTransaction();
-                    if (tx.getUserUse() == null)
-                        continue;
-                    String eid = tx.getUserUse().getEid();
-                    if (tx.getTransactionType() == TransactionType.ASSIGNMENT) {
-                        assignMap.put(eid, assignMap.getOrDefault(eid, 0) + detail.getQuantity());
-                        // Lưu thời gian cấp phát gần nhất
-                        assignTimeMap.put(eid, tx.getCreatedAt());
-                    } else if (tx.getTransactionType() == TransactionType.RETURN_FROM_USER) {
-                        assignMap.put(eid, assignMap.getOrDefault(eid, 0) - detail.getQuantity());
-                    }
-                }
-                for (Map.Entry<String, Integer> entry : assignMap.entrySet()) {
-                    if (entry.getValue() != null && entry.getValue() > 0) {
-                        String eid = entry.getKey();
-                        User user = allDetails.stream().map(TransactionDetail::getTransaction)
-                                .filter(tx -> tx.getUserUse() != null && tx.getUserUse().getEid().equals(eid))
-                                .map(AssetTransaction::getUserUse).findFirst().orElse(null);
-                        if (user == null)
-                            continue;
-                        DeviceBorrowingInfoResponse.DeviceInfo deviceInfo = DeviceBorrowingInfoResponse.DeviceInfo
-                                .builder()
-                                .serialNumber(device.getSerialNumber())
-                                .deviceName(device.getDeviceName())
-                                .quantity(entry.getValue())
-                                .modelId(
-                                        device.getModel() != null
-                                                ? device.getModel().getModelId() == null ? null
-                                                : device.getModel().getModelId()
-                                                : null)
-                                .modelName(device.getModel() != null ? device.getModel().getModelName() : null)
-                                .build();
-                        DeviceBorrowingInfoResponse info = userMap.get(eid);
-                        if (info == null) {
-                            info = DeviceBorrowingInfoResponse.builder()
-                                    .eid(user.getEid())
-                                    .fullName(user.getFullName())
-                                    .devices(new java.util.ArrayList<>())
-                                    .build();
-                            userMap.put(eid, info);
-                        }
-                        info.getDevices().add(deviceInfo);
-                    }
-                }
-            }
-        }
-        return new java.util.ArrayList<>(userMap.values());
     }
 
     @Override
@@ -304,24 +195,29 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable) {
-        List<User> users = transactionRepository.findDistinctEidFromTransactions();
+    public Page<DeviceBorrowingInfoResponse> getUserBorrowingDevice(Pageable pageable) {
 
-        List<DeviceBorrowingInfoResponse> result = users.parallelStream().map(
-                user -> {
+        // Lấy danh sách người dùng từ cả 2 nguồn
+        List<User> users = deviceRepository.findDistinctCurrentUser();
+        List<User> userAccessories = deviceUserRepository.findUserHavingDevice();
 
-                    List<DeviceBorrowingInfoResponse.DeviceInfo> deviceInfos = getBorrowingDevicesByUser(user.getEid());
+        // Gộp 2 danh sách và loại bỏ trùng lặp
+        Set<User> userSet = new HashSet<>();
+        userSet.addAll(users);
+        userSet.addAll(userAccessories);
+        users = new ArrayList<>(userSet);
 
-                    if (deviceInfos.isEmpty()) {
-                        return null;
-                    }
-
-                    return DeviceBorrowingInfoResponse.builder()
-                            .eid(user.getEid())
-                            .fullName(user.getFullName())
-                            .build();
-                }).filter(Objects::nonNull).toList();
-
+        List<DeviceBorrowingInfoResponse> result = new ArrayList<>();
+        for (User user : users) {
+            List<DeviceBorrowingInfoResponse.DeviceInfo> devices = getBorrowingDevicesByUser(user.getEid());
+            if (devices != null && !devices.isEmpty()) {
+                DeviceBorrowingInfoResponse info = DeviceBorrowingInfoResponse.builder()
+                        .eid(user.getEid())
+                        .fullName(user.getFullName())
+                        .build();
+                result.add(info);
+            }
+        }
         return new PageImpl<>(result, pageable, result.size());
     }
 
@@ -342,7 +238,6 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public String generateHostNameForLaptop(Device device) {
         if (device.getModel().getType() == DeviceType.LAPTOP) {
-            DeviceType type = device.getModel().getType();
             int lenSN = device.getSerialNumber().length();
             String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
                     ? device.getSerialNumber().substring(0, 6)

@@ -2,6 +2,7 @@ package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.DeviceUser;
 import com.concentrix.asset.entity.DeviceUserId;
+import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,6 +17,13 @@ public interface DeviceUserRepository extends JpaRepository<DeviceUser, DeviceUs
         Optional<DeviceUser> findByDevice_DeviceIdAndUser_Eid(Integer deviceId, String userEid);
 
         List<DeviceUser> findAllByUser_Eid(String eid);
+
+        @Query("""
+                SELECT DISTINCT du.user FROM DeviceUser du
+                WHERE du.device.serialNumber IS NULL
+                AND du.quantity > 0
+        """)
+        List<User> findUserHavingDevice();
 
         @Query("""
                 SELECT COALESCE(SUM(du.quantity), 0) FROM DeviceUser du

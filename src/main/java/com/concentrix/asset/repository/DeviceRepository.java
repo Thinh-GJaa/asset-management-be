@@ -1,6 +1,7 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.Device;
+import com.concentrix.asset.entity.User;
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,8 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
     List<Device> findAllBySerialNumberIsNotNull();
 
     Optional<Device> findBySeatNumber(String seatNumber);
+
+    List<User> findDistinctCurrentUser();
 
     @Query("""
                 SELECT COUNT(d)

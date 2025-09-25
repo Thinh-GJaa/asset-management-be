@@ -24,11 +24,9 @@ public interface DeviceService {
 
         List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber);
 
-        List<DeviceBorrowingInfoResponse> getAllUserBorrowingDevices();
-
         List<DeviceBorrowingInfoResponse.DeviceInfo> getBorrowingDevicesByUser(String eid);
 
-        Page<DeviceBorrowingInfoResponse> getBorrowingDevice(Pageable pageable);
+        Page<DeviceBorrowingInfoResponse> getUserBorrowingDevice(Pageable pageable);
 
         List<String> getAllDeviceTypes();
 
