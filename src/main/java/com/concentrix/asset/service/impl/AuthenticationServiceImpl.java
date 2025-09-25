@@ -272,7 +272,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+    private SignedJWT verifyToken(String token, boolean isRefresh) {
         try {
             token = token.replace("Bearer ", "");
             SignedJWT signedJWT = SignedJWT.parse(token);
