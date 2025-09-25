@@ -29,6 +29,12 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
 
     Optional<Device> findBySeatNumber(String seatNumber);
 
+    @Query("""
+            SELECT DISTINCT d.currentUser
+            FROM Device d
+            WHERE d.currentUser IS NOT NULL
+              AND d.serialNumber IS NOT NULL
+            """)
     List<User> findDistinctCurrentUser();
 
     @Query("""

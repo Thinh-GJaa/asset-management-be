@@ -38,7 +38,6 @@ public class DeviceServiceImpl implements DeviceService {
     ModelRepository modelRepository;
     TransactionDetailRepository transactionDetailRepository;
     PODetailRepository poDetailRepository;
-    TransactionRepository transactionRepository;
     DeviceUserRepository deviceUserRepository;
 
     @Override
@@ -196,7 +195,6 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceBorrowingInfoResponse> getUserBorrowingDevice(Pageable pageable) {
-
         // Lấy danh sách người dùng từ cả 2 nguồn
         List<User> users = deviceRepository.findDistinctCurrentUser();
         List<User> userAccessories = deviceUserRepository.findUserHavingDevice();
