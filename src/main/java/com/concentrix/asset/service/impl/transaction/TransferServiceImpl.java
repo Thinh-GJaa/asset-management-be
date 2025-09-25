@@ -48,9 +48,6 @@ public class TransferServiceImpl implements TransferService {
     EmailService emailService;
     UserRepository userRepository;
 
-//    String url_base = "http://localhost:3000/transactions/confirm-transfer-site";
-
-
     @Value("${app.notification.owner-email}")
     @NonFinal
     String ownerEmail;
@@ -142,7 +139,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
         User currentUser = userService.getCurrentUser();
-        if(!currentUser.getEmail().equals(ownerEmail))
+        if(!Role.ADMIN.equals(currentUser.getRole()))
             throw new CustomException(ErrorCode.UNAUTHORIZED);
 
         transaction.setTransactionStatus(TransactionStatus.APPROVED);
