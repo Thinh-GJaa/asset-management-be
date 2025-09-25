@@ -8,7 +8,7 @@ spring:
     name: ${SPRING_APP_NAME:ams}
 
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DB:asset_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=${APP_TIMEZONE:Asia/Ho_Chi_Minh}&autoReconnect=true
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:asset_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=${APP_TIMEZONE:Asia/Ho_Chi_Minh}&autoReconnect=true
     username: ${MYSQL_USER:asset}
     password: ${MYSQL_PASSWORD:asset}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -23,22 +23,22 @@ spring:
         jdbc:
           time_zone: ${APP_TIMEZONE:Asia/Ho_Chi_Minh}
 
-  spring:
-    mail:
-      host: ${MAIL_HOST:smtp.gmail.com}
-      port: ${MAIL_PORT:587} # mặc định 587, có thể override thành 465
-      username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
-      password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
-      default-encoding: UTF-8
-      properties:
-        mail:
-          smtp:
-            auth: true
-            starttls:
-              enable: ${MAIL_STARTTLS_ENABLE:true}
-              required: ${MAIL_STARTTLS_REQUIRED:true}
-            ssl:
-              enable: ${MAIL_SSL_ENABLE:false}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587} # mặc định 587, có thể override thành 465
+    username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
+    password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: ${MAIL_SSL_ENABLE:false}
+          starttls:
+            enable: ${MAIL_STARTTLS_ENABLE:true}
+            required: ${MAIL_STARTTLS_REQUIRED:true}
+
 
 management:
   endpoints:
