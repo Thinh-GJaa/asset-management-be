@@ -19,7 +19,6 @@ import com.concentrix.asset.service.UserService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -44,7 +43,6 @@ public class UserServiceImpl implements UserService {
     TransactionMapper transactionMapper;
     PasswordEncoder passwordEncoder;
 
-    @NonFinal
     @Value("${app.password.default}")
     String defaultPassword;
 
