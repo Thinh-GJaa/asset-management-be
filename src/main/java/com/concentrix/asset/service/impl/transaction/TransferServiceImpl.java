@@ -533,9 +533,9 @@ public class TransferServiceImpl implements TransferService {
             String subject = "[AMS_VN] Site Transfer Request Approved - #" + transaction.getTransactionId();
             String htmlBody = buildTransferNotificationHTML(transaction, "APPROVED");
 
-            List<String> ccList = null;
-            // List<String> ccList = userRepository.findEmailByRoleAndSite_SiteId(
-            // Role.IT, transaction.getToWarehouse().getSite().getSiteId());
+
+            List<String> ccList = userRepository.findEmailByRoleAndSiteId(
+                    Role.IT, transaction.getToWarehouse().getSite().getSiteId());
 
             List<String> emails = userRepository.findEmailByRoleAndSiteId(
                     Role.LEADER, transaction.getToWarehouse().getSite().getSiteId());
