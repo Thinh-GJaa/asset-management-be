@@ -13,14 +13,15 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.TransactionMapper;
 import com.concentrix.asset.mapper.UserMapper;
-import com.concentrix.asset.repository.AccountRepository;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.UserService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,7 +43,10 @@ public class UserServiceImpl implements UserService {
     TransactionRepository transactionRepository;
     TransactionMapper transactionMapper;
     PasswordEncoder passwordEncoder;
-    AccountRepository accountRepository;
+
+    @NonFinal
+    @Value("${app.password.default}")
+    String defaultPassword;
 
     @Override
     public UserResponse getUserById(String eid) {
@@ -76,19 +80,13 @@ public class UserServiceImpl implements UserService {
     private void setRole(User user, Role role, boolean createPassword) {
         user.setRole(role);
         if (createPassword) {
-            user.setPassword(passwordEncoder.encode("Concentrix@1234")); // Clear password for non-admin users
+            user.setPassword(passwordEncoder.encode(defaultPassword));
         }
     }
 
-//    private User setRoleOther(User user) {
-//        user.setRole(Role.OTHER);
-//        return user;
-//    }
 
     @Override
     public UserResponse updateUser(UpdateUserRequest request) {
-
-        User userLogin = getCurrentUser();
 
         User user = userRepository.findById(request.getEid())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getEid()));
@@ -177,7 +175,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<TransactionResponse> getUserTransactions(String eid) {
 
-        User user = userRepository.findById(eid)
+        userRepository.findById(eid)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, eid));
 
         List<AssetTransaction> transactions = transactionRepository.findAllByUserUse_Eid(eid);
@@ -191,7 +189,7 @@ public class UserServiceImpl implements UserService {
 
     public List<TransactionItemsResponse> getUserTransactionItems(Integer transactionId) {
         AssetTransaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId.toString()));
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, transactionId));
         return transaction.getDetails().stream()
                 .map(transactionMapper::toTransactionItemsResponse)
                 .toList();

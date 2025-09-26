@@ -26,7 +26,7 @@ public class CustomJwtDecoder implements JwtDecoder {
 
         } catch (ParseException e) {
             log.warn("[SECURITY][JWT] Invalid token parse attempt. Error: {} | Token: {}", e.getMessage(),
-                    token != null && token.length() > 20 ? token.substring(0, 20) + "..." : token);
+                    token.length() > 20 ? token.substring(0, 20) + "..." : token);
             throw new JwtException("Invalid token");
         }
     }

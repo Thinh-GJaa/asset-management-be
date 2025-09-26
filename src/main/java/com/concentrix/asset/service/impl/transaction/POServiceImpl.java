@@ -10,6 +10,7 @@ import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.POMapper;
 import com.concentrix.asset.repository.*;
 import com.concentrix.asset.service.DeviceService;
+import com.concentrix.asset.service.UserService;
 import com.concentrix.asset.service.transaction.POService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
@@ -40,11 +41,15 @@ public class POServiceImpl implements POService {
     ModelRepository modelRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
     UserRepository userRepository;
+    UserService userService;
     DeviceService deviceService;
 
     @Override
     public POResponse createPO(CreatePORequest createPORequest) {
+
         log.info("[POServiceImpl] Creating purchase order with request: {}", createPORequest);
+
+        User currentUser = userService.getCurrentUser();
 
         // Kiểm tra xem PO đã tồn tại hay chưa
         if (poRepository.existsById(createPORequest.getPoId())) {
@@ -63,16 +68,20 @@ public class POServiceImpl implements POService {
         }
 
         PurchaseOrder purchaseOrder = poMapper.toPurchaseOrder(createPORequest);
-        purchaseOrder.setCreatedBy(getCurrentUser());
+        purchaseOrder.setCreatedBy(currentUser);
         purchaseOrder = poRepository.save(purchaseOrder);
 
         for (POItem item : createPORequest.getItems()) {
             Model model = modelRepository.findById(item.getModelId())
                     .orElseThrow(() -> new CustomException(ErrorCode.MODEL_NOT_FOUND, item.getModelId()));
 
-            if (item.getSerialNumber() != null && !item.getSerialNumber().isBlank()) {
-                handleDeviceWithSerial(item, model, purchaseOrder);
-            } else {
+            if(model.getType().hasSerial()){
+                if (item.getSerialNumber() != null && !item.getSerialNumber().isBlank()) {
+                    handleDeviceWithSerial(item, model, purchaseOrder);
+                }else{
+                    throw new CustomException(ErrorCode.MODEL_MISSING_SERIAL_NUMBER, model.getModelName());
+                }
+            }else{
                 handleDeviceWithoutSerial(item, model, purchaseOrder);
             }
         }
@@ -176,12 +185,6 @@ public class POServiceImpl implements POService {
                     .build();
             deviceWarehouseRepository.save(deviceWarehouse);
         }
-    }
-
-    private User getCurrentUser() {
-        String EID = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findById(EID)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
     }
 
 }

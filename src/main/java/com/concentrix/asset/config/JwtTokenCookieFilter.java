@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -15,8 +16,8 @@ public class JwtTokenCookieFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
@@ -27,7 +28,6 @@ public class JwtTokenCookieFilter extends OncePerRequestFilter {
                 for (Cookie cookie : request.getCookies()) {
                     if ("access_token".equals(cookie.getName())) {
                         String token = cookie.getValue();
-                        log.info("[SECURITY][JWT] Access token in cookie: {}", token);
 
                         // Tạo một wrapper để thêm header Authorization
                         HttpServletRequest wrappedRequest =
