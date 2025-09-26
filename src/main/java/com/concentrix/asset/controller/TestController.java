@@ -2,6 +2,7 @@ package com.concentrix.asset.controller;
 
 import com.concentrix.asset.scheduling.LowStockNotificationJob;
 import com.concentrix.asset.scheduling.RemindReturnAssetJob;
+import com.concentrix.asset.scheduling.UpdateWorkdayJob;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,6 +20,7 @@ public class TestController {
 
     LowStockNotificationJob lowStockNotificationJob;
     RemindReturnAssetJob remindReturnAssetJob;
+    UpdateWorkdayJob updateWorkdayJob;
 
     @GetMapping("/low-stock")
     public void testLowStock() throws MessagingException {
@@ -33,6 +35,11 @@ public class TestController {
     @GetMapping("/time")
     public String testTime() {
         return LocalDateTime.now().toString();
+    }
+
+    @GetMapping("/update-workday")
+    public void testUpdateWorkday() throws MessagingException {
+        updateWorkdayJob.updateWorkday();
     }
 
 }
