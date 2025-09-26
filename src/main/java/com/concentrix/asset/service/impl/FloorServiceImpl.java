@@ -62,7 +62,7 @@ public class FloorServiceImpl implements FloorService {
             }
 
             if (accountId != null) {
-                predicates.add(cb.equal(root.get("account").get("accountId"), accountId ));
+                predicates.add(cb.equal(root.get("account").get("accountId"), accountId));
             }
             if (search != null && !search.trim().isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
@@ -73,7 +73,7 @@ public class FloorServiceImpl implements FloorService {
     }
 
     @Override
-    public Page<FloorResponse> getFloorsBySiteId(Integer siteId, Pageable pageable){
+    public Page<FloorResponse> getFloorsBySiteId(Integer siteId, Pageable pageable) {
 
         siteRepository.findById(siteId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SITE_NOT_FOUND, siteId));

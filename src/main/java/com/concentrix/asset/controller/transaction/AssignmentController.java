@@ -13,12 +13,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class AssignmentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<AssignmentResponse>> createAssignment(
-            @Valid @RequestBody CreateAssignmentRequest request){
+            @Valid @RequestBody CreateAssignmentRequest request) {
         ApiResponse<AssignmentResponse> apiResponse = ApiResponse.<AssignmentResponse>builder()
                 .message("Transaction assignment created successful")
                 .data(assignmentService.createAssignment(request))
@@ -40,7 +39,7 @@ public class AssignmentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AssignmentResponse>> getById(
-            @PathVariable Integer id){
+            @PathVariable Integer id) {
         ApiResponse<AssignmentResponse> apiResponse = ApiResponse.<AssignmentResponse>builder()
                 .message("Get transaction assignment successful")
                 .data(assignmentService.getAssignmentById(id))

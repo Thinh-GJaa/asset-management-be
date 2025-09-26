@@ -3,6 +3,7 @@ package com.concentrix.asset.dto.response;
 import com.concentrix.asset.enums.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -49,7 +50,7 @@ public class UserResponse implements Serializable {
     @AllArgsConstructor
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class SiteResponse implements  Serializable{
+    public static class SiteResponse implements Serializable {
         Integer siteId;
         String siteName;
     }

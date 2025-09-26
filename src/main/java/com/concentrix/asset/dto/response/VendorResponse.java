@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class VendorResponse implements Serializable {
-     Integer vendorId;
-     String vendorName;
-     String address;
-     String phoneNumber;
-     String email;
-     LocalDateTime createdAt;
-        LocalDateTime updatedAt;
+    Integer vendorId;
+    String vendorName;
+    String address;
+    String phoneNumber;
+    String email;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

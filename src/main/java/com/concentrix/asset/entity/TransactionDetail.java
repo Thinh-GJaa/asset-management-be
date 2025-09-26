@@ -5,17 +5,17 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import com.concentrix.asset.entity.AssetTransaction;
 
 /**
  * Entity đại diện cho chi tiết phiếu giao dịch (transaction detail).
  */
+@Getter
+@Setter
 @Entity
-@IdClass(TransactionDetailId.class)
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@IdClass(TransactionDetailId.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransactionDetail implements Serializable {
     @Id

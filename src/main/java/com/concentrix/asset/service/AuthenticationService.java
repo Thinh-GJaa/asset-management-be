@@ -18,7 +18,7 @@ public interface AuthenticationService {
             throws ParseException, JOSEException;
 
     RefreshResponse refreshToken(HttpServletRequest request, HttpServletResponse response)
-            throws ParseException, JOSEException ;
+            throws ParseException, JOSEException;
 
     void changePassword(ChangePasswordRequest request);
 

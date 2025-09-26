@@ -12,6 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LoginResponse implements Serializable{
+public class LoginResponse implements Serializable {
     String token;
 }

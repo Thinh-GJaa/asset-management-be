@@ -1,9 +1,6 @@
 package com.concentrix.asset.dto.request;
 
-import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.TransactionType;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -24,7 +21,7 @@ public class CreateTransferRequest {
     String note;
 
     @Valid
-            @NotEmpty(message = "Items cannot be empty")
+    @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;
 
 

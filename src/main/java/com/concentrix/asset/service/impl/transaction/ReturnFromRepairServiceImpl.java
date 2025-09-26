@@ -130,7 +130,7 @@ public class ReturnFromRepairServiceImpl implements ReturnFromRepairService {
                         cb.like(cb.lower(root.get("createdBy").get("fullName")), searchPattern)
                 ));
             }
-            if( fromDate != null) {
+            if (fromDate != null) {
                 LocalDateTime fromDateTime = fromDate.atStartOfDay();
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }

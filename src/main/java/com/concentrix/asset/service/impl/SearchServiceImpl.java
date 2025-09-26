@@ -1,6 +1,8 @@
 package com.concentrix.asset.service.impl;
 
-import com.concentrix.asset.dto.response.*;
+import com.concentrix.asset.dto.response.DeviceResponse;
+import com.concentrix.asset.dto.response.SearchResultResponse;
+import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.mapper.DeviceMapper;
@@ -11,7 +13,8 @@ import com.concentrix.asset.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import java.util.*;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor

@@ -1,9 +1,9 @@
 package com.concentrix.asset.dto.response;
 
-import com.concentrix.asset.enums.DeviceType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 import java.util.List;
 

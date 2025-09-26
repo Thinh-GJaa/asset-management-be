@@ -18,19 +18,19 @@ import java.time.LocalDateTime;
 public class Vendor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     Integer vendorId;
+    Integer vendorId;
 
     @Column(nullable = false, unique = true)
-     String vendorName;
+    String vendorName;
 
     @Column
-     String address;
+    String address;
 
     @Column
-     String phoneNumber;
+    String phoneNumber;
 
     @Column
-     String email;
+    String email;
 
     @Column
     LocalDateTime createdAt;

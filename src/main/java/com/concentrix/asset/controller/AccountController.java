@@ -73,7 +73,7 @@ public class AccountController {
     }
 
     @GetMapping("/owners")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getOwners(){
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getOwners() {
 
         ApiResponse<List<UserResponse>> apiResponse = ApiResponse.<List<UserResponse>>builder()
                 .message("Get owners account successfully")

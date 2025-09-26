@@ -6,14 +6,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Entity đại diện cho phiếu giao dịch (transaction slip/header).
  */
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -44,7 +45,6 @@ public class AssetTransaction {
     @ManyToOne
     @JoinColumn(name = "from_floor_id")
     Floor fromFloor;
-
 
     @ManyToOne
     @JoinColumn(name = "to_floor_id")

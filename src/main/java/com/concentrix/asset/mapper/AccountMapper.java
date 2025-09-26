@@ -4,7 +4,7 @@ import com.concentrix.asset.dto.request.CreateAccountRequest;
 import com.concentrix.asset.dto.request.UpdateAccountRequest;
 import com.concentrix.asset.dto.response.AccountResponse;
 import com.concentrix.asset.entity.Account;
-import com.concentrix.asset.mapper.helper.*;
+import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = {IdMapperHelper.class})

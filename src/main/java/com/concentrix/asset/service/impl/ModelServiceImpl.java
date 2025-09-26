@@ -4,6 +4,7 @@ import com.concentrix.asset.dto.request.CreateModelRequest;
 import com.concentrix.asset.dto.request.UpdateModelRequest;
 import com.concentrix.asset.dto.response.ModelResponse;
 import com.concentrix.asset.entity.Model;
+import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.ModelMapper;
@@ -22,7 +23,6 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.concentrix.asset.enums.DeviceType;
 
 @Service
 @RequiredArgsConstructor

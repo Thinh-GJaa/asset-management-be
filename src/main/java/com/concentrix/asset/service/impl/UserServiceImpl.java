@@ -158,7 +158,7 @@ public class UserServiceImpl implements UserService {
                 users.add(user);
                 updated++;
             } else {
-                User user = userMapper.ToUser(req);
+                User user = userMapper.toUserWD(req);
                 users.add(user);
                 created++;
             }

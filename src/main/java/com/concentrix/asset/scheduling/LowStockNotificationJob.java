@@ -6,33 +6,36 @@ import com.concentrix.asset.enums.Role;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.EmailService;
 import com.concentrix.asset.service.LowStockService;
-import com.concentrix.asset.service.UserService;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE) // bỏ makeFinal
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true) // bỏ makeFinal
 public class LowStockNotificationJob {
 
-    final EmailService emailService;
-    final UserService userService;
-    final UserRepository userRepository;
-    final LowStockService lowStockService;
+    EmailService emailService;
+    UserRepository userRepository;
+    LowStockService lowStockService;
 
+    @NonFinal
     @Value("${app.notification.owner-email}")
     String ownerEmail;
 
+    @NonFinal
     @Value("${app.notification.system-alert-email}")
     String systemAlertEmail;
 
@@ -146,9 +149,6 @@ public class LowStockNotificationJob {
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
-
-
-
 
 
 }

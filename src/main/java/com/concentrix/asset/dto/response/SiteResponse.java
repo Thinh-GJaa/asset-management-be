@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SiteResponse implements Serializable{
+public class SiteResponse implements Serializable {
 
     Long siteId;
     String siteName;

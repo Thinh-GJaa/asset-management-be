@@ -19,7 +19,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -75,13 +74,13 @@ public class POServiceImpl implements POService {
             Model model = modelRepository.findById(item.getModelId())
                     .orElseThrow(() -> new CustomException(ErrorCode.MODEL_NOT_FOUND, item.getModelId()));
 
-            if(model.getType().hasSerial()){
+            if (model.getType().hasSerial()) {
                 if (item.getSerialNumber() != null && !item.getSerialNumber().isBlank()) {
                     handleDeviceWithSerial(item, model, purchaseOrder);
-                }else{
+                } else {
                     throw new CustomException(ErrorCode.MODEL_MISSING_SERIAL_NUMBER, model.getModelName());
                 }
-            }else{
+            } else {
                 handleDeviceWithoutSerial(item, model, purchaseOrder);
             }
         }
@@ -106,10 +105,10 @@ public class POServiceImpl implements POService {
             if (search != null && !search.isEmpty()) {
                 String keyword = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
-                    cb.like(cb.lower(root.get("poId")), keyword),
-                    cb.like(cb.lower(root.get("vendor").get("vendorName")), keyword),
-                    cb.like(cb.lower(root.get("warehouse").get("warehouseName")), keyword),
-                    cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword)
+                        cb.like(cb.lower(root.get("poId")), keyword),
+                        cb.like(cb.lower(root.get("vendor").get("vendorName")), keyword),
+                        cb.like(cb.lower(root.get("warehouse").get("warehouseName")), keyword),
+                        cb.like(cb.lower(root.get("createdBy").get("fullName")), keyword)
                 ));
             }
             if (fromDate != null) {

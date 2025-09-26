@@ -5,8 +5,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -49,7 +49,6 @@ public class AssignmentResponse implements Serializable {
         String warehouseId;
         String warehouseName;
     }
-
 
 
 }

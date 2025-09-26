@@ -4,8 +4,10 @@ import com.concentrix.asset.dto.request.CreateSiteRequest;
 import com.concentrix.asset.dto.request.UpdateSiteRequest;
 import com.concentrix.asset.dto.response.SiteResponse;
 import com.concentrix.asset.entity.Site;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.mapstruct.*;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring")
 public interface SiteMapper {

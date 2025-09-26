@@ -3,8 +3,8 @@ package com.concentrix.asset.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data

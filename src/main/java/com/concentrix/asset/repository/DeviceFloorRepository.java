@@ -1,6 +1,5 @@
 package com.concentrix.asset.repository;
 
-import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.DeviceFloor;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -18,7 +18,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -37,17 +36,16 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     TransactionRepository transactionRepository;
     AssignmentMapper assignmentMapper;
-    UserRepository userRepository;
     DeviceRepository deviceRepository;
     DeviceWarehouseRepository deviceWarehouseRepository;
     UserService userService;
     DeviceUserRepository deviceUserRepository;
 
     @Override
-    public AssignmentResponse getAssignmentById(Integer AssignmentId) {
+    public AssignmentResponse getAssignmentById(Integer assignmentId) {
 
-        AssetTransaction transaction = transactionRepository.findById(AssignmentId).orElseThrow(
-                () -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, AssignmentId));
+        AssetTransaction transaction = transactionRepository.findById(assignmentId).orElseThrow(
+                () -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, assignmentId));
 
         return assignmentMapper.toAssignmentResponse(transaction);
     }
@@ -91,8 +89,8 @@ public class AssignmentServiceImpl implements AssignmentService {
                     detail.setTransaction(finalTransaction); // liên kết ngược
                     return detail;
                 })
-                .filter(detail -> detail != null)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .toList();
 
         // Nếu có serialNumber không tìm thấy thì trả về list
         if (!serialNotFound.isEmpty()) {
@@ -159,64 +157,75 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     }
 
-    private User getCurrentUser() {
-        String EID = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findById(EID)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, EID));
-    }
-
     private void updateWarehouses(AssetTransaction transaction) {
         List<String> serialInvalid = new ArrayList<>();
+
         for (TransactionDetail detail : transaction.getDetails()) {
             Device device = detail.getDevice();
-            boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
-            if (hasSerial) {
-                // Kiểm tra trạng thái device phải là IN_STOCK mới được cấp phát
-                if (device.getStatus() != DeviceStatus.IN_STOCK) {
-                    serialInvalid.add(device.getSerialNumber());
-                }
-                // Bổ sung kiểm tra device có đúng ở warehouse không
-                if (device.getCurrentWarehouse() == null || !device.getCurrentWarehouse().getWarehouseId()
-                        .equals(transaction.getFromWarehouse().getWarehouseId())) {
-                    serialInvalid.add(device.getSerialNumber());
-                }
-                device.setStatus(DeviceStatus.ASSIGNED);
-                device.setCurrentUser(transaction.getUserUse());
-                device.setCurrentWarehouse(null);
-                device.setCurrentFloor(null);
-                deviceRepository.save(device);
+            if (hasSerial(device)) {
+                processDeviceWithSerial(device, transaction, serialInvalid);
             } else {
-                Integer deviceId = device.getDeviceId();
-                Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
-                Integer qty = detail.getQuantity();
-
-                DeviceWarehouse fromStock = deviceWarehouseRepository
-                        .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
-                                device.getModel().getModelName(),
-                                transaction.getFromWarehouse().getWarehouseName()));
-                if (fromStock.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
-                }
-                fromStock.setQuantity(fromStock.getQuantity() - qty);
-                deviceWarehouseRepository.save(fromStock);
-
-                // Cập nhật vào DeviceUser
-                // Nếu không có thì tạo mới
-                DeviceUser deviceUser = deviceUserRepository
-                        .findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
-                        .orElseGet(() -> DeviceUser.builder()
-                                .device(device)
-                                .user(transaction.getUserUse())
-                                .quantity(0)
-                                .build()
-                        );
-                deviceUser.setQuantity(deviceUser.getQuantity() + qty);
-                deviceUserRepository.save(deviceUser);
+                processDeviceWithoutSerial(device, detail, transaction);
             }
         }
+
         if (!serialInvalid.isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_DEVICE_STATUS, String.join(",", serialInvalid));
         }
     }
+
+    private boolean hasSerial(Device device) {
+        return device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
+    }
+
+    private void processDeviceWithSerial(Device device, AssetTransaction transaction, List<String> serialInvalid) {
+        boolean invalidStatus = device.getStatus() != DeviceStatus.IN_STOCK;
+        boolean invalidWarehouse = device.getCurrentWarehouse() == null
+                || !device.getCurrentWarehouse().getWarehouseId()
+                .equals(transaction.getFromWarehouse().getWarehouseId());
+
+        if (invalidStatus || invalidWarehouse) {
+            serialInvalid.add(device.getSerialNumber());
+            return; // Nếu invalid thì không update
+        }
+
+        device.setStatus(DeviceStatus.ASSIGNED);
+        device.setCurrentUser(transaction.getUserUse());
+        device.setCurrentWarehouse(null);
+        device.setCurrentFloor(null);
+        deviceRepository.save(device);
+    }
+
+    private void processDeviceWithoutSerial(Device device, TransactionDetail detail, AssetTransaction transaction) {
+        Integer deviceId = device.getDeviceId();
+        Integer fromWarehouseId = transaction.getFromWarehouse().getWarehouseId();
+        Integer qty = detail.getQuantity();
+
+        DeviceWarehouse fromStock = deviceWarehouseRepository
+                .findByWarehouse_WarehouseIdAndDevice_DeviceId(fromWarehouseId, deviceId)
+                .orElseThrow(() -> new CustomException(
+                        ErrorCode.DEVICE_NOT_FOUND_IN_WAREHOUSE,
+                        device.getModel().getModelName(),
+                        transaction.getFromWarehouse().getWarehouseName()));
+
+        if (fromStock.getQuantity() < qty) {
+            throw new CustomException(ErrorCode.STOCK_OUT, device.getModel().getModelName(), fromStock.getQuantity());
+        }
+
+        fromStock.setQuantity(fromStock.getQuantity() - qty);
+        deviceWarehouseRepository.save(fromStock);
+
+        // Cập nhật DeviceUser
+        DeviceUser deviceUser = deviceUserRepository
+                .findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
+                .orElseGet(() -> DeviceUser.builder()
+                        .device(device)
+                        .user(transaction.getUserUse())
+                        .quantity(0)
+                        .build());
+
+        deviceUser.setQuantity(deviceUser.getQuantity() + qty);
+        deviceUserRepository.save(deviceUser);
+    }
+
 }

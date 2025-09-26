@@ -29,7 +29,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async
     @Retryable(
-            value = { MessagingException.class, MailException.class, RuntimeException.class },
+            value = {MessagingException.class, MailException.class, RuntimeException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000, multiplier = 2)
     )

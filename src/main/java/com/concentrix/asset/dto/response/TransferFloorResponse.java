@@ -1,10 +1,10 @@
 package com.concentrix.asset.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 

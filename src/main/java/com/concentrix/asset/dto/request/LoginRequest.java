@@ -1,6 +1,5 @@
 package com.concentrix.asset.dto.request;
 
-import com.concentrix.asset.validator.ValidPassword;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;

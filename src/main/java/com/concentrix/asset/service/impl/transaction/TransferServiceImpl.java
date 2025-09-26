@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -107,7 +107,7 @@ public class TransferServiceImpl implements TransferService {
                     return detail;
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
         // Nếu có serialNumber không tìm thấy thì trả về list
         if (!serialNotFound.isEmpty()) {
@@ -139,7 +139,7 @@ public class TransferServiceImpl implements TransferService {
         }
 
         User currentUser = userService.getCurrentUser();
-        if(!Role.ADMIN.equals(currentUser.getRole()))
+        if (!Role.ADMIN.equals(currentUser.getRole()))
             throw new CustomException(ErrorCode.UNAUTHORIZED);
 
         transaction.setTransactionStatus(TransactionStatus.APPROVED);
@@ -169,9 +169,9 @@ public class TransferServiceImpl implements TransferService {
 
         User currentUser = userService.getCurrentUser();
         Site currentUserSite = currentUser.getSite();
-        if(currentUserSite == null
-            || !transaction.getToWarehouse().getSite().getSiteId().equals(currentUserSite.getSiteId()))
-                throw new CustomException(ErrorCode.UNAUTHORIZED);
+        if (currentUserSite == null
+                || !transaction.getToWarehouse().getSite().getSiteId().equals(currentUserSite.getSiteId()))
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
 
         transaction.setTransactionStatus(TransactionStatus.CONFIRMED);
         transaction.setConfirmedBy(userService.getCurrentUser());
@@ -205,7 +205,7 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate,
-            Pageable pageable) {
+                                                  Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
@@ -293,8 +293,8 @@ public class TransferServiceImpl implements TransferService {
 
         // Build email structure
 
-        return buildEmailHeader(notificationType, transaction) +
-                buildTransferInfoSection(transaction, notificationType) +
+        return buildEmailHeader(notificationType) +
+                buildTransferInfoSection(transaction) +
                 buildTransferItemsSection(transaction) +
                 buildEmailFooter();
     }
@@ -302,7 +302,7 @@ public class TransferServiceImpl implements TransferService {
     /**
      * Build email header with CSS styles and title
      */
-    private String buildEmailHeader(String notificationType, AssetTransaction transaction) {
+    private String buildEmailHeader(String notificationType) {
         String title = getNotificationTitle(notificationType);
 
         return "<html><head><meta charset='utf-8'><style>"
@@ -351,40 +351,10 @@ public class TransferServiceImpl implements TransferService {
         return "📋 Site Transfer Notification";
     }
 
-//    /**
-//     * Build action button based on notification type
-//     */
-//    private String buildActionButton(String notificationType, AssetTransaction transaction) {
-//        String buttonHtml = "";
-//
-//        if ("CREATED".equals(notificationType)) {
-//            // For created transfer, show approve button
-//            buttonHtml = "<a href='" + url_base + "' class='action-button approve'>👁️ View</a>";
-//        } else if ("APPROVED".equals(notificationType)) {
-//            // For approved transfer, show view detail button
-//            buttonHtml = "<a href='" + url_base + "' class='action-button view'>👁️ View</a>";
-//        }
-//
-//        return buttonHtml;
-//    }
-//
-//    /**
-//     * Build call-to-action section placed above the footer
-//     */
-//    private String buildActionSection(String notificationType, AssetTransaction transaction) {
-//        String button = buildActionButton(notificationType, transaction);
-//        if (button == null || button.isEmpty()) {
-//            return "";
-//        }
-//        return "<div class='info-section' style='text-align:center;margin-top:8px'>" +
-//                button +
-//                "</div>";
-//    }
-
     /**
      * Build transfer information section
      */
-    private String buildTransferInfoSection(AssetTransaction transaction, String notificationType) {
+    private String buildTransferInfoSection(AssetTransaction transaction) {
         StringBuilder section = new StringBuilder();
 
         section.append("<div class='info-section'>")
@@ -539,7 +509,7 @@ public class TransferServiceImpl implements TransferService {
 
             String toEmail = emails.stream().findFirst().orElse(null);
 
-            emailService.sendEmail(ownerEmail, subject, htmlBody, ccList);
+            emailService.sendEmail(toEmail, subject, htmlBody, ccList);
             log.info("[TransferServiceImpl] Transfer approved email sent for transfer #{}",
                     transaction.getTransactionId());
 

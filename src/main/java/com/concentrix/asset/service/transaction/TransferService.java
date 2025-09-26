@@ -15,11 +15,11 @@ public interface TransferService {
 
     Page<TransferResponse> filterTransfers(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 
-     void approveTransfer(Integer transactionId) ;
+    void approveTransfer(Integer transactionId);
 
-     void confirmTransfer(Integer transferId);
+    void confirmTransfer(Integer transferId);
 
-    Page<TransferResponse> filterTransfersSitePending(Pageable pageable) ;
+    Page<TransferResponse> filterTransfersSitePending(Pageable pageable);
 
     void approveTransferByToken(String token);
 

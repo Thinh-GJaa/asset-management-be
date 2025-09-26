@@ -4,7 +4,6 @@ import com.concentrix.asset.dto.request.CreateReturnFromUserRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import com.concentrix.asset.entity.*;
-
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
@@ -25,11 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
+
 
 @Slf4j
 @Service
@@ -134,8 +130,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .filter(detail -> detail != null)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .toList();
 
         if (!serialNotFound.isEmpty()) {
             throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
@@ -229,7 +225,7 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                 DeviceUser deviceUser = deviceUserRepository.findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
                         .orElseThrow(() -> new CustomException(ErrorCode.INVALID_DEVICE_USER, device.getModel().getModelName()));
 
-                if( deviceUser.getQuantity() < qty) {
+                if (deviceUser.getQuantity() < qty) {
                     throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED, device.getModel().getModelName());
                 } else {
                     deviceUser.setQuantity(deviceUser.getQuantity() - qty);

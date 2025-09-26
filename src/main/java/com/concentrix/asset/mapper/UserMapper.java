@@ -9,7 +9,7 @@ import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import com.concentrix.asset.mapper.helper.PasswordHelper;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses ={PasswordHelper.class, IdMapperHelper.class})
+@Mapper(componentModel = "spring", uses = {PasswordHelper.class, IdMapperHelper.class})
 public interface UserMapper {
 
     @Mapping(target = "account", source = "account")
@@ -26,7 +26,7 @@ public interface UserMapper {
 
     @Mapping(target = "account", source = "msaClient", qualifiedByName = "msaClientToAccount")
     @Mapping(target = "role", defaultValue = "OTHER")
-    User ToUser(UserImportRequest request);
+    User toUserWD(UserImportRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "account", source = "msaClient", qualifiedByName = "msaClientToAccount")

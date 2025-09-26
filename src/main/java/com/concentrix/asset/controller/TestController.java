@@ -2,11 +2,14 @@ package com.concentrix.asset.controller;
 
 import com.concentrix.asset.scheduling.LowStockNotificationJob;
 import com.concentrix.asset.scheduling.RemindReturnAssetJob;
+import com.concentrix.asset.scheduling.UpdateWorkdayJob;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +22,7 @@ public class TestController {
 
     LowStockNotificationJob lowStockNotificationJob;
     RemindReturnAssetJob remindReturnAssetJob;
+    UpdateWorkdayJob updateWorkdayJob;
 
     @GetMapping("/low-stock")
     public void testLowStock() throws MessagingException {
@@ -33,6 +37,11 @@ public class TestController {
     @GetMapping("/time")
     public String testTime() {
         return LocalDateTime.now().toString();
+    }
+
+    @GetMapping("/update-workday")
+    public void testUpdateWorkday() throws MessagingException {
+        updateWorkdayJob.updateWorkday();
     }
 
 }

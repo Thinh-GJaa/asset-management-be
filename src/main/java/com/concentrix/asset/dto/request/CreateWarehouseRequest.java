@@ -19,7 +19,7 @@ public class CreateWarehouseRequest {
     String warehouseName;
 
     @NotNull(message = "Site ID cannot be null")
-            @Min(1)
+    @Min(1)
     Integer siteId;
 
     String description;

@@ -10,5 +10,6 @@ import java.util.List;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, Integer>, JpaSpecificationExecutor<Warehouse> {
     Page<Warehouse> findAll(Pageable pageable);
+
     List<Warehouse> findAllBySite_SiteId(Integer siteId);
 }

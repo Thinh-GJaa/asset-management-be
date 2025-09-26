@@ -5,20 +5,17 @@ import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateSiteRequest;
 import com.concentrix.asset.dto.request.UpdateSiteRequest;
 import com.concentrix.asset.dto.response.SiteResponse;
-import com.concentrix.asset.entity.Site;
 import com.concentrix.asset.service.SiteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

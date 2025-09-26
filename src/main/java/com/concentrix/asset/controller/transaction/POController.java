@@ -11,11 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDate;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,12 +61,4 @@ public class POController {
         return ResponseEntity.ok(response);
     }
 
-//    @PatchMapping
-//    public ResponseEntity<ApiResponse<SiteResponse>> updateSite(@Valid @RequestBody UpdateSiteRequest request) {
-//        ApiResponse<SiteResponse> response = ApiResponse.<SiteResponse>builder()
-//                .message("Update site successfully")
-//                .data(siteService.updateSite(request))
-//                .build();
-//        return ResponseEntity.ok(response);
-//    }
 }

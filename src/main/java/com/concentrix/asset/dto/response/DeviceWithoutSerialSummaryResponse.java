@@ -1,9 +1,9 @@
 package com.concentrix.asset.dto.response;
 
-import lombok.Data;
-import java.util.List;
-
 import com.concentrix.asset.enums.DeviceType;
+import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class DeviceWithoutSerialSummaryResponse {

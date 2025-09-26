@@ -4,7 +4,6 @@ import com.concentrix.asset.dto.request.CreateFloorRequest;
 import com.concentrix.asset.dto.request.UpdateFloorRequest;
 import com.concentrix.asset.dto.response.FloorResponse;
 import com.concentrix.asset.entity.Floor;
-
 import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import org.mapstruct.*;
 

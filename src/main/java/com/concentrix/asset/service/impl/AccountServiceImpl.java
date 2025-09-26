@@ -47,7 +47,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse createAccount(CreateAccountRequest request) {
 
-        if(accountRepository.findByAccountName(request.getAccountName()).isPresent()) {
+        if (accountRepository.findByAccountName(request.getAccountName()).isPresent()) {
             throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
         }
 
@@ -63,17 +63,29 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse updateAccount(UpdateAccountRequest request) {
 
         Account account = accountRepository.findById(request.getAccountId())
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND, request.getAccountId()));
+                .orElseThrow(() -> new CustomException(
+                        ErrorCode.ACCOUNT_NOT_FOUND, request.getAccountId()
+                ));
 
-        if(accountRepository.findByAccountName(request.getAccountName()).isPresent() &&
-                !accountRepository.findByAccountName(request.getAccountName()).get().getAccountId().equals(request.getAccountId())) {
-            throw new CustomException(ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS, request.getAccountName());
-        }
+        // Kiểm tra accountName
+        accountRepository.findByAccountName(request.getAccountName())
+                .filter(existing -> !existing.getAccountId().equals(request.getAccountId()))
+                .ifPresent(existing -> {
+                    throw new CustomException(
+                            ErrorCode.ACCOUNT_NAME_ALREADY_EXISTS,
+                            request.getAccountName()
+                    );
+                });
 
-        if(accountRepository.findByAccountCode(request.getAccountCode()).isPresent() &&
-                !accountRepository.findByAccountCode(request.getAccountCode()).get().getAccountId().equals(request.getAccountId())) {
-            throw new CustomException(ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS, request.getAccountCode());
-        }
+        // Kiểm tra accountCode
+        accountRepository.findByAccountCode(request.getAccountCode())
+                .filter(existing -> !existing.getAccountId().equals(request.getAccountId()))
+                .ifPresent(existing -> {
+                    throw new CustomException(
+                            ErrorCode.ACCOUNT_CODE_ALREADY_EXISTS,
+                            request.getAccountCode()
+                    );
+                });
 
         accountMapper.updateAccount(account, request);
         account = accountRepository.save(account);

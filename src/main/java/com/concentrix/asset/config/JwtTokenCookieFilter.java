@@ -22,22 +22,21 @@ public class JwtTokenCookieFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            // Nếu không có token trong header, thử lấy từ cookie
-            if (request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if ("access_token".equals(cookie.getName())) {
-                        String token = cookie.getValue();
+        if ((authHeader == null || !authHeader.startsWith("Bearer "))
+                && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    String token = cookie.getValue();
 
-                        // Tạo một wrapper để thêm header Authorization
-                        HttpServletRequest wrappedRequest =
-                                new HttpServletRequestWrapperWithAuth(request, "Bearer " + token);
+                    // Tạo một wrapper để thêm header Authorization
+                    HttpServletRequest wrappedRequest =
+                            new HttpServletRequestWrapperWithAuth(request, "Bearer " + token);
 
-                        filterChain.doFilter(wrappedRequest, response);
-                        return;
-                    }
+                    filterChain.doFilter(wrappedRequest, response);
+                    return;
                 }
             }
+
         }
 
         filterChain.doFilter(request, response);

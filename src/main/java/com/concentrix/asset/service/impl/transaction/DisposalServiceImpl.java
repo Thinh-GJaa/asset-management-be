@@ -13,19 +13,17 @@ import com.concentrix.asset.repository.DeviceWarehouseRepository;
 import com.concentrix.asset.repository.TransactionRepository;
 import com.concentrix.asset.repository.UserRepository;
 import com.concentrix.asset.service.transaction.DisposalService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.time.LocalDate;
-
-import jakarta.persistence.criteria.Predicate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,8 +67,8 @@ public class DisposalServiceImpl implements DisposalService {
         }
 
         // Gom các serial not found/invalid vào list
-        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
-        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
+        List<String> serialNotFound = new ArrayList<>();
+        List<String> serialInvalid = new ArrayList<>();
         final AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {

@@ -48,14 +48,14 @@ public class LowStockServiceImpl implements LowStockService {
 
             for (Site site : sites) {
                 try {
-                    if(site.getSiteName().equalsIgnoreCase("tmp"))
+                    if (site.getSiteName().equalsIgnoreCase("tmp"))
                         continue;
                     // Xử lý cho loại có serial
                     List<LowStockResponse.LowStockType> lowStockTypes = new ArrayList<>();
                     for (DeviceType type : typesWithSerial) {
                         try {
                             int total = deviceRepository.totalDeviceInUseAndInStock(type);
-                            int available = deviceRepository.countAssetInStock(site.getSiteId(), type, null, null, null,null);
+                            int available = deviceRepository.countAssetInStock(site.getSiteId(), type, null, null, null, null);
 
                             if (total > 0 && available / (double) total <= LOW_STOCK_THRESHOLD_WITH_SERIAL) {
                                 lowStockTypes.add(LowStockResponse.LowStockType.builder()
@@ -93,7 +93,7 @@ public class LowStockServiceImpl implements LowStockService {
                                     site.getSiteId(), type, e.getMessage(), e);
                         }
                     }
-                    if (!lowStockTypes.isEmpty()){
+                    if (!lowStockTypes.isEmpty()) {
                         result.add(LowStockResponse.builder()
                                 .siteId(site.getSiteId())
                                 .siteName(site.getSiteName())
