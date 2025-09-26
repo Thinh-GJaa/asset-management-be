@@ -124,6 +124,7 @@ public class WorkdayServiceImpl implements WorkdayService {
         String status = get(cols, findIndex(idx, "EMPLOYEE STATUS", "STATUS", "EMPLOYEESTATUS"));
         req.setIsActive(status == null || status.equalsIgnoreCase("Active"));
 
+        log.debug("[WORKDAY][IMPORT] Line: {}",);
         log.info("[WORKDAY][IMPORT] User: {}", req);
         return req;
     }
@@ -165,7 +166,7 @@ public class WorkdayServiceImpl implements WorkdayService {
         for (char c : line.toCharArray()) {
             if (c == '"') {
                 inQuotes = !inQuotes;
-            } else if (c == ';' && !inQuotes) {
+            } else if (c == ',' && !inQuotes) {
                 parts.add(stripQuotes(current.toString()));
                 current.setLength(0);
             } else {
