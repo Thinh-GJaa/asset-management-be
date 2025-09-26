@@ -67,8 +67,8 @@ public class DisposalServiceImpl implements DisposalService {
         }
 
         // Gom các serial not found/invalid vào list
-        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
-        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
+        List<String> serialNotFound = new ArrayList<>();
+        List<String> serialInvalid = new ArrayList<>();
         final AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
