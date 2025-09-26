@@ -65,12 +65,12 @@ public class WorkdayServiceImpl implements WorkdayService {
                 return Optional.empty();
             }
 
-            // Nếu là file csv
+            // Nếu workdayFolder là file CSV
             if (Files.isRegularFile(folder) && workdayFolder.toLowerCase().endsWith(".csv")) {
                 return Optional.of(folder);
             }
 
-            // Nếu là thư mục
+            // Nếu workdayFolder là thư mục
             try (var files = Files.list(folder)) {
                 return files.filter(f -> f.toString().toLowerCase().endsWith(".csv"))
                         .max(Comparator.comparingLong(f -> f.toFile().lastModified()));
@@ -111,27 +111,29 @@ public class WorkdayServiceImpl implements WorkdayService {
         UserImportRequest req = new UserImportRequest();
         req.setEid(get(cols, findIndex(idx, "EMPLOYEE_NUMBER", "EMPLOYEE ID", "WORKER ID")));
         req.setFullName(get(cols, findIndex(idx, "FULL_NAME", "FULL NAME")));
-        req.setJobTitle(get(cols, findIndex(idx, "JOB TITLE", "TITLE")));
-        String email = get(cols, findIndex(idx, "EMAIL - WORK", "EMAIL"));
+        req.setJobTitle(get(cols, findIndex(idx, "JOB TITLE", "TITLE", "JOBTITLE")));
+        String email = get(cols, findIndex(idx, "EMAIL WORK", "EMAIL", "EMAIL - WORK"));
         req.setEmail(email);
         req.setSso(email != null && email.contains("@") ? email.substring(0, email.indexOf('@')) : null);
-        req.setMsa(get(cols, idx.get("MSA")));
+        req.setMsa(get(cols, findIndex(idx, "MSA")));
         req.setMsaClient(get(cols, findIndex(idx, "MSA CLIENT", "CLIENT")));
-        req.setCompany(get(cols, idx.get("COMPANY")));
-        req.setCostCenter(get(cols, findIndex(idx, "COST CENTER - ID", "COST CENTER")));
-        req.setLocation(get(cols, findIndex(idx, "LOCATION_NAME", "LOCATION")));
-        req.setManagerEmail(get(cols, findIndex(idx, "SUPERVISOR_EMAIL_ID", "MANAGER EMAIL")));
-        String status = get(cols, findIndex(idx, "EMPLOYEE STATUS", "STATUS"));
+        req.setCompany(get(cols, findIndex(idx, "COMPANY")));
+        req.setCostCenter(get(cols, findIndex(idx, "COST CENTER ID", "COST CENTER")));
+        req.setLocation(get(cols, findIndex(idx, "LOCATION NAME", "LOCATION")));
+        req.setManagerEmail(get(cols, findIndex(idx, "SUPERVISOR EMAIL ID", "MANAGER EMAIL")));
+        String status = get(cols, findIndex(idx, "EMPLOYEE STATUS", "STATUS", "EMPLOYEESTATUS"));
         req.setIsActive(status == null || status.equalsIgnoreCase("Active"));
 
         return req;
     }
 
+    // ================== CSV Helpers ==================
+
     private static Map<String, Integer> index(String[] headers) {
         return IntStream.range(0, headers.length)
                 .boxed()
                 .collect(Collectors.toMap(
-                        i -> headers[i].trim().toUpperCase(),
+                        i -> normalize(headers[i]),
                         Function.identity(),
                         (a, b) -> a
                 ));
@@ -139,10 +141,20 @@ public class WorkdayServiceImpl implements WorkdayService {
 
     private static int findIndex(Map<String, Integer> idx, String... keys) {
         for (String k : keys) {
-            Integer i = idx.get(k.toUpperCase());
+            Integer i = idx.get(normalize(k));
             if (i != null) return i;
         }
         return -1;
+    }
+
+    private static String normalize(String header) {
+        if (header == null) return "";
+        return header
+                .replace("\uFEFF", "") // remove BOM
+                .trim()
+                .toUpperCase()
+                .replace("-", " ")
+                .replace("_", " ");
     }
 
     private static String[] splitSemicolon(String line) {

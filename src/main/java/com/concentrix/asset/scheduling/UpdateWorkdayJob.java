@@ -29,7 +29,7 @@ public class UpdateWorkdayJob {
     @Value("${app.path.upload.workday}")
     String workdayFolder;
 
-    // Chạy 9:00 sáng mỗi ngày làm việc (thứ 2-6)
+    //Chạy mỗi ngày lúc 22:00 (10 PM)
     @Scheduled(cron = "0 0 22 * * *")
     public void updateWorkday() throws MessagingException {
         try {
