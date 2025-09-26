@@ -61,3 +61,12 @@ app:
     default: ${APP_PASSWORD_DEFAULT:Concentrix@1234}
     default-admin: ${APP_PASSWORD_DEFAULT_ADMIN:Concentrix@12345678}
 
+  path:
+    upload:
+      workday: ${APP_PATH_UPLOAD_WORKDAY:/upload/workday}
+      bigfix: ${APP_PATH_UPLOAD_BIGFIX:/upload/bigfix}
+      handover: ${APP_PATH_UPLOAD_HANDOVER:/upload/handover}
+
+
+
+
