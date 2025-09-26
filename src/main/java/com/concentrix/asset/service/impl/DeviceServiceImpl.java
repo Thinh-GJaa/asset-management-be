@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +70,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
-                                              Pageable pageable) {
+            Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -101,13 +100,13 @@ public class DeviceServiceImpl implements DeviceService {
     public List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber) {
         Device device = deviceRepository.findBySerialNumber(serialNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, serialNumber));
-//        final LocalDate purchaseDate;
+        // final LocalDate purchaseDate;
         PODetail poDetail = poDetailRepository.findByDevice_DeviceIdAndDevice_SerialNumberNotNull(device.getDeviceId());
-//        if (poDetail != null && poDetail.getPurchaseOrder() != null) {
-//            purchaseDate = poDetail.getPurchaseOrder().getCreatedAt();
-//        } else {
-//            purchaseDate = null;
-//        }
+        // if (poDetail != null && poDetail.getPurchaseOrder() != null) {
+        // purchaseDate = poDetail.getPurchaseOrder().getCreatedAt();
+        // } else {
+        // purchaseDate = null;
+        // }
         List<TransactionDetail> details = transactionDetailRepository
                 .findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(device.getDeviceId());
         DeviceMovementHistoryResponse.UserResponse poUser = null;
@@ -160,7 +159,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                        : dv.getModel().getModelId()
+                                                : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .build();
@@ -180,7 +179,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                        : dv.getModel().getModelId()
+                                                : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .quantity(quantity)
@@ -194,29 +193,12 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public Page<DeviceBorrowingInfoResponse> getUserBorrowingDevice(Pageable pageable) {
-        // Lấy danh sách người dùng từ cả 2 nguồn
-        List<User> users = deviceRepository.findDistinctCurrentUser();
-        List<User> userAccessories = deviceUserRepository.findUserHavingDevice();
-
-        // Gộp 2 danh sách và loại bỏ trùng lặp
-        Set<User> userSet = new HashSet<>();
-        userSet.addAll(users);
-        userSet.addAll(userAccessories);
-        users = new ArrayList<>(userSet);
-
-        List<DeviceBorrowingInfoResponse> result = new ArrayList<>();
-        for (User user : users) {
-            List<DeviceBorrowingInfoResponse.DeviceInfo> devices = getBorrowingDevicesByUser(user.getEid());
-            if (devices != null && !devices.isEmpty()) {
-                DeviceBorrowingInfoResponse info = DeviceBorrowingInfoResponse.builder()
+    public Page<DeviceBorrowingInfoResponse> getUsersBorrowingDevice(Pageable pageable) {
+        return deviceRepository.findUsersWithDevices(pageable)
+                .map(user -> DeviceBorrowingInfoResponse.builder()
                         .eid(user.getEid())
                         .fullName(user.getFullName())
-                        .build();
-                result.add(info);
-            }
-        }
-        return new PageImpl<>(result, pageable, result.size());
+                        .build());
     }
 
     @Override
@@ -305,7 +287,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
-                                                           Pageable pageable) {
+            Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -342,7 +324,6 @@ public class DeviceServiceImpl implements DeviceService {
         String serialNumber = device.getModel().getManufacturer().equalsIgnoreCase("dell")
                 ? device.getSerialNumber().substring(0, 6)
                 : device.getSerialNumber().substring(lenSN - 6, lenSN);
-
 
         if (floor.getAccount() == null || floor.getAccount().getAccountCode() == null) {
             return null;
