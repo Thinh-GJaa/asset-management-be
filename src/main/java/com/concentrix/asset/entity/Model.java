@@ -1,10 +1,10 @@
 package com.concentrix.asset.entity;
 
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.ModelSize;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 
 /**

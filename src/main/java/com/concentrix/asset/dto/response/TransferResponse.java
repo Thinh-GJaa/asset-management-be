@@ -1,5 +1,6 @@
 package com.concentrix.asset.dto.response;
 
+import com.concentrix.asset.enums.TransactionStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -7,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import com.concentrix.asset.enums.TransactionStatus;
 
 @Getter
 @Setter

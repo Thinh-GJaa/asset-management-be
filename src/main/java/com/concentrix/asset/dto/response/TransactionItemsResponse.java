@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
 
 
 @Data
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class TransactionItemsResponse {
+public class TransactionItemsResponse implements Serializable {
     Integer deviceId;
     String deviceName;
     String modelName;

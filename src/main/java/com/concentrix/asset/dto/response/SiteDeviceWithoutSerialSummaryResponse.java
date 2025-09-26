@@ -1,6 +1,7 @@
 package com.concentrix.asset.dto.response;
 
 import lombok.Data;
+
 import java.util.List;
 
 @Data

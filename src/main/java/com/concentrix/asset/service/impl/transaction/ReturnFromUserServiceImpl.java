@@ -4,7 +4,6 @@ import com.concentrix.asset.dto.request.CreateReturnFromUserRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.ReturnFromUserResponse;
 import com.concentrix.asset.entity.*;
-
 import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.exception.CustomException;
@@ -27,8 +26,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j

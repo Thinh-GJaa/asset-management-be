@@ -1,21 +1,13 @@
 package com.concentrix.asset.controller;
 
 import com.concentrix.asset.dto.ApiResponse;
-import com.concentrix.asset.dto.request.UpdateDeviceRequest;
-import com.concentrix.asset.dto.response.DeviceMovementHistoryResponse;
-import com.concentrix.asset.dto.response.DeviceResponse;
-import com.concentrix.asset.enums.DeviceType;
 import com.concentrix.asset.enums.Role;
-import com.concentrix.asset.service.DeviceService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,8 +1,5 @@
 package com.concentrix.asset.service.impl.transaction;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import com.concentrix.asset.dto.request.CreateUseFloorRequest;
 import com.concentrix.asset.dto.response.UseFloorResponse;
 import com.concentrix.asset.entity.*;
@@ -24,11 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -142,8 +137,8 @@ public class UseFloorServiceImpl implements UseFloorService {
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .filter(detail -> detail != null)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .toList();
 
         if (!serialNotFound.isEmpty()) {
             throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));

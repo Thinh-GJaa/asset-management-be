@@ -1,10 +1,11 @@
 package com.concentrix.asset.mapper;
 
 import com.concentrix.asset.dto.request.CreateTransferRequest;
-import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.dto.response.TransferResponse;
+import com.concentrix.asset.entity.AssetTransaction;
 import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
 public interface TransferMapper {

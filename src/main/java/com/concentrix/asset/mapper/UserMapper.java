@@ -26,7 +26,7 @@ public interface UserMapper {
 
     @Mapping(target = "account", source = "msaClient", qualifiedByName = "msaClientToAccount")
     @Mapping(target = "role", defaultValue = "OTHER")
-    User ToUser(UserImportRequest request);
+    User toUserWD(UserImportRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "account", source = "msaClient", qualifiedByName = "msaClientToAccount")

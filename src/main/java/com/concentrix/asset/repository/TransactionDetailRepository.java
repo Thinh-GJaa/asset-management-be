@@ -1,15 +1,14 @@
 package com.concentrix.asset.repository;
 
-import com.concentrix.asset.entity.*;
+import com.concentrix.asset.entity.TransactionDetail;
+import com.concentrix.asset.entity.TransactionDetailId;
 import com.concentrix.asset.enums.DeviceType;
-import com.concentrix.asset.enums.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public interface TransactionDetailRepository extends JpaRepository<TransactionDetail, TransactionDetailId> {

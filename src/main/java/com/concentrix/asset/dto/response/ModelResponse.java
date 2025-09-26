@@ -3,6 +3,7 @@ package com.concentrix.asset.dto.response;
 import com.concentrix.asset.enums.DeviceType;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 

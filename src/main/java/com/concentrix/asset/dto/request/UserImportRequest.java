@@ -1,7 +1,6 @@
 package com.concentrix.asset.dto.request;
 
 import com.concentrix.asset.enums.Role;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 

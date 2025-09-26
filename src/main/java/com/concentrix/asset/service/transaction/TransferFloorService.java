@@ -2,13 +2,10 @@ package com.concentrix.asset.service.transaction;
 
 import com.concentrix.asset.dto.request.CreateTransferFloorRequest;
 import com.concentrix.asset.dto.response.TransferFloorResponse;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
 
 public interface TransferFloorService {
     TransferFloorResponse getTransferFloorById(Integer transferFloorId);
