@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class POResponse implements Serializable{
+public class POResponse implements Serializable {
 
     String poId;
     VendorResponse vendor;
@@ -31,7 +31,7 @@ public class POResponse implements Serializable{
     @AllArgsConstructor
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class VendorResponse implements Serializable{
+    public static class VendorResponse implements Serializable {
         Integer vendorId;
         String vendorName;
     }
@@ -42,7 +42,7 @@ public class POResponse implements Serializable{
     @AllArgsConstructor
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class WarehouseResponse implements Serializable{
+    public static class WarehouseResponse implements Serializable {
         Integer warehouseId;
         String warehouseName;
     }
@@ -53,11 +53,10 @@ public class POResponse implements Serializable{
     @AllArgsConstructor
     @Builder
     @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class UserResponse implements Serializable{
+    public static class UserResponse implements Serializable {
         String eid;
         String fullName;
     }
-
 
 
 }

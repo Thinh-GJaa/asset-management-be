@@ -7,7 +7,7 @@ import com.concentrix.asset.entity.Warehouse;
 import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring" , uses = IdMapperHelper.class)
+@Mapper(componentModel = "spring", uses = IdMapperHelper.class)
 public interface WarehouseMapper {
 
     WarehouseResponse toWarehouseResponse(Warehouse warehouse);

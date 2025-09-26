@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WarehouseResponse implements Serializable{
+public class WarehouseResponse implements Serializable {
 
     Integer warehouseId;
     String warehouseName;

@@ -26,7 +26,7 @@ public class SearchController {
 
     /**
      * Search across all devices and users in the system.
-     * 
+     *
      * @param query The search keyword (serial, name, email, eid, ...)
      * @return SearchResultResponse (list or detail)
      */

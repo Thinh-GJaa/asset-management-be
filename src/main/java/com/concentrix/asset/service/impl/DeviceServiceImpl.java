@@ -72,7 +72,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
-            Pageable pageable) {
+                                              Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -161,7 +161,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                                : dv.getModel().getModelId()
+                                        : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .build();
@@ -181,7 +181,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                                : dv.getModel().getModelId()
+                                        : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .quantity(quantity)
@@ -289,7 +289,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
-            Pageable pageable) {
+                                                           Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

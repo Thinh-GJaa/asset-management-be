@@ -22,14 +22,12 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
 
     @Query("""
-    SELECT u.email
-    FROM User u
-    WHERE u.role = :role
-      AND (:siteId IS NULL OR u.site.siteId = :siteId)
-    """)
+            SELECT u.email
+            FROM User u
+            WHERE u.role = :role
+              AND (:siteId IS NULL OR u.site.siteId = :siteId)
+            """)
     List<String> findEmailByRoleAndSiteId(Role role, Integer siteId);
-
-
 
 
 }

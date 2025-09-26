@@ -41,6 +41,68 @@ public class WorkdayServiceImpl implements WorkdayService {
     @Value("${app.notification.system-alert-email}")
     String alertSystemEmail;
 
+    private static Map<String, Integer> index(String[] headers) {
+        return IntStream.range(0, headers.length)
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> normalize(headers[i]),
+                        Function.identity(),
+                        (a, b) -> a
+                ));
+    }
+
+    private static int findIndex(Map<String, Integer> idx, String... keys) {
+        for (String k : keys) {
+            Integer i = idx.get(normalize(k));
+            if (i != null) return i;
+        }
+        return -1;
+    }
+
+    private static String normalize(String header) {
+        if (header == null) return "";
+        return header
+                .replace("\uFEFF", "") // remove BOM
+                .trim()
+                .toUpperCase()
+                .replace("-", " ")
+                .replace("_", " ");
+    }
+
+    private static String[] splitSemicolon(String line) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        for (char c : line.toCharArray()) {
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                parts.add(stripQuotes(current.toString()));
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        parts.add(stripQuotes(current.toString()));
+        return parts.toArray(new String[0]);
+    }
+
+    // ================== CSV Helpers ==================
+
+    private static String stripQuotes(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        if (t.startsWith("\"") && t.endsWith("\"") && t.length() >= 2) {
+            return t.substring(1, t.length() - 1);
+        }
+        return t.isEmpty() ? null : t;
+    }
+
+    private static String get(String[] cols, int idx) {
+        if (idx < 0 || idx >= cols.length) return null;
+        return stripQuotes(cols[idx]);
+    }
+
     @Override
     public Map<String, Object> importFromWorkday() throws MessagingException {
         return resolveLatestCsv()
@@ -128,67 +190,5 @@ public class WorkdayServiceImpl implements WorkdayService {
 
         log.info("[WORKDAY][IMPORT] User: {}", req);
         return req;
-    }
-
-    // ================== CSV Helpers ==================
-
-    private static Map<String, Integer> index(String[] headers) {
-        return IntStream.range(0, headers.length)
-                .boxed()
-                .collect(Collectors.toMap(
-                        i -> normalize(headers[i]),
-                        Function.identity(),
-                        (a, b) -> a
-                ));
-    }
-
-    private static int findIndex(Map<String, Integer> idx, String... keys) {
-        for (String k : keys) {
-            Integer i = idx.get(normalize(k));
-            if (i != null) return i;
-        }
-        return -1;
-    }
-
-    private static String normalize(String header) {
-        if (header == null) return "";
-        return header
-                .replace("\uFEFF", "") // remove BOM
-                .trim()
-                .toUpperCase()
-                .replace("-", " ")
-                .replace("_", " ");
-    }
-
-    private static String[] splitSemicolon(String line) {
-        List<String> parts = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean inQuotes = false;
-        for (char c : line.toCharArray()) {
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
-                parts.add(stripQuotes(current.toString()));
-                current.setLength(0);
-            } else {
-                current.append(c);
-            }
-        }
-        parts.add(stripQuotes(current.toString()));
-        return parts.toArray(new String[0]);
-    }
-
-    private static String stripQuotes(String s) {
-        if (s == null) return null;
-        String t = s.trim();
-        if (t.startsWith("\"") && t.endsWith("\"") && t.length() >= 2) {
-            return t.substring(1, t.length() - 1);
-        }
-        return t.isEmpty() ? null : t;
-    }
-
-    private static String get(String[] cols, int idx) {
-        if (idx < 0 || idx >= cols.length) return null;
-        return stripQuotes(cols[idx]);
     }
 }

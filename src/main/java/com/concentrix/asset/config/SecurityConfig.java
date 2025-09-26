@@ -46,6 +46,13 @@ public class SecurityConfig {
         this.customJwtDecoder = customJwtDecoder;
     }
 
+    private static boolean publicEndpoint(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return Arrays.stream(PUBLIC_ENDPOINTS)
+                .anyMatch(pattern -> pattern.endsWith("/**") ? path.startsWith(pattern.replace("/**", ""))
+                        : path.equals(pattern));
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
@@ -69,10 +76,10 @@ public class SecurityConfig {
         }, org.springframework.web.filter.CorsFilter.class);
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwtConfigurer -> jwtConfigurer
-                        .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .csrf(AbstractHttpConfigurer::disable);
 
         // Thêm filter lấy token từ cookie trước filter xác thực JWT
@@ -90,13 +97,6 @@ public class SecurityConfig {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
-    }
-
-    private static boolean publicEndpoint(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return Arrays.stream(PUBLIC_ENDPOINTS)
-                .anyMatch(pattern -> pattern.endsWith("/**") ? path.startsWith(pattern.replace("/**", ""))
-                        : path.equals(pattern));
     }
 
     @Bean

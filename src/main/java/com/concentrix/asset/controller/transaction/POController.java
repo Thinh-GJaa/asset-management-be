@@ -61,12 +61,4 @@ public class POController {
         return ResponseEntity.ok(response);
     }
 
-//    @PatchMapping
-//    public ResponseEntity<ApiResponse<SiteResponse>> updateSite(@Valid @RequestBody UpdateSiteRequest request) {
-//        ApiResponse<SiteResponse> response = ApiResponse.<SiteResponse>builder()
-//                .message("Update site successfully")
-//                .data(siteService.updateSite(request))
-//                .build();
-//        return ResponseEntity.ok(response);
-//    }
 }

@@ -23,11 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
+
 
 @Slf4j
 @Service
@@ -84,10 +81,9 @@ public class TransferFloorServiceImpl implements TransferFloorService {
         }
 
 
-
         // Gom các serial not found/invalid vào list
-        java.util.List<String> serialNotFound = new java.util.ArrayList<>();
-        java.util.List<String> serialInvalid = new java.util.ArrayList<>();
+        List<String> serialNotFound = new ArrayList<>();
+        List<String> serialInvalid = new ArrayList<>();
         final AssetTransaction finalTransaction = transaction;
         List<TransactionDetail> details = request.getItems().stream()
                 .map(item -> {
@@ -128,8 +124,8 @@ public class TransferFloorServiceImpl implements TransferFloorService {
                     detail.setTransaction(finalTransaction);
                     return detail;
                 })
-                .filter(detail -> detail != null)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .toList();
 
         if (!serialNotFound.isEmpty()) {
             throw new CustomException(ErrorCode.DEVICE_NOT_FOUND, String.join(",", serialNotFound));
@@ -167,7 +163,7 @@ public class TransferFloorServiceImpl implements TransferFloorService {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }
             if (toDate != null) {
-                LocalDateTime toDateTime = toDate.atTime(23, 59,59);
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
                 predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
             }
 

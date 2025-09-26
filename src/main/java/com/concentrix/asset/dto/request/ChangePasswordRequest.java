@@ -16,10 +16,10 @@ public class ChangePasswordRequest {
     String currentPassword;
 
     @NotBlank(message = "New password is required")
-            @ValidPassword
+    @ValidPassword
     String newPassword;
 
     @NotBlank(message = "Confirm password is required")
-            @ValidPassword
+    @ValidPassword
     String confirmPassword;
 }

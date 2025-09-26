@@ -7,7 +7,7 @@ import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
+@Mapper(componentModel = "spring", uses = {TransactionMapperHelper.class})
 public interface TransferMapper {
 
     @Mapping(target = "transactionType", constant = "TRANSFER_SITE")

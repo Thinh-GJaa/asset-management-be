@@ -23,7 +23,7 @@ public class TypeController {
     TypeService typeService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypes (){
+    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypes() {
         ApiResponse<List<DeviceType>> apiResponse = ApiResponse.<List<DeviceType>>builder()
                 .message("Get all device types successfully")
                 .data(typeService.getTypes())
@@ -32,7 +32,7 @@ public class TypeController {
     }
 
     @GetMapping("/with-serial")
-    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypesWithSerial (){
+    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypesWithSerial() {
         ApiResponse<List<DeviceType>> apiResponse = ApiResponse.<List<DeviceType>>builder()
                 .message("Get all device types with serial successfully")
                 .data(typeService.getTypeWithSerial())
@@ -41,7 +41,7 @@ public class TypeController {
     }
 
     @GetMapping("/without-serial")
-    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypesWithoutSerial (){
+    public ResponseEntity<ApiResponse<List<DeviceType>>> getTypesWithoutSerial() {
         ApiResponse<List<DeviceType>> apiResponse = ApiResponse.<List<DeviceType>>builder()
                 .message("Get all device types without serial successfully")
                 .data(typeService.getTypeWithoutSerial())

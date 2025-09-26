@@ -8,7 +8,7 @@ import com.concentrix.asset.mapper.helper.IdMapperHelper;
 import com.concentrix.asset.mapper.helper.TransactionMapperHelper;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class, IdMapperHelper.class})
+@Mapper(componentModel = "spring", uses = {TransactionMapperHelper.class, IdMapperHelper.class})
 public interface AssignmentMapper {
 
     @Mapping(target = "transactionType", expression = "java(com.concentrix.asset.enums.TransactionType.ASSIGNMENT)")
@@ -24,7 +24,6 @@ public interface AssignmentMapper {
             @Mapping(target = "userUse", source = "userUse"),
             @Mapping(target = "returnDate", source = "returnDate", dateFormat = "yyyy-MM-dd")
     })
-
     AssignmentResponse toAssignmentResponse(AssetTransaction transaction);
 
     @Mappings(value = {

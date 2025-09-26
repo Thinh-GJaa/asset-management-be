@@ -12,5 +12,6 @@ import java.util.List;
 @Repository
 public interface FloorRepository extends JpaRepository<Floor, Integer>, JpaSpecificationExecutor<Floor> {
     Page<Floor> findAllBySite_SiteId(Integer siteId, Pageable pageable);
+
     List<Floor> findAllBySite_SiteId(Integer siteId);
 }

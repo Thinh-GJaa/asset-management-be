@@ -42,14 +42,14 @@ public class DeviceMapperHelper {
 
     @Named("mapPoId")
     public String mapPoId(List<PODetail> poDetails) {
-        if(poDetails == null || poDetails.isEmpty())
+        if (poDetails == null || poDetails.isEmpty())
             return null;
         return poDetails.get(0).getPurchaseOrder().getPoId();
     }
 
     @Named("mapPurchaseDate")
     public LocalDate mapPurchaseDate(List<PODetail> poDetails) {
-        if(poDetails == null || poDetails.isEmpty())
+        if (poDetails == null || poDetails.isEmpty())
             return null;
         return poDetails.get(0).getPurchaseOrder().getCreatedAt();
     }

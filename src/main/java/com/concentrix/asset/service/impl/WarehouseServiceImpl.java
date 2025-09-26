@@ -43,7 +43,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         Warehouse warehouse = warehouseMapper.toWarehouse(request);
 
-        warehouse  = warehouseRepository.save(warehouse);
+        warehouse = warehouseRepository.save(warehouse);
 
         return warehouseMapper.toWarehouseResponse(warehouse);
     }

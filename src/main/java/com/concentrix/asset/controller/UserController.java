@@ -34,110 +34,110 @@ import java.util.Map;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/user")
 public class UserController {
-        UserService userService;
-        DeviceService deviceService;
+    UserService userService;
+    DeviceService deviceService;
 
-        @PostMapping
-        public ResponseEntity<ApiResponse<UserResponse>> createUser(
-                        @Valid @RequestBody CreateUserRequest createUserRequest) {
-                ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                                .message("User created successfully")
-                                .data(userService.createUser(createUserRequest))
-                                .build();
-                return new ResponseEntity<>(response, HttpStatus.CREATED);
-        }
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @Valid @RequestBody CreateUserRequest createUserRequest) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("User created successfully")
+                .data(userService.createUser(createUserRequest))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
-        @PostMapping("/import")
-        public ResponseEntity<ApiResponse<Map<String, Object>>> importUsers(@RequestBody List<UserImportRequest> importRequests) {
-                Map<String, Object> result = userService.importUsers(importRequests);
-                ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
-                                .message("Import users completed")
-                                .data(result)
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @PostMapping("/import")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> importUsers(@RequestBody List<UserImportRequest> importRequests) {
+        Map<String, Object> result = userService.importUsers(importRequests);
+        ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+                .message("Import users completed")
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/{eid}")
-        public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String eid) {
-                ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                                .message("Get user successfully")
-                                .data(userService.getUserById(eid))
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/{eid}")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String eid) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("Get user successfully")
+                .data(userService.getUserById(eid))
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/filter")
-        public ResponseEntity<ApiResponse<Page<UserResponse>>> filterUser(
-                        @RequestParam(required = false) String search,
-                        @RequestParam(required = false) Role role,
-                        @RequestParam(required = false) Integer accountId,
-                        @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-                ApiResponse<Page<UserResponse>> response = ApiResponse.<Page<UserResponse>>builder()
-                                .message("Get all users successfully")
-                                .data(userService.filterUser(search, role, accountId, pageable))
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> filterUser(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) Integer accountId,
+            @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        ApiResponse<Page<UserResponse>> response = ApiResponse.<Page<UserResponse>>builder()
+                .message("Get all users successfully")
+                .data(userService.filterUser(search, role, accountId, pageable))
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @PatchMapping
-        public ResponseEntity<ApiResponse<UserResponse>> updateUser(@Valid @RequestBody UpdateUserRequest request) {
-                ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                                .message("Update user successfully")
-                                .data(userService.updateUser(request))
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @PatchMapping
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@Valid @RequestBody UpdateUserRequest request) {
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("Update user successfully")
+                .data(userService.updateUser(request))
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/{eid}/borrowing-devices")
-        public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>>> getBorrowingDevicesByUser(
-                        @PathVariable String eid) {
-                ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>> response = ApiResponse.<List<DeviceBorrowingInfoResponse.DeviceInfo>>builder()
-                                .message("Get borrowing devices by user successfully")
-                                .data(deviceService.getBorrowingDevicesByUser(eid))
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/{eid}/borrowing-devices")
+    public ResponseEntity<ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>>> getBorrowingDevicesByUser(
+            @PathVariable String eid) {
+        ApiResponse<List<DeviceBorrowingInfoResponse.DeviceInfo>> response = ApiResponse.<List<DeviceBorrowingInfoResponse.DeviceInfo>>builder()
+                .message("Get borrowing devices by user successfully")
+                .data(deviceService.getBorrowingDevicesByUser(eid))
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/me")
-        public ResponseEntity<ApiResponse<UserResponse>> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
-                String eid = jwt.getSubject(); // Lấy EID từ claim 'sub'
-                ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
-                                .message("Get current user profile successfully")
-                                .data(userService.getUserById(eid))
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        String eid = jwt.getSubject(); // Lấy EID từ claim 'sub'
+        ApiResponse<UserResponse> response = ApiResponse.<UserResponse>builder()
+                .message("Get current user profile successfully")
+                .data(userService.getUserById(eid))
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/{eid}/transactions")
-        public ResponseEntity<ApiResponse<List<TransactionResponse>>> getUserTransactions(
-                        @PathVariable String eid) {
-                List<TransactionResponse> transactions = userService.getUserTransactions(eid);
-                ApiResponse<List<TransactionResponse>> response = ApiResponse.<List<TransactionResponse>>builder()
-                                .message("Get user transactions successfully")
-                                .data(transactions)
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/{eid}/transactions")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getUserTransactions(
+            @PathVariable String eid) {
+        List<TransactionResponse> transactions = userService.getUserTransactions(eid);
+        ApiResponse<List<TransactionResponse>> response = ApiResponse.<List<TransactionResponse>>builder()
+                .message("Get user transactions successfully")
+                .data(transactions)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/transactions/{transactionId}/items")
-        public ResponseEntity<ApiResponse<List<TransactionItemsResponse>>> getUserTransactionsDetail(
-                        @PathVariable Integer transactionId) {
-                List<TransactionItemsResponse> transactions = userService.getUserTransactionItems(transactionId);
-                ApiResponse<List<TransactionItemsResponse>> response = ApiResponse.<List<TransactionItemsResponse>>builder()
-                                .message("Get user transaction items successfully")
-                                .data(transactions)
-                                .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/transactions/{transactionId}/items")
+    public ResponseEntity<ApiResponse<List<TransactionItemsResponse>>> getUserTransactionsDetail(
+            @PathVariable Integer transactionId) {
+        List<TransactionItemsResponse> transactions = userService.getUserTransactionItems(transactionId);
+        ApiResponse<List<TransactionItemsResponse>> response = ApiResponse.<List<TransactionItemsResponse>>builder()
+                .message("Get user transaction items successfully")
+                .data(transactions)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
-        @GetMapping("/borrowing-devices")
-        public ResponseEntity<ApiResponse<Page<DeviceBorrowingInfoResponse>>> getDeviceBorrowingInfo(
-                @PageableDefault(page = 0, size = 10, direction = Sort.Direction.ASC) Pageable pageable){
-                Page<DeviceBorrowingInfoResponse> borrowingInfo = deviceService.getUsersBorrowingDevice(pageable);
-                ApiResponse<Page<DeviceBorrowingInfoResponse>> response = ApiResponse.<Page<DeviceBorrowingInfoResponse>>builder()
-                        .message("Get device borrowing info successfully")
-                        .data(borrowingInfo)
-                        .build();
-                return ResponseEntity.ok(response);
-        }
+    @GetMapping("/borrowing-devices")
+    public ResponseEntity<ApiResponse<Page<DeviceBorrowingInfoResponse>>> getDeviceBorrowingInfo(
+            @PageableDefault(page = 0, size = 10, direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<DeviceBorrowingInfoResponse> borrowingInfo = deviceService.getUsersBorrowingDevice(pageable);
+        ApiResponse<Page<DeviceBorrowingInfoResponse>> response = ApiResponse.<Page<DeviceBorrowingInfoResponse>>builder()
+                .message("Get device borrowing info successfully")
+                .data(borrowingInfo)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 }

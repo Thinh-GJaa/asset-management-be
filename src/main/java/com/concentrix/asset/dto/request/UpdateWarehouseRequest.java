@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 public class UpdateWarehouseRequest {
 
     @NotNull(message = "Warehouse ID cannot be null")
-            @Min(1)
+    @Min(1)
     Integer warehouseId;
 
     String warehouseName;

@@ -70,7 +70,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status,
-            DeviceType type, Integer modelId) {
+                                                                                DeviceType type, Integer modelId) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<SiteDeviceWithoutSerialSummaryResponse> result = new ArrayList<>();
 
@@ -182,8 +182,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
-            Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
-            Boolean isOutOfWarranty, String ageRange) {
+                                                          Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
+                                                          Boolean isOutOfWarranty, String ageRange) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<Site> sites = (siteId == null) ? siteRepository.findAll()
                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
@@ -291,7 +291,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange) {
+                                                       Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange) {
 
         LocalDate[] dateRange = getDateRangeFromAgeRange(ageRange);
         LocalDate startDate = dateRange[0];
@@ -299,15 +299,18 @@ public class ReportServiceImpl implements ReportService {
 
         List<Device> devices = new ArrayList<>();
         switch (status) {
-            case IN_STOCK -> devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
+            case IN_STOCK ->
+                    devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
 
             case IN_FLOOR ->
-                devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type,
-                        modelId, isOutOfWarranty, startDate, endDate);
+                    devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type,
+                            modelId, isOutOfWarranty, startDate, endDate);
 
-            case E_WASTE -> devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
+            case E_WASTE ->
+                    devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
 
-            default -> devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty, startDate, endDate);
+            default ->
+                    devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty, startDate, endDate);
 
         }
 
@@ -338,15 +341,15 @@ public class ReportServiceImpl implements ReportService {
                                 .filter(d -> d.getModel().getType() == type
                                         && d.getStatus() == status
                                         && ((d.getCurrentWarehouse() != null
-                                                && d.getCurrentWarehouse()
-                                                        .getSite()
-                                                        .getSiteId()
-                                                        .equals(site.getSiteId()))
-                                                || (d.getCurrentFloor() != null
-                                                        && d.getCurrentFloor()
-                                                                .getSite()
-                                                                .getSiteId()
-                                                                .equals(site.getSiteId()))))
+                                        && d.getCurrentWarehouse()
+                                        .getSite()
+                                        .getSiteId()
+                                        .equals(site.getSiteId()))
+                                        || (d.getCurrentFloor() != null
+                                        && d.getCurrentFloor()
+                                        .getSite()
+                                        .getSiteId()
+                                        .equals(site.getSiteId()))))
                                 .count();
                         typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                                 .type(type.name())
@@ -358,16 +361,16 @@ public class ReportServiceImpl implements ReportService {
                             .filter(d -> !mainTypes.contains(d.getModel().getType())
                                     && d.getStatus() == status
                                     && ((d.getCurrentWarehouse() != null
-                                            && d.getCurrentWarehouse()
-                                                    .getSite()
-                                                    .getSiteId()
-                                                    .equals(site.getSiteId()))
-                                            || (d.getCurrentFloor() != null
-                                                    && d
-                                                            .getCurrentFloor()
-                                                            .getSite()
-                                                            .getSiteId()
-                                                            .equals(site.getSiteId()))))
+                                    && d.getCurrentWarehouse()
+                                    .getSite()
+                                    .getSiteId()
+                                    .equals(site.getSiteId()))
+                                    || (d.getCurrentFloor() != null
+                                    && d
+                                    .getCurrentFloor()
+                                    .getSite()
+                                    .getSiteId()
+                                    .equals(site.getSiteId()))))
                             .count();
                     typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                             .type("OTHER")
@@ -483,8 +486,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private List<SiteTypeChartResponse.TypeCount> buildTypeCounts(Collection<DeviceType> types,
-            DeviceStatus status,
-            Integer siteId) {
+                                                                  DeviceStatus status,
+                                                                  Integer siteId) {
         List<SiteTypeChartResponse.TypeCount> result = new ArrayList<>();
         for (DeviceType type : types) {
             int count = getDeviceCountByStatus(status, type, siteId);
@@ -521,30 +524,28 @@ public class ReportServiceImpl implements ReportService {
         }
 
         switch (ageRange) {
-            case "<=1" ->
-                    startDate = LocalDate.now().minusYears(1);
+            case "<=1" -> startDate = LocalDate.now().minusYears(1);
             case "1-2" -> {
                 startDate = LocalDate.now().minusYears(2);
-                endDate   = LocalDate.now().minusYears(1);
+                endDate = LocalDate.now().minusYears(1);
             }
             case "2-3" -> {
                 startDate = LocalDate.now().minusYears(3);
-                endDate   = LocalDate.now().minusYears(2);
+                endDate = LocalDate.now().minusYears(2);
             }
             case "3-4" -> {
                 startDate = LocalDate.now().minusYears(4);
-                endDate   = LocalDate.now().minusYears(3);
+                endDate = LocalDate.now().minusYears(3);
             }
             case "4-5" -> {
                 startDate = LocalDate.now().minusYears(5);
-                endDate   = LocalDate.now().minusYears(4);
+                endDate = LocalDate.now().minusYears(4);
             }
             case "5-6" -> {
                 startDate = LocalDate.now().minusYears(6);
-                endDate   = LocalDate.now().minusYears(5);
+                endDate = LocalDate.now().minusYears(5);
             }
-            case ">6" ->
-                    endDate = LocalDate.now().minusYears(6);
+            case ">6" -> endDate = LocalDate.now().minusYears(6);
         }
 
         return new LocalDate[]{startDate, endDate};

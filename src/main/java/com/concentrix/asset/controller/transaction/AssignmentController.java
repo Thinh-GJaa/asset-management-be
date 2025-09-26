@@ -29,7 +29,7 @@ public class AssignmentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<AssignmentResponse>> createAssignment(
-            @Valid @RequestBody CreateAssignmentRequest request){
+            @Valid @RequestBody CreateAssignmentRequest request) {
         ApiResponse<AssignmentResponse> apiResponse = ApiResponse.<AssignmentResponse>builder()
                 .message("Transaction assignment created successful")
                 .data(assignmentService.createAssignment(request))
@@ -39,7 +39,7 @@ public class AssignmentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AssignmentResponse>> getById(
-            @PathVariable Integer id){
+            @PathVariable Integer id) {
         ApiResponse<AssignmentResponse> apiResponse = ApiResponse.<AssignmentResponse>builder()
                 .message("Get transaction assignment successful")
                 .data(assignmentService.getAssignmentById(id))

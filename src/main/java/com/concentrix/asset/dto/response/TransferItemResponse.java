@@ -15,10 +15,10 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransferItemResponse implements Serializable {
 
-   Integer deviceId;
-   String serialNumber;
-   String modelName;
-   String deviceName;
-   Integer quantity;
+    Integer deviceId;
+    String serialNumber;
+    String modelName;
+    String deviceName;
+    Integer quantity;
 
 }

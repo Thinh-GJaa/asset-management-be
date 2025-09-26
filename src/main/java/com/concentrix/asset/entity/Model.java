@@ -18,40 +18,40 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Model {
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        Integer modelId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Integer modelId;
 
-        @Column(nullable = false, unique = true)
-        String modelName;
+    @Column(nullable = false, unique = true)
+    String modelName;
 
-        @Column
-        String manufacturer;
+    @Column
+    String manufacturer;
 
-        @Enumerated(EnumType.STRING)
-        @Column(nullable = false, length = 20)
-        DeviceType type;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    DeviceType type;
 
-        @Column
-        String size;
+    @Column
+    String size;
 
-        @Column
-        String description;
+    @Column
+    String description;
 
-        @Column
-        LocalDateTime createdAt;
+    @Column
+    LocalDateTime createdAt;
 
-        @Column
-        LocalDateTime updatedAt;
+    @Column
+    LocalDateTime updatedAt;
 
-        @PrePersist
-        protected void onCreate() {
-                createdAt = LocalDateTime.now();
-                updatedAt = LocalDateTime.now();
-        }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 
-        @PreUpdate
-        protected void onUpdate() {
-                updatedAt = LocalDateTime.now();
-        }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

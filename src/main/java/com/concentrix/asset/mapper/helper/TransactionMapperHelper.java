@@ -55,9 +55,9 @@ public class TransactionMapperHelper {
 
     @Named("mapLocation")
     public String mapLocation(AssetTransaction assetTransaction) {
-        if (assetTransaction.getFromWarehouse() != null ) {
+        if (assetTransaction.getFromWarehouse() != null) {
             return assetTransaction.getFromWarehouse().getSite().getSiteName();
-        } else if (assetTransaction.getToWarehouse() != null ) {
+        } else if (assetTransaction.getToWarehouse() != null) {
             return assetTransaction.getToWarehouse().getSite().getSiteName();
         }
         return null;
@@ -66,8 +66,8 @@ public class TransactionMapperHelper {
     @Named("transactionTypeToAssetType")
     public String transactionTypeToAssetType(AssetTransaction assetTransaction) {
 
-        if( assetTransaction.getTransactionType() == TransactionType.ASSIGNMENT) {
-            if(assetTransaction.getReturnDate() != null) {
+        if (assetTransaction.getTransactionType() == TransactionType.ASSIGNMENT) {
+            if (assetTransaction.getReturnDate() != null) {
                 return "Temporary";
             } else {
                 return "Permanent";
@@ -79,7 +79,6 @@ public class TransactionMapperHelper {
         }
         return null;
     }
-
 
 
     @Named("vendorIdToVendor")
@@ -108,30 +107,18 @@ public class TransactionMapperHelper {
                 .build();
     }
 
-    @Named("mapUser")
-    public POResponse.UserResponse mapUser(User user) {
-        if (user == null)
-            return null;
-        return POResponse.UserResponse.builder()
-                .eid(user.getEid())
-                .fullName(user.getFullName())
-                .build();
-    }
-
     @Named("mapPOItems")
     public List<TransactionItemsResponse> mapPOItems(List<PODetail> poDetails) {
         if (poDetails == null)
             return null;
         return poDetails.stream()
-                .map(detail -> {
-                    return TransactionItemsResponse.builder()
-                            .deviceId(detail.getDevice().getDeviceId())
-                            .serialNumber(detail.getDevice().getSerialNumber())
-                            .modelName(detail.getDevice().getModel().getModelName())
-                            .deviceName(detail.getDevice().getDeviceName())
-                            .quantity(detail.getQuantity())
-                            .build();
-                })
-                .collect(Collectors.toList());
+                .map(detail -> TransactionItemsResponse.builder()
+                        .deviceId(detail.getDevice().getDeviceId())
+                        .serialNumber(detail.getDevice().getSerialNumber())
+                        .modelName(detail.getDevice().getModel().getModelName())
+                        .deviceName(detail.getDevice().getDeviceName())
+                        .quantity(detail.getQuantity())
+                        .build())
+                .toList();
     }
 }

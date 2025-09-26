@@ -59,7 +59,7 @@ public class UseFloorServiceImpl implements UseFloorService {
         Warehouse fromWarehouse = warehouseRepository.findById(request.getFromWarehouseId())
                 .orElseThrow(() -> new CustomException(ErrorCode.WAREHOUSE_NOT_FOUND, request.getFromWarehouseId()));
 
-        if(!toFloor.getSite().getSiteId().equals(fromWarehouse.getSite().getSiteId())) {
+        if (!toFloor.getSite().getSiteId().equals(fromWarehouse.getSite().getSiteId())) {
             throw new CustomException(ErrorCode.INVALID_USE_FLOOR);
         }
 
@@ -176,7 +176,7 @@ public class UseFloorServiceImpl implements UseFloorService {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDateTime));
             }
             if (toDate != null) {
-                LocalDateTime toDateTime = toDate.atTime(23, 59,59);
+                LocalDateTime toDateTime = toDate.atTime(23, 59, 59);
                 predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDateTime));
             }
 

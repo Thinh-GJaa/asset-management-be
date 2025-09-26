@@ -27,7 +27,7 @@ public class RemindReturnAssetJob {
     public void sendReturnReminders() {
         log.info("[SCHEDULER] Sending return reminders");
         Map<User, Map<Device, Integer>> pendingReturns = returnRemindService.calculatePendingReturnsForAllUsers();
-        if(pendingReturns.isEmpty()){
+        if (pendingReturns.isEmpty()) {
             log.info("[SCHEDULER] No pending returns found");
         }
         for (Map.Entry<User, Map<Device, Integer>> entry : pendingReturns.entrySet()) {

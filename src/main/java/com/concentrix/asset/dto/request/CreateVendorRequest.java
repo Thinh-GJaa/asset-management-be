@@ -18,6 +18,6 @@ public class CreateVendorRequest {
     String phoneNumber;
 
     @NotBlank(message = "Email is required")
-            @Email
+    @Email
     String email;
 }

@@ -71,7 +71,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.EMAIL_NOT_FOUND, request.getEmail()));
 
-        if(Role.OTHER.equals(user.getRole()))
+        if (Role.OTHER.equals(user.getRole()))
             throw new CustomException(ErrorCode.UNAUTHENTICATED);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -155,24 +155,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-
     @Override
     public void changePassword(ChangePasswordRequest request) {
         User user = userService.getCurrentUser();
 
-        if(!request.getNewPassword().equals(request.getConfirmPassword()))
+        if (!request.getNewPassword().equals(request.getConfirmPassword()))
             throw new CustomException(ErrorCode.CONFIRM_PASSWORD_NOT_MATCH);
 
-        if(!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword()))
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword()))
             throw new CustomException(ErrorCode.CURRENT_PASSWORD_INCORRECT);
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
-
-
-
-
 
 
     private String getRefreshTokenFromCookie(HttpServletRequest request) {

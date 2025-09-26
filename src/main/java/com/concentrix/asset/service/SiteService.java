@@ -8,14 +8,14 @@ import org.springframework.data.domain.Pageable;
 
 public interface SiteService {
 
-     SiteResponse getSiteById(Integer id);
+    SiteResponse getSiteById(Integer id);
 
-     SiteResponse createSite(CreateSiteRequest request);
+    SiteResponse createSite(CreateSiteRequest request);
 
-     SiteResponse updateSite(UpdateSiteRequest request);
+    SiteResponse updateSite(UpdateSiteRequest request);
 
-     void deleteSite(Integer id);
+    void deleteSite(Integer id);
 
-     Page<SiteResponse> filterSite(Pageable pageable);
+    Page<SiteResponse> filterSite(Pageable pageable);
 
 }

@@ -17,6 +17,6 @@ public class CreateEWasteRequest {
     String note;
 
     @Valid
-            @NotEmpty(message = "Items cannot be empty")
+    @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;
 }

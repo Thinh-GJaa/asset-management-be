@@ -8,7 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
-@Mapper(componentModel = "spring", uses = { TransactionMapperHelper.class })
+@Mapper(componentModel = "spring", uses = {TransactionMapperHelper.class})
 public interface TransferFloorMapper {
     @Mapping(target = "transactionType", expression = "java(com.concentrix.asset.enums.TransactionType.TRANSFER_FLOOR)")
     @Mapping(target = "fromFloor", source = "fromFloorId", qualifiedByName = "floorIdToFloor")
