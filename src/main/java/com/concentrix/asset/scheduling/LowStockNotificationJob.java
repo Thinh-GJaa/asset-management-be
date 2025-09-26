@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,17 +23,18 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE) // bỏ makeFinal
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true) // bỏ makeFinal
 public class LowStockNotificationJob {
 
-    final EmailService emailService;
-    final UserService userService;
-    final UserRepository userRepository;
-    final LowStockService lowStockService;
+    EmailService emailService;
+    UserRepository userRepository;
+    LowStockService lowStockService;
 
+    @NonFinal
     @Value("${app.notification.owner-email}")
     String ownerEmail;
 
+    @NonFinal
     @Value("${app.notification.system-alert-email}")
     String systemAlertEmail;
 
