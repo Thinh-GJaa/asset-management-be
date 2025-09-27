@@ -37,7 +37,7 @@ public class LowStockNotificationJob {
 
     @NonFinal
     @Value("${app.notification.system-alert-email}")
-    String systemAlertEmail;
+    String alertSystemEmail;
 
     // Scheduled: chạy 10h sáng mỗi thứ 2
     @Scheduled(cron = "0 0 10 ? * MON")
@@ -46,15 +46,15 @@ public class LowStockNotificationJob {
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
             List<String> ccList = userRepository.findEmailByRoleAndSiteId(Role.LEADER, null);
-            emailService.sendEmail(ownerEmail, subject, body, ccList);
+            emailService.sendEmail(ownerEmail, subject, body, ccList, List.of(alertSystemEmail));
             log.info("[SCHEDULER] Email sent to {}", ownerEmail);
         } catch (Exception e) {
             log.error("[SCHEDULER] Failed to send email to {}: {}", ownerEmail, e.getMessage());
 
             String subjectError = "[AMS_VN]Low Stock Devices Report Error";
             String bodyError = "Failed to send email low stock devices report";
-            emailService.sendEmail(systemAlertEmail, subjectError, bodyError, null);
-            emailService.sendEmail("congthang.van@concentrix.com", subjectError, bodyError, null);
+            emailService.sendEmail(alertSystemEmail, subjectError, bodyError, null, null);
+            emailService.sendEmail("congthang.van@concentrix.com", subjectError, bodyError, null, List.of(alertSystemEmail));
         }
     }
 

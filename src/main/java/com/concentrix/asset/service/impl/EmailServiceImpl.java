@@ -29,14 +29,15 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async
     @Retryable(
-            value = {MessagingException.class, MailException.class, RuntimeException.class},
-            maxAttempts = 3,
+            retryFor = {MessagingException.class, MailException.class, RuntimeException.class},
+            maxAttempts = 4,
             backoff = @Backoff(delay = 2000, multiplier = 2)
     )
     public void sendEmail(String to,
                           String subject,
                           String body,
-                          List<String> cc) throws MessagingException {
+                          List<String> cc,
+                          List<String> bcc) throws MessagingException {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -50,12 +51,16 @@ public class EmailServiceImpl implements EmailService {
                 helper.setCc(cc.toArray(new String[0]));
             }
 
+            if (bcc != null && !bcc.isEmpty()) {
+                helper.setBcc(bcc.toArray(new String[0]));
+            }
+
             mailSender.send(message);
-            log.info("[EMAIL][SUCCESS] Email sent successfully to [{}] with subject [{}]", to, subject);
+            log.info("[EMAIL][SUCCESS] Email sent successfully to [{}] with subject [{}], cc [{}], bcc [{}]", to, subject, cc, bcc);
 
         } catch (AuthenticationFailedException e) {
             log.error("[EMAIL][AUTH_ERROR] Authentication failed for recipient [{}]. Error: {}", to, e.getMessage(), e);
-            throw e; // let Retryable handle retry
+            throw e; // để Retryable xử lý retry
         } catch (MessagingException | MailException e) {
             log.error("[EMAIL][SEND_ERROR] Failed to send email to [{}]. Error: {}", to, e.getMessage(), e);
             throw e;

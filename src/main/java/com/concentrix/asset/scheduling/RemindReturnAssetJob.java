@@ -7,10 +7,13 @@ import com.concentrix.asset.service.ReturnRemindService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -21,6 +24,10 @@ public class RemindReturnAssetJob {
 
     EmailService emailService;
     ReturnRemindService returnRemindService;
+
+    @NonFinal
+    @Value("${app.notification.system-alert-email}")
+    String alertSystemEmail;
 
     // Scheduled: chạy 9h sáng mỗi ngày
     @Scheduled(cron = "0 0 9 * * *")
@@ -36,7 +43,7 @@ public class RemindReturnAssetJob {
             String html = buildReturnReminderHtml(user, deviceRemainings);
             try {
                 String subject = "[AMS_VN] Device Return Reminder";
-                emailService.sendEmail(user.getEmail(), subject, html, null);
+                emailService.sendEmail(user.getEmail(), subject, html, null, List.of(alertSystemEmail));
             } catch (Exception e) {
                 log.error("[SCHEDULER] Failed to send email to {}: {}", user.getEmail(), e.getMessage());
             }

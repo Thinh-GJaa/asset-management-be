@@ -125,6 +125,7 @@ public class WorkdayServiceImpl implements WorkdayService {
                 emailService.sendEmail(alertSystemEmail,
                         "Workday Import",
                         "Workday folder does not exist: " + workdayFolder,
+                        null,
                         null);
                 return Optional.empty();
             }
