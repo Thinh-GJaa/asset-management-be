@@ -52,9 +52,6 @@ public class IdMapperHelper {
     public Account msaClientToAccount(String msaClient) {
         if (msaClient == null || msaClient.isBlank())
             return null;
-
-        log.info("[msaClientToAccount] Fetching account for MSA client: {}", msaClient);
-
         return accountRepository.findByAccountName(msaClient)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NAME_NOT_FOUND, msaClient));
     }
