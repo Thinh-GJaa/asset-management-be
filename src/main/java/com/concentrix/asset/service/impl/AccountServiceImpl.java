@@ -5,12 +5,15 @@ import com.concentrix.asset.dto.request.UpdateAccountRequest;
 import com.concentrix.asset.dto.response.AccountResponse;
 import com.concentrix.asset.dto.response.UserResponse;
 import com.concentrix.asset.entity.Account;
+import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.AccountMapper;
 import com.concentrix.asset.mapper.UserMapper;
 import com.concentrix.asset.repository.AccountRepository;
+import com.concentrix.asset.repository.DeviceRepository;
 import com.concentrix.asset.service.AccountService;
+import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.UserService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,8 @@ public class AccountServiceImpl implements AccountService {
     AccountMapper accountMapper;
     UserService userService;
     UserMapper userMapper;
+    DeviceRepository deviceRepository;
+    DeviceService deviceService;
 
     @Override
     public AccountResponse getAccountById(Integer accountId) {
@@ -89,6 +94,17 @@ public class AccountServiceImpl implements AccountService {
 
         accountMapper.updateAccount(account, request);
         account = accountRepository.save(account);
+
+        // Update device host name
+        if (request.getAccountCode() != null) {
+            List<Device> devices = deviceRepository.findDevicesInFloorForReport (
+                    null, null, account.getAccountId(), null, null, null, null, null, null);
+
+            for (Device device : devices) {
+                device.setHostName(deviceService.generateHostNameForDesktop(device, device.getCurrentFloor()));
+            }
+            deviceRepository.saveAll(devices);
+        }
 
         return accountMapper.toAccountResponse(account);
 

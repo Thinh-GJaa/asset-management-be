@@ -3,12 +3,15 @@ package com.concentrix.asset.service.impl;
 import com.concentrix.asset.dto.request.CreateFloorRequest;
 import com.concentrix.asset.dto.request.UpdateFloorRequest;
 import com.concentrix.asset.dto.response.FloorResponse;
+import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.Floor;
 import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.FloorMapper;
+import com.concentrix.asset.repository.DeviceRepository;
 import com.concentrix.asset.repository.FloorRepository;
 import com.concentrix.asset.repository.SiteRepository;
+import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.FloorService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,8 @@ public class FloorServiceImpl implements FloorService {
     FloorRepository floorRepository;
     FloorMapper floorMapper;
     SiteRepository siteRepository;
+    DeviceRepository deviceRepository;
+    DeviceService deviceService;
 
     @Override
     public FloorResponse getFloorById(Integer floorId) {
@@ -50,6 +55,19 @@ public class FloorServiceImpl implements FloorService {
                 .orElseThrow(() -> new CustomException(ErrorCode.FLOOR_NOT_FOUND, request.getFloorId()));
         floorMapper.updateFloor(floor, request);
         floor = floorRepository.save(floor);
+
+        // Update device host name
+        if (request.getAccountId() != null) {
+            List<Device> devices = deviceRepository.findDevicesInFloorForReport(
+                    null, floor.getFloorId(), null, null, null, null, null, null, null
+            );
+            for (Device device : devices) {
+                device.setHostName(deviceService.generateHostNameForDesktop(device, floor));
+            }
+            deviceRepository.saveAll(devices);
+        }
+
+
         return floorMapper.toFloorResponse(floor);
     }
 
