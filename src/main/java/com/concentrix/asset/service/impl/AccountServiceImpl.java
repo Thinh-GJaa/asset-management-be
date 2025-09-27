@@ -98,7 +98,7 @@ public class AccountServiceImpl implements AccountService {
         // Update device host name
         if (request.getAccountCode() != null) {
             List<Device> devices = deviceRepository.findDevicesInFloorForReport (
-                    null, null, account.getAccountId(), null, null, null, null, null, null);
+                    null, null, null, account.getAccountId(), null, null, null, null, null);
 
             for (Device device : devices) {
                 device.setHostName(deviceService.generateHostNameForDesktop(device, device.getCurrentFloor()));
