@@ -52,6 +52,10 @@ public class TransferServiceImpl implements TransferService {
     @NonFinal
     String ownerEmail;
 
+    @Value("${app.notification.system-alert-email}")
+    @NonFinal
+    String alertSystemEmail;
+
     @Override
     public TransferResponse getTransferById(Integer transferId) {
 
@@ -482,7 +486,7 @@ public class TransferServiceImpl implements TransferService {
             String subject = "[AMS_VN] New Site Transfer Request - #" + transaction.getTransactionId();
             String htmlBody = buildTransferNotificationHTML(transaction, "CREATED");
 
-            emailService.sendEmail(ownerEmail, subject, htmlBody, null);
+            emailService.sendEmail(ownerEmail, subject, htmlBody, null, List.of(alertSystemEmail));
 
             log.info("[TransferServiceImpl] Transfer created email sent for transfer #{}",
                     transaction.getTransactionId());
@@ -504,12 +508,14 @@ public class TransferServiceImpl implements TransferService {
             List<String> ccList = userRepository.findEmailByRoleAndSiteId(
                     Role.IT, transaction.getToWarehouse().getSite().getSiteId());
 
+            List<String> bccList = List.of(alertSystemEmail);
+
             List<String> emails = userRepository.findEmailByRoleAndSiteId(
                     Role.LEADER, transaction.getToWarehouse().getSite().getSiteId());
 
             String toEmail = emails.stream().findFirst().orElse(null);
 
-            emailService.sendEmail(toEmail, subject, htmlBody, ccList);
+            emailService.sendEmail(toEmail, subject, htmlBody, ccList, bccList);
             log.info("[TransferServiceImpl] Transfer approved email sent for transfer #{}",
                     transaction.getTransactionId());
 

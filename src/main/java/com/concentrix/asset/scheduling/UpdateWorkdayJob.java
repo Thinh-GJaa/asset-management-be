@@ -39,7 +39,7 @@ public class UpdateWorkdayJob {
             log.error("[Workday][Import][ERROR] {}", e.getMessage(), e);
             String subject = "Workday Import Error";
             String content = e.getMessage();
-            emailService.sendEmail(alertSystemEmail, subject, content, null);
+            emailService.sendEmail(alertSystemEmail, subject, content, null, null);
         }
     }
 
