@@ -154,7 +154,6 @@ public class WorkdayServiceImpl implements WorkdayService {
             }
 
             String[] headers = splitSemicolon(headerLine);
-            log.info("[WORKDAY][IMPORT] Headers: {}", Arrays.toString(headers));
 
             Map<String, Integer> idx = index(headers);
 
@@ -188,7 +187,6 @@ public class WorkdayServiceImpl implements WorkdayService {
         String status = get(cols, findIndex(idx, "EMPLOYEE STATUS", "STATUS", "EMPLOYEESTATUS"));
         req.setIsActive(status == null || status.equalsIgnoreCase("Active"));
 
-        log.info("[WORKDAY][IMPORT] User: {}", req);
         return req;
     }
 }
