@@ -16,10 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,13 +31,12 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
 
     public Map<User, Map<Device, Integer>> calculatePendingReturnsForAllUsers() {
         LocalDate today = LocalDate.now();
-        List<AssetTransaction> allTransactions = transactionRepository.findAllByUserUseIsNotNull();
 
-        // 1. Lấy các transaction có returnDate trong khoảng từ hôm nay trở về trước
-        // (bao gồm cả quá hạn)
-        // và có user/eid để nhắc trả thiết bị
+        // Lọc ngay từ DB: chỉ lấy transaction có user và returnDate <= today+3
+        List<AssetTransaction> allTransactions = transactionRepository
+                .findAllByUserUseIsNotNullAndReturnDateLessThanEqual(today.plusDays(3));
+
         Map<User, List<AssetTransaction>> userDueTxs = allTransactions.stream()
-                .filter(tx -> tx.getReturnDate() != null && !tx.getReturnDate().isAfter(today))
                 .collect(Collectors.groupingBy(AssetTransaction::getUserUse));
 
         Map<User, Map<Device, Integer>> result = new HashMap<>();
@@ -49,61 +45,46 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
             User user = entry.getKey();
             List<AssetTransaction> dueTxs = entry.getValue();
 
-            // 2. Kiểm tra xem có nên nhắc user hay không
-            // Nhắc trước 3 ngày hoặc từ ngày returnDate trở đi
-            boolean shouldRemind = dueTxs.stream()
-                    .anyMatch(tx -> {
-                        LocalDate returnDate = tx.getReturnDate();
-                        LocalDate remindStartDate = returnDate.minusDays(3);
-                        return !today.isBefore(remindStartDate);
-                    });
-
-            if (!shouldRemind) {
-                continue; // Bỏ qua user này nếu chưa đến thời điểm nhắc
-            }
-
-            // 3. Tìm min createDate của user
             LocalDate minCreateDate = dueTxs.stream()
-                    .map(AssetTransaction::getCreatedAt) // LocalDateTime
+                    .map(AssetTransaction::getCreatedAt)
                     .filter(Objects::nonNull)
                     .map(LocalDateTime::toLocalDate)
-                    .min(LocalDate::compareTo)
+                    .min(Comparator.naturalOrder())
                     .orElse(today);
 
-            // 4. Lấy tất cả transaction của user từ minCreateDate đến hôm nay của user
-            List<AssetTransaction> periodTxs = allTransactions.stream()
-                    .filter(tx -> tx.getUserUse() != null && tx.getUserUse().equals(user))
-                    .filter(tx -> tx.getCreatedAt() != null
-                            && !tx.getCreatedAt().toLocalDate().isBefore(minCreateDate)
+            // Filter transaction trong khoảng thời gian
+            List<AssetTransaction> periodTxs = dueTxs.stream()
+                    .filter(tx -> !tx.getCreatedAt().toLocalDate().isBefore(minCreateDate)
                             && !tx.getCreatedAt().toLocalDate().isAfter(today))
-                    .filter(tx -> tx.getTransactionType() == TransactionType.RETURN_FROM_USER ||
-                            (tx.getTransactionType() == TransactionType.ASSIGNMENT && tx.getReturnDate() != null))
+                    .filter(tx -> tx.getTransactionType() == TransactionType.RETURN_FROM_USER
+                            || (tx.getTransactionType() == TransactionType.ASSIGNMENT && tx.getReturnDate() != null))
                     .toList();
 
-            // 5. Gom theo device và tính tổng số lượng còn thiếu
             Map<Device, Integer> assigned = new HashMap<>();
             Map<Device, Integer> returned = new HashMap<>();
+
             for (AssetTransaction tx : periodTxs) {
                 for (TransactionDetail detail : tx.getDetails()) {
                     Device device = detail.getDevice();
                     int qty = detail.getQuantity();
                     if (tx.getTransactionType() == TransactionType.ASSIGNMENT) {
-                        assigned.put(device, assigned.getOrDefault(device, 0) + qty);
+                        assigned.merge(device, qty, Integer::sum);
                     } else if (tx.getTransactionType() == TransactionType.RETURN_FROM_USER) {
-                        returned.put(device, returned.getOrDefault(device, 0) + qty);
+                        returned.merge(device, qty, Integer::sum);
                     }
                 }
             }
-            Map<Device, Integer> deviceRemainings = new HashMap<>();
-            for (Device device : assigned.keySet()) {
-                int remain = assigned.get(device) - returned.getOrDefault(device, 0);
-                if (remain > 0)
-                    deviceRemainings.put(device, remain);
-            }
+
+            Map<Device, Integer> deviceRemainings = assigned.entrySet().stream()
+                    .map(e -> Map.entry(e.getKey(), e.getValue() - returned.getOrDefault(e.getKey(), 0)))
+                    .filter(e -> e.getValue() > 0)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
             if (!deviceRemainings.isEmpty()) {
                 result.put(user, deviceRemainings);
             }
         }
         return result;
     }
+
 }
