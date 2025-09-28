@@ -42,7 +42,7 @@ public class RemindReturnAssetJob {
             Map<Device, Integer> deviceRemainings = entry.getValue();
             String html = buildReturnReminderHtml(user, deviceRemainings);
             try {
-                String subject = "[AMS_VN] Device Return Reminder";
+                String subject = "[AMS_VN] Asset Return Reminder - Auto Notification";
                 emailService.sendEmail(user.getEmail(), subject, html, null, List.of(alertSystemEmail));
             } catch (Exception e) {
                 log.error("[SCHEDULER] Failed to send email to {}: {}", user.getEmail(), e.getMessage());
@@ -57,10 +57,11 @@ public class RemindReturnAssetJob {
         StringBuilder html = new StringBuilder();
         html.append(
                 "<div style='font-family:Arial,sans-serif;max-width:800px;margin:40px auto;background:#fff;padding:40px 32px;border-radius:16px;box-shadow:0 4px 24px #e0e7ef;'>");
+        
         html.append("<h2 style='color:#2563eb;text-align:center;font-size:2rem;margin-bottom:16px;'>Dear ")
                 .append(user.getFullName()).append("!</h2>");
         html.append(
-                "<p style='font-size:18px;text-align:center;margin-bottom:32px;'>Below is the list of devices you need to return today:</p>");
+                "<p style='font-size:18px;text-align:center;margin-bottom:32px;'>Below is the list of assets you need to return:</p>");
         html.append("<div style='overflow-x:auto;'>");
         html.append(
                 "<table style='width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;box-shadow:0 2px 8px #e0e7ef;font-size:17px;'>");
@@ -85,8 +86,19 @@ public class RemindReturnAssetJob {
         }
         html.append("</tbody></table>");
         html.append("</div>");
+        
+        // Additional information section
+        html.append("<div style='margin-top:32px;padding:20px;background:#f1f5f9;border-radius:8px;border-left:4px solid #3b82f6;'>");
+        html.append("<h3 style='color:#1e40af;margin-top:0;margin-bottom:12px;font-size:18px;'>📋 Important Information:</h3>");
+        html.append("<ul style='margin:0;padding-left:20px;color:#374151;font-size:15px;line-height:1.6;'>");
+        html.append("<li>This is an automated reminder system</li>");
+        html.append("<li>Please return the assets according to your return schedule</li>");
+        html.append("<li>Contact IT Support if you have any questions</li>");
+        html.append("<li>Do not reply to this email as it is auto-generated</li>");
+        html.append("</ul></div>");
+        
         html.append(
-                "<p style='margin-top:32px;font-size:16px;color:#334155;text-align:center;'>Please return the devices on time to avoid any impact on your work. Thank you!</p>");
+                "<p style='margin-top:24px;font-size:16px;color:#334155;text-align:center;'>Thank you for your cooperation!</p>");
         html.append("</div>");
         return html.toString();
     }
