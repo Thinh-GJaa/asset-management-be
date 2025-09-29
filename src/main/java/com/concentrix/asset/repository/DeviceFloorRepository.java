@@ -1,6 +1,7 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.DeviceFloor;
+import com.concentrix.asset.entity.DeviceFloorId;
 import com.concentrix.asset.enums.DeviceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface DeviceFloorRepository extends JpaRepository<DeviceFloor, DeviceFloor> {
+public interface DeviceFloorRepository extends JpaRepository<DeviceFloor, DeviceFloorId> {
     Optional<DeviceFloor> findByDevice_DeviceIdAndFloor_FloorId(Integer deviceId, Integer floorId);
 
     @Query("""
