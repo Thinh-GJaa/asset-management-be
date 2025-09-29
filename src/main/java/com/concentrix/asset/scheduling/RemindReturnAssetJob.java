@@ -39,8 +39,12 @@ public class RemindReturnAssetJob {
         }
         for (Map.Entry<User, Map<Device, Integer>> entry : pendingReturns.entrySet()) {
             User user = entry.getKey();
-            Map<Device, Integer> deviceRemainings = entry.getValue();
-            String html = buildReturnReminderHtml(user, deviceRemainings);
+            Map<Device, Integer> deviceRemaining = entry.getValue();
+
+            log.info("[SCHEDULER][Reminder] User: {}\n Device Remaining: {} ", user
+                    .getSso(), deviceRemaining);
+
+            String html = buildReturnReminderHtml(user, deviceRemaining);
             try {
                 String subject = "[AMS_VN] Asset Return Reminder - Auto Notification";
                 emailService.sendEmail(user.getEmail(), subject, html, null, List.of(alertSystemEmail));
@@ -53,7 +57,7 @@ public class RemindReturnAssetJob {
     /**
      * Build HTML content for device return reminder email for a user
      */
-    private String buildReturnReminderHtml(User user, Map<Device, Integer> deviceRemainings) {
+    private String buildReturnReminderHtml(User user, Map<Device, Integer> deviceRemaining) {
         StringBuilder html = new StringBuilder();
         html.append(
                 "<div style='font-family:Arial,sans-serif;max-width:800px;margin:40px auto;background:#fff;padding:40px 32px;border-radius:16px;box-shadow:0 4px 24px #e0e7ef;'>");
@@ -71,7 +75,7 @@ public class RemindReturnAssetJob {
         html.append("<th style='padding:16px 12px;text-align:left;'>Serial</th>");
         html.append("<th style='padding:16px 12px;text-align:center;'>Remaining Quantity</th>");
         html.append("</tr></thead><tbody>");
-        for (Map.Entry<Device, Integer> d : deviceRemainings.entrySet()) {
+        for (Map.Entry<Device, Integer> d : deviceRemaining.entrySet()) {
             Device device = d.getKey();
             Integer remain = d.getValue();
             html.append("<tr style='border-bottom:1px solid #e5e7eb;'>")
