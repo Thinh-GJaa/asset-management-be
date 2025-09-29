@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 /**
  * Entity lưu thông tin nhà cung cấp thiết bị (Vendor).
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

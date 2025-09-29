@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
  * Entity lưu thông tin các model thiết bị (ví dụ: tên model, loại thiết bị,
  * hãng sản xuất).
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

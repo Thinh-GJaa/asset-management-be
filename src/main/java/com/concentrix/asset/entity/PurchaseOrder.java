@@ -12,7 +12,8 @@ import java.util.List;
 /**
  * Entity lưu thông tin phiếu đặt hàng (Purchase Order - P.O).
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -12,7 +12,8 @@ import java.util.List;
  * Entity lưu thông tin từng thiết bị cụ thể (serial, trạng thái, model, vị trí
  * hiện tại).
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

@@ -10,7 +10,8 @@ import java.util.List;
 /**
  * Entity lưu thông tin các sàn làm việc (floor), thuộc về một site cụ thể.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

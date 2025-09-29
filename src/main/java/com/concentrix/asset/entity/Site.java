@@ -11,7 +11,8 @@ import java.util.List;
 /**
  * Entity lưu thông tin các site/cơ sở (tên, địa chỉ).
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
