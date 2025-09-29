@@ -11,7 +11,7 @@ WORKDIR /app
 COPY ${JAR_FILE} app.jar
 
 # Copy file cấu hình nếu cần (ví dụ application.yml)
-COPY src/main/resources/application.yml ./src/main/resources/application.yml
+COPY src/main/resources/application.yml ./application.yml
 
 # Mở port ứng dụng (ví dụ 8080)
 EXPOSE 8080
