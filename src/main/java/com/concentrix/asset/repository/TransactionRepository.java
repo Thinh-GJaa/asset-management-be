@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -18,20 +19,21 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<AssetTransaction, Integer>, JpaSpecificationExecutor<AssetTransaction> {
 
-    Page<AssetTransaction> findALLByTransactionType(TransactionType transactionType, Pageable pageable);
-
-    List<AssetTransaction> findAllByUserUseIsNotNull();
-
     List<AssetTransaction> findAllByUserUse_Eid(String eid);
 
     @Query("SELECT t FROM AssetTransaction t WHERE t.transactionType = 'TRANSFER_SITE' " +
             "AND t.transactionStatus IN ('PENDING', 'APPROVED') ")
     Page<AssetTransaction> findPendingOrApprovedTransfers(Pageable pageable);
 
-    List<AssetTransaction> findAllByUserUseIsNotNullAndTransactionTypeInAndReturnDateLessThanEqual(
-            List<TransactionType> transactionTypes,
-            LocalDate date
-    );
-
+    @Query("""
+           SELECT t FROM AssetTransaction t
+           WHERE t.userUse IS NOT NULL
+             AND (
+                  (t.transactionType = TransactionType.ASSIGNMENT
+                       AND t.returnDate <= :date)
+                  OR t.transactionType = RETURN_FROM_USER
+                 )
+           """)
+    List<AssetTransaction> findTransactionForReminder(@Param("date") LocalDate date);
 
 }

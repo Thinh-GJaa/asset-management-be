@@ -37,10 +37,7 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
 
         // Lấy cả ASSIGNMENT (có hạn <= threshold) và RETURN_FROM_USER
         List<AssetTransaction> allTransactions =
-                transactionRepository.findAllByUserUseIsNotNullAndTransactionTypeInAndReturnDateLessThanEqual(
-                        List.of(TransactionType.ASSIGNMENT, TransactionType.RETURN_FROM_USER),
-                        threshold
-                );
+                transactionRepository.findTransactionForReminder(threshold);
 
         log.info("[RETURN-REMIND] Lấy được {} transactions từ DB để xử lý", allTransactions.size());
 
