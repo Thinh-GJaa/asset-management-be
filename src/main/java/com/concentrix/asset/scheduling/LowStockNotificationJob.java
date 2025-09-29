@@ -40,21 +40,20 @@ public class LowStockNotificationJob {
     String alertSystemEmail;
 
     // Scheduled: chạy 10h sáng mỗi thứ 2
-    @Scheduled(cron = "0 0 10 ? * MON")
+    @Scheduled(cron = "0 0 10 * * 2")
     public void sendLowStockNotifications() throws MessagingException {
         String subject = "[AMS_VN]Low Stock Devices Report";
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
             List<String> ccList = userRepository.findEmailByRoleAndSiteId(Role.LEADER, null);
             emailService.sendEmail(ownerEmail, subject, body, ccList, List.of(alertSystemEmail));
-            log.info("[SCHEDULER] Email sent to {}", ownerEmail);
+            log.info("[SCHEDULER] Email sent to {} and cc {}", ownerEmail, ccList);
         } catch (Exception e) {
             log.error("[SCHEDULER] Failed to send email to {}: {}", ownerEmail, e.getMessage());
 
             String subjectError = "[AMS_VN]Low Stock Devices Report Error";
             String bodyError = "Failed to send email low stock devices report";
             emailService.sendEmail(alertSystemEmail, subjectError, bodyError, null, null);
-            emailService.sendEmail("congthang.van@concentrix.com", subjectError, bodyError, null, List.of(alertSystemEmail));
         }
     }
 
@@ -94,7 +93,7 @@ public class LowStockNotificationJob {
                 String key = display.toUpperCase();
 
                 deviceDisplay.putIfAbsent(key, display);
-                totalMap.put(key, totalMap.getOrDefault(key, 0) + t.getTotal());
+                totalMap.put(key, t.getTotal());
 
                 Map<String, Integer> bySite = availableMap.computeIfAbsent(key, k -> new LinkedHashMap<>());
                 bySite.put(siteName, t.getAvailable());

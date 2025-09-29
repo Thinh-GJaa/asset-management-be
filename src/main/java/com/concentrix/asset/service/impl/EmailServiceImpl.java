@@ -55,7 +55,7 @@ public class EmailServiceImpl implements EmailService {
                 helper.setBcc(bcc.toArray(new String[0]));
             }
 
-            //mailSender.send(message);
+            mailSender.send(message);
             log.info("[EMAIL][SUCCESS] Email sent successfully to [{}] with subject [{}], cc [{}], bcc [{}]", to, subject, cc, bcc);
 
         } catch (AuthenticationFailedException e) {

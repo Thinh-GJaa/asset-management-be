@@ -48,7 +48,7 @@ public class LowStockServiceImpl implements LowStockService {
 
             for (Site site : sites) {
                 try {
-                    if (site.getSiteName().equalsIgnoreCase("tmp"))
+                    if (site.getSiteName().equalsIgnoreCase("po"))
                         continue;
                     // Xử lý cho loại có serial
                     List<LowStockResponse.LowStockType> lowStockTypes = new ArrayList<>();
@@ -64,6 +64,8 @@ public class LowStockServiceImpl implements LowStockService {
                                         .available(available)
                                         .build());
                             }
+                            log.info("[LOW STOCK SERVICE] Low stock (WITH SERIAL) for siteId {} and deviceType {}: {}-{}",
+                                    site.getSiteId(), type, available , (double) total);
                         } catch (Exception e) {
                             log.error("[LOW STOCK SERVICE] Error calculating low stock (WITH SERIAL) for siteId {} and deviceType {}: {}",
                                     site.getSiteId(), type, e.getMessage(), e);
@@ -88,6 +90,8 @@ public class LowStockServiceImpl implements LowStockService {
                                         .available(totalInStockOnSite)
                                         .build());
                             }
+                            log.info("[LOW STOCK SERVICE] Low stock (WITHOUT SERIAL) for siteId {} and deviceType {}: {}-{}",
+                                    site.getSiteId(), type, totalInStockOnSite, (double) total);
                         } catch (Exception e) {
                             log.error("[LOW STOCK SERVICE] Error calculating low stock (WITHOUT SERIAL) for siteId {} and deviceType {}: {}",
                                     site.getSiteId(), type, e.getMessage(), e);
