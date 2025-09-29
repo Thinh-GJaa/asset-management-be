@@ -28,7 +28,10 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
             "AND t.transactionStatus IN ('PENDING', 'APPROVED') ")
     Page<AssetTransaction> findPendingOrApprovedTransfers(Pageable pageable);
 
-    List<AssetTransaction> findAllByUserUseIsNotNullAndReturnDateLessThanEqual(LocalDate date);
+    List<AssetTransaction> findAllByUserUseIsNotNullAndTransactionTypeInAndReturnDateLessThanEqual(
+            List<TransactionType> transactionTypes,
+            LocalDate date
+    );
 
 
 }

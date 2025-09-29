@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -32,50 +31,43 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
     @Override
     public Map<User, Map<Device, Integer>> calculatePendingReturnsForAllUsers() {
         LocalDate today = LocalDate.now();
-        log.info("[RETURN-REMIND] Bắt đầu tính toán pending returns, today={}, threshold={}", today, today.plusDays(3));
+        LocalDate threshold = today.plusDays(3);
 
-        // Lọc ngay từ DB
-        List<AssetTransaction> allTransactions = transactionRepository
-                .findAllByUserUseIsNotNullAndReturnDateLessThanEqual(today.plusDays(3));
+        log.info("[RETURN-REMIND] Bắt đầu tính toán pending returns, today={}, threshold={}", today, threshold);
+
+        // Lấy cả ASSIGNMENT (có hạn <= threshold) và RETURN_FROM_USER
+        List<AssetTransaction> allTransactions =
+                transactionRepository.findAllByUserUseIsNotNullAndTransactionTypeInAndReturnDateLessThanEqual(
+                        List.of(TransactionType.ASSIGNMENT, TransactionType.RETURN_FROM_USER),
+                        threshold
+                );
+
         log.info("[RETURN-REMIND] Lấy được {} transactions từ DB để xử lý", allTransactions.size());
 
-        Map<User, List<AssetTransaction>> userDueTxs = allTransactions.stream()
+        // Nhóm theo user
+        Map<User, List<AssetTransaction>> userTxs = allTransactions.stream()
                 .collect(Collectors.groupingBy(AssetTransaction::getUserUse));
-        log.info("[RETURN-REMIND] Có {} user(s) cần kiểm tra pending returns", userDueTxs.size());
 
         Map<User, Map<Device, Integer>> result = new HashMap<>();
+        log.info("[RETURN-REMIND] Có {} user(s) cần kiểm tra pending returns", userTxs.size());
 
-        for (Map.Entry<User, List<AssetTransaction>> entry : userDueTxs.entrySet()) {
+        for (Map.Entry<User, List<AssetTransaction>> entry : userTxs.entrySet()) {
             User user = entry.getKey();
-            List<AssetTransaction> dueTxs = entry.getValue();
-            log.debug("[RETURN-REMIND] Đang xử lý user={} có {} transactions", user.getEmail(), dueTxs.size());
+            List<AssetTransaction> txs = entry.getValue();
 
-            LocalDate minCreateDate = dueTxs.stream()
-                    .map(AssetTransaction::getCreatedAt)
-                    .filter(Objects::nonNull)
-                    .map(LocalDateTime::toLocalDate)
-                    .min(Comparator.naturalOrder())
-                    .orElse(today);
-            log.debug("[RETURN-REMIND] User={} minCreateDate={}", user.getEmail(), minCreateDate);
-
-            // Filter transaction trong khoảng thời gian
-            List<AssetTransaction> periodTxs = dueTxs.stream()
-                    .filter(tx -> !tx.getCreatedAt().toLocalDate().isBefore(minCreateDate)
-                            && !tx.getCreatedAt().toLocalDate().isAfter(today))
-                    .filter(tx -> tx.getTransactionType() == TransactionType.RETURN_FROM_USER
-                            || (tx.getTransactionType() == TransactionType.ASSIGNMENT && tx.getReturnDate() != null))
-                    .toList();
-            log.debug("[RETURN-REMIND] User={} còn {} periodTxs sau khi filter", user.getEmail(), periodTxs.size());
+            log.debug("[RETURN-REMIND] Đang xử lý user={} có {} transactions", user.getEmail(), txs.size());
 
             Map<Device, Integer> assigned = new HashMap<>();
             Map<Device, Integer> returned = new HashMap<>();
 
-            for (AssetTransaction tx : periodTxs) {
+            for (AssetTransaction tx : txs) {
                 log.trace("[RETURN-REMIND] User={} TxId={} type={} details={}",
                         user.getEmail(), tx.getTransactionId(), tx.getTransactionType(), tx.getDetails().size());
+
                 for (TransactionDetail detail : tx.getDetails()) {
                     Device device = detail.getDevice();
                     int qty = detail.getQuantity();
+
                     if (tx.getTransactionType() == TransactionType.ASSIGNMENT) {
                         assigned.merge(device, qty, Integer::sum);
                         log.trace("   + Gán device={} qty={} -> totalAssigned={}",
@@ -88,16 +80,17 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
                 }
             }
 
-            Map<Device, Integer> deviceRemainings = assigned.entrySet().stream()
+            // Tính còn lại = ASSIGNMENT - RETURN
+            Map<Device, Integer> remaining = assigned.entrySet().stream()
                     .map(e -> Map.entry(e.getKey(), e.getValue() - returned.getOrDefault(e.getKey(), 0)))
-                    .filter(e -> e.getValue() > 0)
+                    .filter(e -> e.getValue() > 0) // chỉ giữ device còn giữ
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            if (!deviceRemainings.isEmpty()) {
-                log.info("[RETURN-REMIND] User={} còn {} device(s) pending", user.getEmail(), deviceRemainings.size());
-                deviceRemainings.forEach((dev, qty) ->
+            if (!remaining.isEmpty()) {
+                log.info("[RETURN-REMIND] User={} còn {} device(s) pending", user.getEmail(), remaining.size());
+                remaining.forEach((dev, qty) ->
                         log.info("   -> Device={} remainQty={}", dev.getDeviceId(), qty));
-                result.put(user, deviceRemainings);
+                result.put(user, remaining);
             } else {
                 log.debug("[RETURN-REMIND] User={} không còn device nào pending", user.getEmail());
             }
@@ -106,5 +99,4 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
         log.info("[RETURN-REMIND] Hoàn tất tính toán. Tổng user có pending = {}", result.size());
         return result;
     }
-
 }

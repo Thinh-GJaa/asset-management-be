@@ -42,7 +42,7 @@ public class RemindReturnAssetJob {
             Map<Device, Integer> deviceRemaining = entry.getValue();
 
             log.info("[SCHEDULER][Reminder] User: {}\n Device Remaining: {} ", user
-                    .getSso(), deviceRemaining);
+                    .getSso(), deviceRemaining.toString());
 
             String html = buildReturnReminderHtml(user, deviceRemaining);
             try {
