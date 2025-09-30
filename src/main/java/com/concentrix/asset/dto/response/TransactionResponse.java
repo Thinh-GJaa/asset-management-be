@@ -6,8 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 
 @Data
 @NoArgsConstructor
@@ -20,6 +20,7 @@ public class TransactionResponse {
     String fromWarehouse;
     String toWarehouse;
     LocalDateTime createdAt;
+    LocalDate returnDate;
     String createdBy;
     String note;
 }

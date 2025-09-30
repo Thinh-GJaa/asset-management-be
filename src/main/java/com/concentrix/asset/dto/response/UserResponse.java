@@ -32,7 +32,6 @@ public class UserResponse implements Serializable {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
-
     @Getter
     @Setter
     @NoArgsConstructor

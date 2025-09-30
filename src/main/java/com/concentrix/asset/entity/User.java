@@ -36,9 +36,6 @@ public class User {
     String sso;
 
     @Column
-    String msa;
-
-    @Column
     String location;
 
     @Column
@@ -48,7 +45,13 @@ public class User {
     String costCenter;
 
     @Column
+    String msa;
+
+    @Column
     String msaClient;
+
+    @Column
+    String msaProgram;
 
     @Column
     String managerEmail;
