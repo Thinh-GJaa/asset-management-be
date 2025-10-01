@@ -17,6 +17,7 @@ public class UserImportRequest {
     String company;
     String costCenter;
     String msaClient;
+    String msaProgram;
     String managerEmail;
     Boolean isActive;
     Role role;

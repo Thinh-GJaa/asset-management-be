@@ -181,6 +181,7 @@ public class WorkdayServiceImpl implements WorkdayService {
         req.setSso(email != null && email.contains("@") ? email.substring(0, email.indexOf('@')) : null);
         req.setMsa(get(cols, findIndex(idx, "MSA")));
         req.setMsaClient(get(cols, findIndex(idx, "MSA CLIENT", "CLIENT")));
+        req.setMsaProgram(get(cols, findIndex(idx, "MSA PROGRAM", "PROGRAM")));
         req.setCompany(get(cols, findIndex(idx, "COMPANY")));
         req.setCostCenter(get(cols, findIndex(idx, "COST CENTER ID", "COST CENTER")));
         req.setLocation(get(cols, findIndex(idx, "LOCATION NAME", "LOCATION")));

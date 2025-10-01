@@ -25,9 +25,10 @@ public class UserResponse implements Serializable {
     String company;
     String costCenter;
     String msaClient;
+    String msaProgram;
     String managerEmail;
     SiteResponse site;
-    boolean isActive;
+    boolean active;
     AccountResponse account;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
