@@ -16,8 +16,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,4 +68,16 @@ public class AssignmentController {
         return ResponseEntity.ok(response);
     }
 
-} 
+
+    @PostMapping("/{assignmentId}/upload-image")
+    public ResponseEntity<ApiResponse<Void>> uploadImage(
+            @PathVariable Integer assignmentId,
+            @RequestParam List<MultipartFile> images) {
+        assignmentService.uploadImage(assignmentId, images);
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .message("Upload image successful")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+}

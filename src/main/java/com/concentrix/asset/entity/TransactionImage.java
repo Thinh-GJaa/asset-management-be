@@ -24,7 +24,7 @@ public class TransactionImage {
     Integer transactionImageId;
 
     @Column(unique = true, nullable = false)
-    String urlImage;
+    String imageName;
 
     @ManyToOne
     @JoinColumn(name = "transaction_id")

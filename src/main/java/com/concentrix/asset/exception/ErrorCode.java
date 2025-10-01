@@ -204,6 +204,8 @@ public enum ErrorCode {
     DEVICE_NOT_FOUND_IN_FLOOR(21705, HttpStatus.NOT_FOUND, "Device '{}' not found in floor '{}'"),
     DEVICE_NOT_ENOUGH_IN_FLOOR(21709, HttpStatus.BAD_REQUEST, "Device '{}' not enough in floor '{}'"),
 
+    IMAGE_NOT_FOUND(21711, HttpStatus.NOT_FOUND, "Image not found"),
+
     MODEL_MISSING_SERIAL_NUMBER(21710, HttpStatus.BAD_REQUEST, "Model '{}' missing serial number");
 
     private final int code;
