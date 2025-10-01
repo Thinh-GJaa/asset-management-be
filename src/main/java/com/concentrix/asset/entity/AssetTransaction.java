@@ -77,6 +77,9 @@ public class AssetTransaction {
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TransactionDetail> details;
 
+    @OneToMany(mappedBy = "assetTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<TransactionImage> images;
+
     @PrePersist
     private void prePersist() {
         this.createdAt = LocalDateTime.now();
