@@ -15,17 +15,25 @@ import com.concentrix.asset.service.transaction.ReturnFromUserService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-
 
 @Slf4j
 @Service
@@ -41,7 +49,11 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     TransactionDetailRepository transactionDetailRepository;
     AssignmentMapper assignmentMapper;
     DeviceUserRepository deviceUserRepository;
+    TransactionImageRepository transactionImageRepository;
 
+    @NonFinal
+    @Value("${app.path.upload.handover}")
+    String handoverImageFolder;
 
     @Override
     public ReturnFromUserResponse getReturnFromUserById(Integer returnId) {
@@ -154,7 +166,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
     }
 
     @Override
-    public Page<ReturnFromUserResponse> filterReturnFromUsers(String search, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+    public Page<ReturnFromUserResponse> filterReturnFromUsers(String search, LocalDate fromDate, LocalDate toDate,
+            Pageable pageable) {
         if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
             throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
         }
@@ -222,11 +235,14 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
                 deviceWarehouseRepository.save(toStock);
 
                 // Cập nhật số lượng mượn của user
-                DeviceUser deviceUser = deviceUserRepository.findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
-                        .orElseThrow(() -> new CustomException(ErrorCode.INVALID_DEVICE_USER, device.getModel().getModelName()));
+                DeviceUser deviceUser = deviceUserRepository
+                        .findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
+                        .orElseThrow(() -> new CustomException(ErrorCode.INVALID_DEVICE_USER,
+                                device.getModel().getModelName()));
 
                 if (deviceUser.getQuantity() < qty) {
-                    throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED, device.getModel().getModelName());
+                    throw new CustomException(ErrorCode.RETURN_QUANTITY_EXCEEDS_BORROWED,
+                            device.getModel().getModelName());
                 } else {
                     deviceUser.setQuantity(deviceUser.getQuantity() - qty);
                     deviceUserRepository.save(deviceUser);
@@ -245,5 +261,96 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
             throw new CustomException(ErrorCode.TRANSACTION_NOT_FOUND);
         }
         return assignmentMapper.toAssetHandoverResponse(transaction);
+    }
+
+    @Override
+    public void uploadImage(Integer returnId, List<MultipartFile> images) {
+        AssetTransaction transaction = transactionRepository.findById(returnId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (!transaction.getTransactionType().equals(TransactionType.RETURN_FROM_USER)) {
+            throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID, returnId);
+        }
+
+        if (images == null || images.isEmpty()) {
+            throw new CustomException(ErrorCode.IMAGE_NOT_FOUND);
+        }
+
+        File dir = new File(handoverImageFolder);
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new RuntimeException("Cannot create upload directory: " + handoverImageFolder);
+        }
+
+        String sso = (transaction.getUserUse() != null && transaction.getUserUse().getSso() != null)
+                ? transaction.getUserUse().getSso()
+                : "unknown";
+
+        String transactionType = transaction.getTransactionType().name();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String dateTime = LocalDateTime.now().format(formatter);
+
+        String serialOrType = "unknown";
+
+        if (transaction.getDetails() != null && !transaction.getDetails().isEmpty()) {
+            // 1️⃣ Ưu tiên tìm serialNumber
+            for (TransactionDetail detail : transaction.getDetails()) {
+                if (detail.getDevice() != null
+                        && detail.getDevice().getSerialNumber() != null
+                        && !detail.getDevice().getSerialNumber().isBlank()) {
+                    serialOrType = detail.getDevice().getSerialNumber();
+                    break; // lấy cái đầu tiên có serial rồi thoát luôn
+                }
+            }
+
+            // 2️⃣ Nếu chưa có serial thì lấy type từ model
+            if ("unknown".equals(serialOrType)) {
+                TransactionDetail detail = transaction.getDetails().get(0); // fallback device đầu tiên
+                if (detail.getDevice() != null
+                        && detail.getDevice().getModel() != null
+                        && detail.getDevice().getModel().getType() != null) {
+                    serialOrType = detail.getDevice().getModel().getType().name();
+                }
+            }
+        }
+
+        for (int i = 0; i < images.size(); i++) {
+            MultipartFile file = images.get(i);
+            if (file.isEmpty())
+                continue;
+
+            try {
+                // Lấy extension file gốc (.png, .jpg…)
+                String originalFilename = file.getOriginalFilename();
+                String ext = "";
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+
+                // 👉 Tạo tên file với serialOrType
+                String fileName = String.format("%s_%s_%d_%s_%s_%d%s",
+                        sso,
+                        dateTime,
+                        returnId,
+                        transactionType,
+                        serialOrType,
+                        i + 1,
+                        ext);
+
+                Path filePath = Paths.get(handoverImageFolder, fileName);
+                Files.write(filePath, file.getBytes());
+
+                TransactionImage transactionImage = TransactionImage.builder()
+                        .imageName(fileName)
+                        .assetTransaction(transaction)
+                        .build();
+
+                transactionImageRepository.save(transactionImage);
+
+                log.info("Saved image: {}", fileName);
+
+            } catch (IOException e) {
+                log.error("Error while saving file for transaction {}", returnId, e);
+            }
+        }
     }
 }

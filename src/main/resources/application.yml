@@ -56,7 +56,6 @@ jwt:
   refreshable-duration: ${JWT_REFRESHABLE_DURATION:2592000} # 30 ngày
   issuer: ${JWT_ISSUER:Thinh_GJaa}
 
-
 app:
   notification:
     owner-email: ${APP_OWNER_EMAIL:xthinh04052002@gmail.com}

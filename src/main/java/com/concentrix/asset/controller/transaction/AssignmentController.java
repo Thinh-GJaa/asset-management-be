@@ -71,7 +71,6 @@ public class AssignmentController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/{assignmentId}/upload-image")
     public ResponseEntity<ApiResponse<Void>> uploadImage(
             @PathVariable Integer assignmentId,

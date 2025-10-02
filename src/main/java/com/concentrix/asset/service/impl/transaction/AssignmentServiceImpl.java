@@ -197,7 +197,6 @@ public class AssignmentServiceImpl implements AssignmentService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String dateTime = LocalDateTime.now().format(formatter);
 
-
         String serialOrType = "unknown";
 
         if (transaction.getDetails() != null && !transaction.getDetails().isEmpty()) {
@@ -222,10 +221,10 @@ public class AssignmentServiceImpl implements AssignmentService {
             }
         }
 
-
         for (int i = 0; i < images.size(); i++) {
             MultipartFile file = images.get(i);
-            if (file.isEmpty()) continue;
+            if (file.isEmpty())
+                continue;
 
             try {
                 // Lấy extension file gốc (.png, .jpg…)
@@ -243,8 +242,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                         transactionType,
                         serialOrType,
                         i + 1,
-                        ext
-                );
+                        ext);
 
                 Path filePath = Paths.get(handoverImageFolder, fileName);
                 Files.write(filePath, file.getBytes());
@@ -263,8 +261,6 @@ public class AssignmentServiceImpl implements AssignmentService {
             }
         }
     }
-
-
 
     private void updateWarehouses(AssetTransaction transaction) {
         List<String> serialInvalid = new ArrayList<>();
@@ -291,7 +287,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         boolean invalidStatus = device.getStatus() != DeviceStatus.IN_STOCK;
         boolean invalidWarehouse = device.getCurrentWarehouse() == null
                 || !device.getCurrentWarehouse().getWarehouseId()
-                .equals(transaction.getFromWarehouse().getWarehouseId());
+                        .equals(transaction.getFromWarehouse().getWarehouseId());
 
         if (invalidStatus || invalidWarehouse) {
             serialInvalid.add(device.getSerialNumber());

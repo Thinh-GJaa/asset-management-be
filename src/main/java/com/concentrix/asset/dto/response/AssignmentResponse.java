@@ -27,6 +27,7 @@ public class AssignmentResponse implements Serializable {
     String note;
     LocalDate returnDate;
     List<TransactionItemsResponse> items;
+    List<String> images;
 
     @Getter
     @Setter

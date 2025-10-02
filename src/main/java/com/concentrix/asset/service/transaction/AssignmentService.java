@@ -22,5 +22,3 @@ public interface AssignmentService {
 
     void uploadImage(Integer assignmentId, List<MultipartFile> images);
 }
-
-
