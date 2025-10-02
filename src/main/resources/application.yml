@@ -43,7 +43,6 @@ spring:
             enable: ${MAIL_STARTTLS_ENABLE:true}
             required: ${MAIL_STARTTLS_REQUIRED:true}
 
-
 management:
   endpoints:
     web:
