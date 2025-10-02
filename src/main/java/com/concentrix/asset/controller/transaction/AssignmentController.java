@@ -75,7 +75,7 @@ public class AssignmentController {
     @PostMapping("/{assignmentId}/upload-image")
     public ResponseEntity<ApiResponse<Void>> uploadImage(
             @PathVariable Integer assignmentId,
-            @RequestParam List<MultipartFile> images,
+            @RequestParam("images") List<MultipartFile> images,
             HttpServletRequest request) {
         log.info("[AssignmentController] Content-Type = {}", request.getContentType());
         assignmentService.uploadImage(assignmentId, images);
