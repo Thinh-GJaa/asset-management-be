@@ -5,9 +5,11 @@ import com.concentrix.asset.dto.request.CreateAssignmentRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.service.transaction.AssignmentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,13 +18,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("/transaction/assignment")
+@Slf4j
 public class AssignmentController {
 
     AssignmentService assignmentService;
@@ -66,4 +71,17 @@ public class AssignmentController {
         return ResponseEntity.ok(response);
     }
 
-} 
+    @PostMapping("/{assignmentId}/upload-image")
+    public ResponseEntity<ApiResponse<Void>> uploadImage(
+            @PathVariable Integer assignmentId,
+            @RequestParam("images") List<MultipartFile> images,
+            HttpServletRequest request) {
+        log.info("[AssignmentController] Content-Type = {}", request.getContentType());
+        assignmentService.uploadImage(assignmentId, images);
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .message("Upload image successful")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+}

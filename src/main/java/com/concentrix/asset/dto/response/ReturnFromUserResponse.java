@@ -24,6 +24,7 @@ public class ReturnFromUserResponse implements Serializable {
     LocalDateTime updatedAt;
     String note;
     List<TransactionItemsResponse> items;
+    List<String> images;
 
     @Getter
     @Setter

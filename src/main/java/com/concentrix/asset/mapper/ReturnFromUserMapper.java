@@ -19,7 +19,8 @@ public interface ReturnFromUserMapper {
             @Mapping(target = "toWarehouse", source = "toWarehouse"),
             @Mapping(target = "items", source = "details", qualifiedByName = "mapItems"),
             @Mapping(target = "createdBy", source = "createdBy"),
-            @Mapping(target = "userUse", source = "userUse")
+            @Mapping(target = "userUse", source = "userUse"),
+            @Mapping(target = "images", source = "images", qualifiedByName = "mapImages")
     })
     ReturnFromUserResponse toReturnFromUserResponse(AssetTransaction transaction);
 }

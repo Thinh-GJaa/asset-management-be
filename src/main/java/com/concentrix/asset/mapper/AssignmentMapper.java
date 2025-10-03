@@ -22,7 +22,8 @@ public interface AssignmentMapper {
             @Mapping(target = "items", source = "details", qualifiedByName = "mapItems"),
             @Mapping(target = "createdBy", source = "createdBy"),
             @Mapping(target = "userUse", source = "userUse"),
-            @Mapping(target = "returnDate", source = "returnDate", dateFormat = "yyyy-MM-dd")
+            @Mapping(target = "returnDate", source = "returnDate", dateFormat = "yyyy-MM-dd"),
+            @Mapping(target = "images", source = "images", qualifiedByName = "mapImages")
     })
     AssignmentResponse toAssignmentResponse(AssetTransaction transaction);
 

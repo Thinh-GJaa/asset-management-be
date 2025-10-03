@@ -11,7 +11,9 @@ import com.concentrix.asset.repository.VendorRepository;
 import com.concentrix.asset.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,6 +27,10 @@ public class TransactionMapperHelper {
     WarehouseRepository warehouseRepository;
     FloorRepository floorRepository;
     VendorRepository vendorRepository;
+
+    @NonFinal
+    @Value("${app.path.upload.handover}")
+    String uploadHandoverPath;
 
     @Named("warehouseIdToWarehouse")
     public Warehouse warehouseIdToWarehouse(Integer warehouseId) {
@@ -121,4 +127,15 @@ public class TransactionMapperHelper {
                         .build())
                 .toList();
     }
+
+    @Named("mapImages")
+    public List<String> mapImages(List<TransactionImage> transactionImages) {
+        if (transactionImages == null)
+            return null;
+        return transactionImages.stream()
+                .map(TransactionImage::getImageName)
+                .toList();
+
+    }
+
 }
