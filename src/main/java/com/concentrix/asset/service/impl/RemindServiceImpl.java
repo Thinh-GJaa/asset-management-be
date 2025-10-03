@@ -1,13 +1,9 @@
 package com.concentrix.asset.service.impl;
 
-import com.concentrix.asset.entity.AssetTransaction;
-import com.concentrix.asset.entity.Device;
-import com.concentrix.asset.entity.TransactionDetail;
-import com.concentrix.asset.entity.User;
+import com.concentrix.asset.entity.*;
 import com.concentrix.asset.enums.TransactionType;
 import com.concentrix.asset.repository.TransactionRepository;
-import com.concentrix.asset.service.EmailService;
-import com.concentrix.asset.service.ReturnRemindService;
+import com.concentrix.asset.service.RemindService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 @Service
@@ -23,10 +18,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
-public class ReturnRemindServiceImpl implements ReturnRemindService {
+public class RemindServiceImpl implements RemindService {
 
     TransactionRepository transactionRepository;
-    EmailService emailService;
 
     @Override
     public Map<User, Map<Device, Integer>> calculatePendingReturnsForAllUsers() {
@@ -95,5 +89,15 @@ public class ReturnRemindServiceImpl implements ReturnRemindService {
 
         log.info("[RETURN-REMIND] Hoàn tất tính toán. Tổng user có pending = {}", result.size());
         return result;
+    }
+
+    @Override
+    public Map<Site, List<AssetTransaction>> calculateHandoverImageReminder() {
+        List<AssetTransaction> transactionList = transactionRepository.findTransactionsWithoutImages();
+
+        return transactionList.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.getFromWarehouse().getSite()
+                ));
     }
 }

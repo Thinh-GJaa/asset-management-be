@@ -2,6 +2,7 @@ package com.concentrix.asset.controller;
 
 import com.concentrix.asset.scheduling.LowStockNotificationJob;
 import com.concentrix.asset.scheduling.RemindReturnAssetJob;
+import com.concentrix.asset.scheduling.ReminderUploadHandoverImageJob;
 import com.concentrix.asset.scheduling.UpdateWorkdayJob;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class TestController {
     LowStockNotificationJob lowStockNotificationJob;
     RemindReturnAssetJob remindReturnAssetJob;
     UpdateWorkdayJob updateWorkdayJob;
+    ReminderUploadHandoverImageJob reminderUploadHandoverImageJob;
 
     @GetMapping("/low-stock")
     public void testLowStock() throws MessagingException {
@@ -42,6 +44,11 @@ public class TestController {
     @GetMapping("/update-workday")
     public void testUpdateWorkday() throws MessagingException {
         updateWorkdayJob.updateWorkday();
+    }
+
+    @GetMapping("/reminder-upload-handover-image")
+    public void testReminderUploadHandoverImage() throws MessagingException {
+        reminderUploadHandoverImageJob.sendReminderUploadHandoverImage();
     }
 
 }
