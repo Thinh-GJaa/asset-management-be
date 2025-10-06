@@ -59,6 +59,8 @@ app:
   notification:
     owner-email: ${APP_OWNER_EMAIL:xthinh04052002@gmail.com}
     system-alert-email: ${APP_SYSTEM_ALERT_EMAIL:xthinh04052002@gmail.com}
+    security-email: ${APP_SECURITY_EMAIL:xthinh04052002@gmail.com}
+    local-it-email: ${APP_LOCAL_IT_EMAIL:xthinh04052002@gmail.com}
 
   password:
     default: ${APP_PASSWORD_DEFAULT:Concentrix@1234}

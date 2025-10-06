@@ -1,6 +1,7 @@
 package com.concentrix.asset.service.impl.transaction;
 
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.request.LaptopBadgeRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.entity.*;
@@ -10,8 +11,10 @@ import com.concentrix.asset.exception.CustomException;
 import com.concentrix.asset.exception.ErrorCode;
 import com.concentrix.asset.mapper.AssignmentMapper;
 import com.concentrix.asset.repository.*;
+import com.concentrix.asset.service.EmailService;
 import com.concentrix.asset.service.UserService;
 import com.concentrix.asset.service.transaction.AssignmentService;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,6 +36,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,10 +54,24 @@ public class AssignmentServiceImpl implements AssignmentService {
     UserService userService;
     DeviceUserRepository deviceUserRepository;
     TransactionImageRepository transactionImageRepository;
+    EmailService emailService;
 
     @NonFinal
     @Value("${app.path.upload.handover}")
     String handoverImageFolder;
+
+
+    @NonFinal
+    @Value("${app.notification.security-email}")
+    String securityEmailsString;
+
+    @NonFinal
+    @Value("${app.notification.local-it-email}")
+    String localITEmail;
+
+    @NonFinal
+    @Value("${app.notification.system-alert-email}")
+    String alertSystemEmail;
 
     @Override
     public AssignmentResponse getAssignmentById(Integer assignmentId) {
@@ -171,6 +189,8 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     }
 
+
+
     @Override
     public void uploadImage(Integer assignmentId, List<MultipartFile> images) {
         AssetTransaction transaction = transactionRepository.findById(assignmentId)
@@ -262,6 +282,48 @@ public class AssignmentServiceImpl implements AssignmentService {
         }
     }
 
+    @Override
+    public void requestLaptopBadge(LaptopBadgeRequest request) throws MessagingException {
+
+        //Kiểm tra transactionId có tồn tại hay không
+        AssetTransaction transaction = transactionRepository.findById(request.getTransactionId())
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, request.getTransactionId()));
+
+        //Kiểm tra transaction type có hợp lệ hay không
+        if(!transaction.getTransactionType().equals(TransactionType.ASSIGNMENT))
+            throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID);
+
+        // Lấy danh sách serial hiện có trong transaction details
+        List<String> transactionSerials = transaction.getDetails().stream()
+                .map(detail -> detail.getDevice().getSerialNumber())
+                .toList();
+
+        List<Device> devices = new ArrayList<>();
+
+        // Kiểm tra từng serial trong listSerial
+        for (String serial : request.getListSerial()) {
+            Device device = deviceRepository.findBySerialNumber(serial)
+                    .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, serial));
+
+            // Nếu serial không nằm trong transaction details → báo lỗi
+            if (!transactionSerials.contains(serial)) {
+                throw new CustomException(ErrorCode.SERIAL_NOT_IN_TRANSACTION, serial, request.getTransactionId());
+            }
+
+            devices.add(device);
+        }
+
+        //Email user and email Local IT team
+        List<String> ccList = Arrays.asList(transaction.getUserUse().getEmail(), localITEmail);
+
+        String subject = "Laptop Badge request for "+ transaction.getUserUse().getEmail();
+
+        String html = buildLaptopBadgeHtmlTemplate(transaction, devices);
+
+        emailService.sendEmail(securityEmailsString, subject, html, ccList, List.of(alertSystemEmail));
+
+    }
+
     private void updateWarehouses(AssetTransaction transaction) {
         List<String> serialInvalid = new ArrayList<>();
 
@@ -332,5 +394,86 @@ public class AssignmentServiceImpl implements AssignmentService {
         deviceUser.setQuantity(deviceUser.getQuantity() + qty);
         deviceUserRepository.save(deviceUser);
     }
+
+    public String buildLaptopBadgeHtmlTemplate(AssetTransaction transaction, List<Device> devices) {
+        StringBuilder html = new StringBuilder();
+
+        // --- HEADER + STYLE ---
+        html.append("<html><head><meta charset='UTF-8'><style>")
+                .append("body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:14px;}")
+                .append("table{border-collapse:collapse;width:100%;margin-top:10px;}")
+                .append("th,td{border:1px solid #0b0b0b;padding:8px 10px;text-align:left;}")
+                .append("th{background-color:#ffeb3b;font-weight:bold;}")
+                .append("td{background-color:#10334b;color:#fff;}")
+                .append("a{color:#64b5f6;text-decoration:none;}")
+                .append(".container{margin:10px 0;}")
+                .append("</style></head><body>")
+                .append("<div class='container'>")
+                .append("<p>Hi Security team,</p>")
+                .append("<p>Please help provide laptop badge as the following information.</p>");
+
+        // --- KIỂM TRA DỮ LIỆU ---
+        if (transaction == null || devices == null || devices.isEmpty()) {
+            html.append("<p>No laptop badge request data found.</p>")
+                    .append("</div></body></html>");
+            return html.toString();
+        }
+
+        // --- BẢNG HEADER ---
+        html.append("<table><thead><tr>")
+                .append("<th>Employee ID</th>")
+                .append("<th>Name</th>")
+                .append("<th>Role</th>")
+                .append("<th>Serial Number</th>")
+                .append("<th>Laptop Badge</th>")
+                .append("<th>User Email</th>")
+                .append("<th>Model</th>")
+                .append("<th>Location</th>")
+                .append("</tr></thead><tbody>");
+
+        // --- GHI DỮ LIỆU ---
+        String employeeId = String.valueOf(transaction.getUserUse().getEid());
+        String fullName = transaction.getUserUse().getFullName();
+        String role = transaction.getUserUse().getJobTitle();
+        String email = transaction.getUserUse().getEmail();
+        String location = transaction.getFromWarehouse().getSite().getSiteName();
+
+        for (Device device : devices) {
+            html.append("<tr>")
+                    .append("<td>").append(escapeHtml(employeeId)).append("</td>")
+                    .append("<td>").append(escapeHtml(fullName)).append("</td>")
+                    .append("<td>").append(escapeHtml(role)).append("</td>")
+                    .append("<td>").append(escapeHtml(device.getSerialNumber())).append("</td>")
+                    .append("<td>").append("White").append("</td>") // ✅ luôn White
+                    .append("<td>").append(escapeHtml(email)).append("</td>")
+                    .append("<td>").append(escapeHtml(device.getModel() != null ? device.getModel().getModelName() : "---")).append("</td>")
+                    .append("<td>").append(escapeHtml(location)).append("</td>")
+                    .append("</tr>");
+        }
+
+        html.append("</tbody></table>");
+
+        // --- LỜI CHÀO CÁ NHÂN ---
+        html.append("<p><br>Hi ").append(escapeHtml(fullName)).append(",</p>")
+                .append("<p>To create laptop badge, please provide a photo of yourself ")
+                .append("to the security team for further processing.</p>");
+
+
+        html.append("</div></body></html>");
+
+        return html.toString();
+    }
+
+    /** Escape HTML để tránh lỗi khi có ký tự đặc biệt */
+    private String escapeHtml(String input) {
+        if (input == null) return "";
+        return input.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
+
 
 }

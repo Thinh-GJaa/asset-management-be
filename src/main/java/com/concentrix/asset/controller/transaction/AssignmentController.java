@@ -2,9 +2,11 @@ package com.concentrix.asset.controller.transaction;
 
 import com.concentrix.asset.dto.ApiResponse;
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.request.LaptopBadgeRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
 import com.concentrix.asset.service.transaction.AssignmentService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -71,12 +73,21 @@ public class AssignmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/request-laptop-badge")
+    public ResponseEntity<ApiResponse<Void>> requestLaptopBadge(@Valid @RequestBody LaptopBadgeRequest request)
+            throws MessagingException {
+        assignmentService.requestLaptopBadge(request);
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .message("Request laptop badge successful")
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{assignmentId}/upload-image")
     public ResponseEntity<ApiResponse<Void>> uploadImage(
             @PathVariable Integer assignmentId,
             @RequestParam("images") List<MultipartFile> images,
             HttpServletRequest request) {
-        log.info("[AssignmentController] Content-Type = {}", request.getContentType());
         assignmentService.uploadImage(assignmentId, images);
         ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .message("Upload image successful")

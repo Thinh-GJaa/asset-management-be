@@ -16,6 +16,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -42,8 +43,15 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            // ✅ Nếu "to" là chuỗi có nhiều email cách nhau bằng dấu phẩy
+            String[] toArray = Arrays.stream(to.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toArray(String[]::new);
+            helper.setTo(toArray);
+
             helper.setFrom("itvn_noreply@concentrix.com");
-            helper.setTo(to);
+            helper.setTo(toArray);
             helper.setSubject(subject);
             helper.setText(body, true);
 
