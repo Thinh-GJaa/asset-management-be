@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class ReminderUploadHandoverImageJob {
     @Value("${app.notification.system-alert-email}")
     String alertSystemEmail;
 
-//    @Scheduled(cron = "0 45 17 ? * MON-SAT")    // 17:45 từ T2 → T
+    @Scheduled(cron = "0 45 17 ? * MON-SAT")    // 17:45 từ T2 → T7
     public void sendReminderUploadHandoverImage() throws MessagingException{
         try{
             Map<Site, List<AssetTransaction>> transactionMap = remindService.calculateHandoverImageReminder();
