@@ -1,9 +1,6 @@
 package com.concentrix.asset.repository;
 
 import com.concentrix.asset.entity.AssetTransaction;
-import com.concentrix.asset.entity.User;
-import com.concentrix.asset.enums.TransactionStatus;
-import com.concentrix.asset.enums.TransactionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

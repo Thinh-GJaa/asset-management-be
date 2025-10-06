@@ -73,9 +73,9 @@ public class AssignmentController {
         return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/request-laptop-badge")
-    public ResponseEntity<ApiResponse<Void>> requestLaptopBadge(@Valid @RequestBody LaptopBadgeRequest request) throws MessagingException {
+    public ResponseEntity<ApiResponse<Void>> requestLaptopBadge(@Valid @RequestBody LaptopBadgeRequest request)
+            throws MessagingException {
         assignmentService.requestLaptopBadge(request);
         ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .message("Request laptop badge successful")
