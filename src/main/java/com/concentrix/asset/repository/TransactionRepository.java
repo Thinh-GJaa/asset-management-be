@@ -36,4 +36,12 @@ public interface TransactionRepository extends JpaRepository<AssetTransaction, I
            """)
     List<AssetTransaction> findTransactionForReminder(@Param("date") LocalDate date);
 
+    @Query("""
+            SELECT t
+            FROM AssetTransaction t
+            WHERE t.images IS EMPTY
+                AND t.transactionType in ('ASSIGNMENT', 'RETURN_FROM_USER')
+            """)
+    List<AssetTransaction> findTransactionsWithoutImages();
+
 }

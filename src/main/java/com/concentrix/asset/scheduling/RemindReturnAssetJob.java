@@ -3,7 +3,7 @@ package com.concentrix.asset.scheduling;
 import com.concentrix.asset.entity.Device;
 import com.concentrix.asset.entity.User;
 import com.concentrix.asset.service.EmailService;
-import com.concentrix.asset.service.ReturnRemindService;
+import com.concentrix.asset.service.RemindService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class RemindReturnAssetJob {
 
     EmailService emailService;
-    ReturnRemindService returnRemindService;
+    RemindService remindService;
 
     @NonFinal
     @Value("${app.notification.system-alert-email}")
@@ -33,7 +33,7 @@ public class RemindReturnAssetJob {
     @Scheduled(cron = "0 0 9 * * *")
     public void sendReturnReminders() {
         log.info("[SCHEDULER] Sending return reminders");
-        Map<User, Map<Device, Integer>> pendingReturns = returnRemindService.calculatePendingReturnsForAllUsers();
+        Map<User, Map<Device, Integer>> pendingReturns = remindService.calculatePendingReturnsForAllUsers();
         if (pendingReturns.isEmpty()) {
             log.info("[SCHEDULER] No pending returns found");
         }
