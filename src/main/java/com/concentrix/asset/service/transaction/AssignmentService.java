@@ -1,8 +1,10 @@
 package com.concentrix.asset.service.transaction;
 
 import com.concentrix.asset.dto.request.CreateAssignmentRequest;
+import com.concentrix.asset.dto.request.LaptopBadgeRequest;
 import com.concentrix.asset.dto.response.AssetHandoverResponse;
 import com.concentrix.asset.dto.response.AssignmentResponse;
+import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,4 +23,7 @@ public interface AssignmentService {
     AssetHandoverResponse getAssetHandoverByAssignmentId(Integer assignmentId);
 
     void uploadImage(Integer assignmentId, List<MultipartFile> images);
+
+    void requestLaptopBadge(LaptopBadgeRequest request) throws MessagingException;
+
 }

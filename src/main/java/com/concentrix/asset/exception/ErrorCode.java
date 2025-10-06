@@ -8,6 +8,8 @@ public enum ErrorCode {
 
     OPTIMISTIC_LOCK(10002, HttpStatus.CONFLICT, "OptimisticLock occurred"),
 
+    SERIAL_NOT_IN_TRANSACTION(10004,HttpStatus.NOT_FOUND, "Serial '{}' not found in transaction '{}'"),
+
     SERIAL_NUMBER_ALREADY_EXISTS(10003, HttpStatus.CONFLICT, "Serial number '{}' already exists"),
 
     STOCK_OUT(10005, HttpStatus.CONFLICT, "Stock out of '{}', current stock is {}"),
