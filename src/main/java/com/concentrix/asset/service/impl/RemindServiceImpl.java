@@ -98,8 +98,17 @@ public class RemindServiceImpl implements RemindService {
         List<AssetTransaction> transactionList = transactionRepository.findTransactionsWithoutImages();
 
         return transactionList.stream()
-                .collect(Collectors.groupingBy(
-                        t -> t.getFromWarehouse().getSite()
-                ));
+                .collect(Collectors.groupingBy(t -> {
+                    Warehouse from = t.getFromWarehouse();
+                    Warehouse to = t.getToWarehouse();
+                    if (from != null && from.getSite() != null) {
+                        return from.getSite();
+                    } else if (to != null && to.getSite() != null) {
+                        return to.getSite();
+                    } else {
+                        return null; // hoặc có thể group về "unknown" site
+                    }
+                }));
     }
+
 }
