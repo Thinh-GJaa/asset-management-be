@@ -55,7 +55,6 @@ public class ReminderUploadHandoverImageJob {
 
                 try {
                     emailService.sendEmail(emailLeader, subject, html, ccList, List.of(alertSystemEmail));
-//                    emailService.sendEmail("xthinh04052002@gmail.com", subject, html, null, null);
                 } catch (MessagingException e) {
                     throw new RuntimeException(e);
                 }
