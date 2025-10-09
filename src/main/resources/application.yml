@@ -43,6 +43,11 @@ spring:
             enable: ${MAIL_STARTTLS_ENABLE:true}
             required: ${MAIL_STARTTLS_REQUIRED:true}
 
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
+
 management:
   endpoints:
     web:
@@ -63,7 +68,7 @@ app:
     local-it-email: ${APP_LOCAL_IT_EMAIL:xthinh04052002@gmail.com}
 
   password:
-    default: ${APP_PASSWORD_DEFAULT:Concentrix@1234}
+    default: ${APP_PASSWORD_DEFAULT:Concentxrix@1234}
     default-admin: ${APP_PASSWORD_DEFAULT_ADMIN:Concentrix@12345678}
 
   path:
