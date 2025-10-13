@@ -32,6 +32,15 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
     Optional<Device> findBySeatNumber(String seatNumber);
 
     @Query("""
+        SELECT d FROM Device d
+        WHERE
+            LOWER(d.serialNumber) LIKE LOWER(CONCAT('%', :q, '%'))
+            OR LOWER(d.hostName) LIKE LOWER(CONCAT('%', :q, '%'))
+            OR LOWER(d.seatNumber) LIKE LOWER(CONCAT('%', :q, '%'))
+    """)
+    List<Device> searchDevices(@Param("q") String q);
+
+    @Query("""
                 select distinct u
                 from User u
                 where u.eid in (
@@ -45,6 +54,9 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                 )
             """)
     Page<User> findUsersWithDevices(Pageable pageable);
+
+
+
 
     @Query("""
                 SELECT COUNT(d)
@@ -133,7 +145,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                     OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                     OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
                     )
-
+            
             """)
     int countAssetInFloor(
             @Param("siteId") Integer siteId,
@@ -163,7 +175,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                     OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                     OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
                     )
-
+            
             """)
     int countAssetByStatus(
             @Param("status") DeviceStatus status,
@@ -193,8 +205,8 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                             OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                             OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
                     )
-
-
+            
+            
             """)
     List<Device> findDevicesInStockForReport(
             @Param("siteId") Integer siteId,
@@ -222,7 +234,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                     OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                     OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
                     )
-
+            
             """)
     List<Device> findDevicesEWasteForReport(
             @Param("siteId") Integer siteId,
@@ -242,7 +254,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                 LEFT JOIN a.owner o
                 WHERE d.status = 'IN_FLOOR'
                   AND d.serialNumber IS NOT NULL
-
+            
                   AND (:modelId IS NULL OR m.modelId = :modelId)
                   AND (:type IS NULL OR m.type = :type)
                   AND (:floorId IS NULL OR cf.floorId = :floorId)
@@ -260,7 +272,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                     OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                     OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
                     )
-
+            
             """)
     List<Device> findDevicesInFloorForReport(
             @Param("siteId") Integer siteId,
@@ -290,7 +302,7 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
                 OR (:startDate IS NULL AND :endDate IS NOT NULL AND d.startDate <= :endDate)
                 OR (:startDate IS NOT NULL AND :endDate IS NOT NULL AND d.startDate BETWEEN :startDate AND :endDate)
             )
-
+            
             """)
     List<Device> findDevicesStatusForReport(
             @Param("status") DeviceStatus status,
