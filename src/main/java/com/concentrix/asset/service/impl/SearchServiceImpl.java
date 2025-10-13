@@ -55,11 +55,7 @@ public class SearchServiceImpl implements SearchService {
                 .toList();
 
         // 2. Tìm kiếm device theo các trường: serialNumber, deviceName, modelName
-        List<Device> devices = deviceRepository.findAll().stream()
-                .filter(d ->
-                        (d.getSerialNumber() != null &&
-                                d.getSerialNumber().toLowerCase().contains(q)))
-                .toList();
+        List<Device> devices = deviceRepository.searchDevices(q);
 
         // 3. Map kết quả sang DTO chuẩn cho FE
         List<UserResponse> userResponses = users.stream()
