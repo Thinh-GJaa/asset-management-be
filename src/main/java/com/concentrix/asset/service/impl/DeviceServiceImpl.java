@@ -72,15 +72,29 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
-                                              Pageable pageable) {
+            Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (search != null && !search.trim().isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("deviceName")), like),
-                        cb.like(cb.lower(root.get("serialNumber")), like)));
+                List<Predicate> searchPredicates = new ArrayList<>();
+
+                // Tìm kiếm theo deviceName và serialNumber
+                searchPredicates.add(cb.like(cb.lower(root.get("deviceName")), like));
+                searchPredicates.add(cb.like(cb.lower(root.get("serialNumber")), like));
+
+                // Sử dụng LEFT JOIN để xử lý relationship có thể null
+                var floorJoin = root.join("currentFloor", jakarta.persistence.criteria.JoinType.LEFT);
+                var warehouseJoin = root.join("currentWarehouse", jakarta.persistence.criteria.JoinType.LEFT);
+
+                // Tìm kiếm theo floorName với LEFT JOIN
+                searchPredicates.add(cb.like(cb.lower(floorJoin.get("floorName")), like));
+
+                // Tìm kiếm theo warehouseName với LEFT JOIN
+                searchPredicates.add(cb.like(cb.lower(warehouseJoin.get("warehouseName")), like));
+
+                predicates.add(cb.or(searchPredicates.toArray(new Predicate[0])));
             }
 
             if (type != null) {
@@ -161,7 +175,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                        : dv.getModel().getModelId()
+                                                : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .build();
@@ -181,7 +195,7 @@ public class DeviceServiceImpl implements DeviceService {
                         .modelId(
                                 dv.getModel() != null
                                         ? dv.getModel().getModelId() == null ? null
-                                        : dv.getModel().getModelId()
+                                                : dv.getModel().getModelId()
                                         : null)
                         .modelName(dv.getModel() != null ? dv.getModel().getModelName() : null)
                         .quantity(quantity)
@@ -289,7 +303,7 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
-                                                           Pageable pageable) {
+            Pageable pageable) {
         return deviceRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
