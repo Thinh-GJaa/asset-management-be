@@ -7,14 +7,19 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class DataTrending implements Serializable {
-    List<String> labels;
-    List<Integer> datasets;
+public class DeviceChangeItem implements Serializable {
+
+    String serialNumber;
+    String deviceName;
+    String modelName;
+    String type;
+    String status;
+    String siteName;
+
 }
