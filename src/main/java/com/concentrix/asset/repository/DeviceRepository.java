@@ -321,4 +321,37 @@ public interface DeviceRepository extends JpaRepository<Device, Integer>, JpaSpe
             """)
     Integer totalDeviceInUseAndInStock(DeviceType type);
 
+    /**
+     * Kiểm tra xem serial number đã tồn tại chưa
+     * @param serialNumber Số serial cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa
+     */
+    boolean existsBySerialNumber(String serialNumber);
+
+    /**
+     * Tìm kiếm thiết bị theo trạng thái
+     * @param status Trạng thái thiết bị
+     * @return Danh sách thiết bị có trạng thái tương ứng
+     */
+    List<Device> findByStatus(DeviceStatus status);
+
+    /**
+     * Đếm số lượng thiết bị theo trạng thái
+     * @param status Trạng thái thiết bị
+     * @return Số lượng thiết bị có trạng thái tương ứng
+     */
+    long countByStatus(DeviceStatus status);
+
+    /**
+     * Tìm kiếm thiết bị theo site thông qua warehouse hoặc floor
+     * @param siteId ID của site
+     * @return Danh sách thiết bị thuộc site
+     */
+    @Query("""
+        SELECT d FROM Device d WHERE
+        (d.currentWarehouse IS NOT NULL AND d.currentWarehouse.site.siteId = :siteId) OR
+        (d.currentFloor IS NOT NULL AND d.currentFloor.site.siteId = :siteId)
+    """)
+    List<Device> findBySite(@Param("siteId") Integer siteId);
+
 }
