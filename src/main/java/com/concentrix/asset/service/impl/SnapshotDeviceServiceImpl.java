@@ -38,7 +38,7 @@ public class SnapshotDeviceServiceImpl implements SnapshotDeviceService {
         List<Device> devices = deviceRepository.findAllBySerialNumberIsNotNull();
         for (Device device : devices) {
             SnapshotDevice snapshotDevice = SnapshotDevice.builder()
-                    .snapshotDate(LocalDate.now().plusDays(2))
+                    .snapshotDate(LocalDate.now().plusDays(1))
                     .device(device)
                     .status(device.getStatus())
                     .site(
@@ -91,7 +91,10 @@ public class SnapshotDeviceServiceImpl implements SnapshotDeviceService {
 
             // Tính toán thiết bị được thêm/bớt
             List<DeviceChangeItem> addedDevices = findAddedDevices(fromSnapshotDevices, toSnapshotDevices);
+            log.info("[Check] addedDevices: {}", addedDevices.size());
+
             List<DeviceChangeItem> removedDevices = findRemovedDevices(fromSnapshotDevices, toSnapshotDevices);
+            log.info("[Check] removedDevices: {}", removedDevices.size());
 
             // Tính tổng số
             int totalAdded = addedDevices.size();
