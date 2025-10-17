@@ -29,6 +29,12 @@ public class RemindReturnAssetJob {
     @Value("${app.notification.system-alert-email}")
     String alertSystemEmail;
 
+     @NonFinal
+    @Value("${app.notification.local-it-email}")
+    String localITEmail;
+
+
+
     // Scheduled: chạy 9h sáng mỗi ngày
     @Scheduled(cron = "0 0 9 * * *")
     public void sendReturnReminders() {
@@ -47,7 +53,7 @@ public class RemindReturnAssetJob {
             String html = buildReturnReminderHtml(user, deviceRemaining);
             try {
                 String subject = "[AMS_VN] Asset Return Reminder - Auto Notification";
-                emailService.sendEmail(user.getEmail(), subject, html, null, List.of(alertSystemEmail));
+                emailService.sendEmail(user.getEmail(), subject, html, null, List.of(alertSystemEmail, localITEmail));
             } catch (Exception e) {
                 log.error("[SCHEDULER] Failed to send email to {}: {}", user.getEmail(), e.getMessage());
             }
