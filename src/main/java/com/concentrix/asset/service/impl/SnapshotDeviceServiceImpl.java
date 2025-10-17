@@ -91,10 +91,8 @@ public class SnapshotDeviceServiceImpl implements SnapshotDeviceService {
 
             // Tính toán thiết bị được thêm/bớt
             List<DeviceChangeItem> addedDevices = findAddedDevices(fromSnapshotDevices, toSnapshotDevices);
-            log.info("[Check] addedDevices: {}", addedDevices.size());
 
             List<DeviceChangeItem> removedDevices = findRemovedDevices(fromSnapshotDevices, toSnapshotDevices);
-            log.info("[Check] removedDevices: {}", removedDevices.size());
 
             // Tính tổng số
             int totalAdded = addedDevices.size();
@@ -120,29 +118,29 @@ public class SnapshotDeviceServiceImpl implements SnapshotDeviceService {
         }
     }
 
-    private List<SnapshotDevice> getSnapshotDevicesByDate(LocalDate date, Integer siteId, DeviceStatus status,
-                    DeviceType type) {
-        // Lấy tất cả snapshot devices và filter theo ngày
-        return snapshotDeviceRepository.findAll()
-                        .stream()
-                        .filter(snapshot -> snapshot.getSnapshotDate().equals(date))
-                        .filter(snapshot -> {
-                            // Filter theo site nếu có
-                            if (siteId != null && snapshot.getSite() != null) {
-                                return snapshot.getSite().getSiteId().equals(siteId);
-                            }
-                            // Filter theo status nếu có
-                            if (status != null) {
-                                return snapshot.getStatus().equals(status);
-                            }
-                            // Filter theo type nếu có (lấy từ model của device)
-                            if (type != null && snapshot.getDevice().getModel() != null) {
-                                return snapshot.getDevice().getModel().getType().equals(type);
-                            }
-                            return true; // Không filter
-                        })
-                        .collect(Collectors.toList());
+    private List<SnapshotDevice> getSnapshotDevicesByDate(
+            LocalDate date,
+            Integer siteId,
+            DeviceStatus status,
+            DeviceType type) {
+        return snapshotDeviceRepository.findAll().stream()
+                // Lọc theo ngày snapshot
+                .filter(snapshot -> date != null && date.equals(snapshot.getSnapshotDate()))
+                // Lọc theo site nếu có
+                .filter(snapshot -> siteId == null ||
+                        (snapshot.getSite() != null &&
+                                siteId.equals(snapshot.getSite().getSiteId())))
+                // Lọc theo status nếu có
+                .filter(snapshot -> status == null ||
+                        status.equals(snapshot.getStatus()))
+                // Lọc theo type nếu có
+                .filter(snapshot -> type == null ||
+                        (snapshot.getDevice() != null &&
+                                snapshot.getDevice().getModel() != null &&
+                                type.equals(snapshot.getDevice().getModel().getType())))
+                .collect(Collectors.toList());
     }
+
 
     private CompareDataResponse calculateComparisonData(List<SnapshotDevice> fromDevices,
                     List<SnapshotDevice> toDevices,
