@@ -1,6 +1,5 @@
 package com.concentrix.asset.scheduling;
 
-
 import com.concentrix.asset.dto.response.LowStockResponse;
 import com.concentrix.asset.enums.Role;
 import com.concentrix.asset.repository.UserRepository;
@@ -46,6 +45,9 @@ public class LowStockNotificationJob {
         String body = buildLowStockHtmlTable(lowStockService.getLowStockDevices());
         try {
             List<String> ccList = userRepository.findEmailByRoleAndSiteId(Role.LEADER, null);
+
+            ccList.add("diemmi.nguyenthi@concentrix.com.vn"); // Add thêm email của chị Mi vào notification low stock
+
             emailService.sendEmail(ownerEmail, subject, body, ccList, List.of(alertSystemEmail));
             log.info("[SCHEDULER] Email sent to {} and cc {}", ownerEmail, ccList);
         } catch (Exception e) {
@@ -118,7 +120,7 @@ public class LowStockNotificationJob {
                     .append(" (").append(total).append(")</td>");
 
             for (String site : siteNames) {
-                String cellValue = "---"; // mặc định là không có
+                String cellValue = "> 4-5%"; // mặc định là không có
                 Map<String, Integer> bySite = availableMap.get(key);
                 boolean hasData = false;
                 if (bySite != null && bySite.containsKey(site)) {
@@ -141,13 +143,13 @@ public class LowStockNotificationJob {
     }
 
     private String escapeHtml(String s) {
-        if (s == null) return "";
+        if (s == null)
+            return "";
         return s.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
-
 
 }
