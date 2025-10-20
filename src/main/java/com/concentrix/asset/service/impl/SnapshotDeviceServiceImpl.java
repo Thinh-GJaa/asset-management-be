@@ -38,7 +38,7 @@ public class SnapshotDeviceServiceImpl implements SnapshotDeviceService {
         List<Device> devices = deviceRepository.findAllBySerialNumberIsNotNull();
         for (Device device : devices) {
             SnapshotDevice snapshotDevice = SnapshotDevice.builder()
-                    .snapshotDate(LocalDate.now().plusDays(1))
+                    .snapshotDate(LocalDate.now())
                     .device(device)
                     .status(device.getStatus())
                     .site(
