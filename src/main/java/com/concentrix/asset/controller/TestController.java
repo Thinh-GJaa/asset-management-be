@@ -1,15 +1,20 @@
 package com.concentrix.asset.controller;
 
 import com.concentrix.asset.scheduling.*;
+import com.concentrix.asset.thirdparty.lenovogateway.LenovoApiClient;
+import com.concentrix.asset.thirdparty.lenovogateway.LenovoProductResponse;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @Slf4j

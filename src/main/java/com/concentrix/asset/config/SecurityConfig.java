@@ -37,7 +37,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui.html",
             "/webjars/**",
-            "/swagger-resources/**"
+            "/swagger-resources/**",
+            "/test/**"
     };
 
     private final CustomJwtDecoder customJwtDecoder;
