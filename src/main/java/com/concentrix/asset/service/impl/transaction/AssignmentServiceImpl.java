@@ -99,7 +99,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     final Device device;
                     if (item.getSerialNumber() != null && !item.getSerialNumber().isEmpty()) {
                         // Tìm device theo serial number - gom lỗi vào list
-                        device = deviceRepository.findBySerialNumber(item.getSerialNumber())
+                        device = deviceRepository.findBySerialNumber(item.getSerialNumber().trim())
                                 .orElse(null);
                         if (device == null) {
                             serialNotFound.add(item.getSerialNumber());
