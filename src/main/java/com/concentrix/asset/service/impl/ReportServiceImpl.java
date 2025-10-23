@@ -70,7 +70,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status,
-                                                                                DeviceType type, Integer modelId) {
+            DeviceType type, Integer modelId) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<SiteDeviceWithoutSerialSummaryResponse> result = new ArrayList<>();
 
@@ -182,8 +182,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<TypeSummaryResponse> getWithSerialSummary(Integer siteId, DeviceStatus status,
-                                                          Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
-                                                          Boolean isOutOfWarranty, String ageRange) {
+            Integer floorId, Integer ownerId, Integer accountId, DeviceType type, Integer modelId,
+            Boolean isOutOfWarranty, String ageRange) {
         List<DeviceType> types = (type != null) ? List.of(type) : Arrays.asList(DeviceType.values());
         List<Site> sites = (siteId == null) ? siteRepository.findAll()
                 : Collections.singletonList(siteRepository.findById(siteId).orElse(null));
@@ -227,7 +227,8 @@ public class ReportServiceImpl implements ReportService {
                             if (siteId != null && !site.getSiteId().equals(siteId))
                                 continue;
                             int quantity = deviceRepository.countAssetInFloor(
-                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId(), isOutOfWarranty, startDate, endDate);
+                                    site.getSiteId(), ownerId, accountId, floorId, t, model.getModelId(),
+                                    isOutOfWarranty, startDate, endDate);
                             if (quantity > 0) {
                                 SiteSummaryResponse siteSummary = new SiteSummaryResponse();
                                 siteSummary.setSiteId(site.getSiteId());
@@ -291,27 +292,39 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<DeviceResponse> getDeviceListForReport(Integer siteId, DeviceStatus status, Integer floorId,
-                                                       Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange) {
+            Integer ownerId, Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty,
+            String ageRange) {
 
         LocalDate[] dateRange = getDateRangeFromAgeRange(ageRange);
         LocalDate startDate = dateRange[0];
         LocalDate endDate = dateRange[1];
 
         List<Device> devices = new ArrayList<>();
-        switch (status) {
-            case IN_STOCK ->
-                    devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
 
-            case IN_FLOOR ->
+        // Nếu status = null, lấy tất cả devices với các filter khác
+        if (status == null) {
+            devices = deviceRepository.findAllDevicesForReport(siteId, floorId, ownerId, accountId, type, modelId,
+                    isOutOfWarranty, startDate, endDate);
+        } else {
+            switch (status) {
+                case IN_STOCK ->
+                    devices = deviceRepository.findDevicesInStockForReport(siteId, type, modelId, isOutOfWarranty,
+                            startDate, endDate);
+
+                case IN_FLOOR ->
                     devices = deviceRepository.findDevicesInFloorForReport(siteId, floorId, ownerId, accountId, type,
                             modelId, isOutOfWarranty, startDate, endDate);
 
-            case E_WASTE ->
-                    devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty, startDate, endDate);
+                case E_WASTE ->
+                    devices = deviceRepository.findDevicesEWasteForReport(siteId, type, modelId, isOutOfWarranty,
+                            startDate,
+                            endDate);
 
-            default ->
-                    devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty, startDate, endDate);
-
+                default ->
+                    devices = deviceRepository.findDevicesStatusForReport(status, type, modelId, isOutOfWarranty,
+                            startDate,
+                            endDate);
+            }
         }
 
         return devices.stream()
@@ -341,15 +354,15 @@ public class ReportServiceImpl implements ReportService {
                                 .filter(d -> d.getModel().getType() == type
                                         && d.getStatus() == status
                                         && ((d.getCurrentWarehouse() != null
-                                        && d.getCurrentWarehouse()
-                                        .getSite()
-                                        .getSiteId()
-                                        .equals(site.getSiteId()))
-                                        || (d.getCurrentFloor() != null
-                                        && d.getCurrentFloor()
-                                        .getSite()
-                                        .getSiteId()
-                                        .equals(site.getSiteId()))))
+                                                && d.getCurrentWarehouse()
+                                                        .getSite()
+                                                        .getSiteId()
+                                                        .equals(site.getSiteId()))
+                                                || (d.getCurrentFloor() != null
+                                                        && d.getCurrentFloor()
+                                                                .getSite()
+                                                                .getSiteId()
+                                                                .equals(site.getSiteId()))))
                                 .count();
                         typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                                 .type(type.name())
@@ -361,16 +374,16 @@ public class ReportServiceImpl implements ReportService {
                             .filter(d -> !mainTypes.contains(d.getModel().getType())
                                     && d.getStatus() == status
                                     && ((d.getCurrentWarehouse() != null
-                                    && d.getCurrentWarehouse()
-                                    .getSite()
-                                    .getSiteId()
-                                    .equals(site.getSiteId()))
-                                    || (d.getCurrentFloor() != null
-                                    && d
-                                    .getCurrentFloor()
-                                    .getSite()
-                                    .getSiteId()
-                                    .equals(site.getSiteId()))))
+                                            && d.getCurrentWarehouse()
+                                                    .getSite()
+                                                    .getSiteId()
+                                                    .equals(site.getSiteId()))
+                                            || (d.getCurrentFloor() != null
+                                                    && d
+                                                            .getCurrentFloor()
+                                                            .getSite()
+                                                            .getSiteId()
+                                                            .equals(site.getSiteId()))))
                             .count();
                     typeCounts.add(SiteTypeChartResponse.TypeCount.builder()
                             .type("OTHER")
@@ -486,8 +499,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private List<SiteTypeChartResponse.TypeCount> buildTypeCounts(Collection<DeviceType> types,
-                                                                  DeviceStatus status,
-                                                                  Integer siteId) {
+            DeviceStatus status,
+            Integer siteId) {
         List<SiteTypeChartResponse.TypeCount> result = new ArrayList<>();
         for (DeviceType type : types) {
             int count = getDeviceCountByStatus(status, type, siteId);
@@ -520,7 +533,7 @@ public class ReportServiceImpl implements ReportService {
         LocalDate endDate = null;
 
         if (ageRange == null) {
-            return new LocalDate[]{startDate, endDate};
+            return new LocalDate[] { startDate, endDate };
         }
 
         switch (ageRange) {
@@ -548,7 +561,68 @@ public class ReportServiceImpl implements ReportService {
             case ">6" -> endDate = LocalDate.now().minusYears(6);
         }
 
-        return new LocalDate[]{startDate, endDate};
+        return new LocalDate[] { startDate, endDate };
+    }
+
+    @Override
+    public byte[] generateDeviceListCsv(Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId,
+            Integer accountId, DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange) {
+        List<DeviceResponse> devices = getDeviceListForReport(siteId, status, floorId, ownerId, accountId, type,
+                modelId, isOutOfWarranty, ageRange);
+
+        StringBuilder csvContent = new StringBuilder();
+
+        // CSV Header
+        csvContent.append("Device ID,Serial Number,Device Name,Host Name,Seat Number,PO ID,Purchase Date,")
+                .append("Model ID,Model Name,Device Type,")
+                .append("User EID,User Full Name,")
+                .append("Floor ID,Floor Name,")
+                .append("Warehouse ID,Warehouse Name,")
+                .append("Site ID,Site Name,")
+                .append("Status,Description\n");
+
+        // CSV Data
+        for (DeviceResponse device : devices) {
+            csvContent.append(escapeCsvValue(device.getDeviceId())).append(",")
+                    .append(escapeCsvValue(device.getSerialNumber())).append(",")
+                    .append(escapeCsvValue(device.getDeviceName())).append(",")
+                    .append(escapeCsvValue(device.getHostName())).append(",")
+                    .append(escapeCsvValue(device.getSeatNumber())).append(",")
+                    .append(escapeCsvValue(device.getPoId())).append(",")
+                    .append(escapeCsvValue(device.getPurchaseDate() != null ? device.getPurchaseDate().toString() : ""))
+                    .append(",")
+                    .append(escapeCsvValue(device.getModel() != null ? device.getModel().getModelId() : "")).append(",")
+                    .append(escapeCsvValue(device.getModel() != null ? device.getModel().getModelName() : ""))
+                    .append(",")
+                    .append(escapeCsvValue(device.getModel() != null ? device.getModel().getType() : "")).append(",")
+                    .append(escapeCsvValue(device.getUser() != null ? device.getUser().getEid() : "")).append(",")
+                    .append(escapeCsvValue(device.getUser() != null ? device.getUser().getFullName() : "")).append(",")
+                    .append(escapeCsvValue(device.getFloor() != null ? device.getFloor().getFloorId() : "")).append(",")
+                    .append(escapeCsvValue(device.getFloor() != null ? device.getFloor().getFloorName() : ""))
+                    .append(",")
+                    .append(escapeCsvValue(device.getWarehouse() != null ? device.getWarehouse().getWarehouseId() : ""))
+                    .append(",")
+                    .append(escapeCsvValue(
+                            device.getWarehouse() != null ? device.getWarehouse().getWarehouseName() : ""))
+                    .append(",")
+                    .append(escapeCsvValue(device.getSite() != null ? device.getSite().getSiteId() : "")).append(",")
+                    .append(escapeCsvValue(device.getSite() != null ? device.getSite().getSiteName() : "")).append(",")
+                    .append(escapeCsvValue(device.getStatus())).append(",")
+                    .append(escapeCsvValue(device.getDescription())).append("\n");
+        }
+
+        return csvContent.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private String escapeCsvValue(Object value) {
+        if (value == null) {
+            return "";
+        }
+        String stringValue = value.toString();
+        if (stringValue.contains(",") || stringValue.contains("\"") || stringValue.contains("\n")) {
+            return "\"" + stringValue.replace("\"", "\"\"") + "\"";
+        }
+        return stringValue;
     }
 
 }

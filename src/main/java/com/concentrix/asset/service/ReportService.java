@@ -12,20 +12,24 @@ import java.util.Map;
 
 public interface ReportService {
 
-    Map<String, Map<String, Integer>> getStatusSummaryAllSite();
+        Map<String, Map<String, Integer>> getStatusSummaryAllSite();
 
-    List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status, DeviceType type,
-                                                                         Integer modelId);
+        List<SiteDeviceWithoutSerialSummaryResponse> getWithoutSerialSummary(DeviceStatus status, DeviceType type,
+                        Integer modelId);
 
-    List<TypeSummaryResponse> getWithSerialSummary(
-            Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
-            DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange);
+        List<TypeSummaryResponse> getWithSerialSummary(
+                        Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
+                        DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange);
 
-    List<DeviceResponse> getDeviceListForReport(
-            Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
-            DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange);
+        List<DeviceResponse> getDeviceListForReport(
+                        Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
+                        DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange);
 
-    List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status);
+        List<SiteTypeChartResponse> getSiteTypeChartWithSerial(DeviceStatus status);
 
-    List<SiteTypeChartResponse> getSiteTypeChartWithoutSerial(DeviceStatus status);
+        List<SiteTypeChartResponse> getSiteTypeChartWithoutSerial(DeviceStatus status);
+
+        byte[] generateDeviceListCsv(
+                        Integer siteId, DeviceStatus status, Integer floorId, Integer ownerId, Integer accountId,
+                        DeviceType type, Integer modelId, Boolean isOutOfWarranty, String ageRange);
 }
