@@ -30,7 +30,7 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587} # mặc định 587, có thể override thành 465
-    username: ${MAIL_USERNAME:xthinh04052002@gmail.com}
+    username: ${MAIL_USERNAME:test@gmail.com}
     password: ${MAIL_PASSWORD:ouulqfcqomiuzdqs}
     default-encoding: UTF-8
     properties:
@@ -74,7 +74,9 @@ app:
   path:
     upload:
       workday: ${APP_PATH_UPLOAD_WORKDAY:upload/workday.csv}
-      bigfix: ${APP_PATH_UPLOAD_BIGFIX:upload/bigfix}
+      crowdstrike: ${APP_PATH_UPLOAD_CROWDSTRIKE:upload/crowdstrike_data.csv}
+      bigfix: ${APP_PATH_UPLOAD_BIGFIX:upload/report-97.csv}
+      cortex: ${APP_PATH_UPLOAD_CORTEX:upload/cortex_data.csv}
       handover: ${APP_PATH_UPLOAD_HANDOVER:upload/handover}
 
 
