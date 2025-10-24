@@ -190,7 +190,7 @@ public class TransferFloorServiceImpl implements TransferFloorService {
             } else {
                 DeviceFloor deviceFloorTo = deviceFloorRepository
                         .findByDevice_DeviceIdAndFloor_FloorId(device.getDeviceId(), transaction.getToFloor().getFloorId())
-                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getModel().getModelName()));
+                        .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND_IN_FLOOR, device.getModel().getModelName(), transaction.getFromFloor().getFloorName()));
 
                 if (deviceFloorTo.getQuantity() < detail.getQuantity()) {
                     throw new CustomException(ErrorCode.DEVICE_NOT_ENOUGH_IN_FLOOR, device.getModel().getModelName(), deviceFloorTo.getFloor().getFloorName());
