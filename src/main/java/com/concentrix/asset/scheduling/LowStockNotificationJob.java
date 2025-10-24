@@ -46,7 +46,7 @@ public class LowStockNotificationJob {
         try {
             List<String> ccList = userRepository.findEmailByRoleAndSiteId(Role.LEADER, null);
 
-            ccList.add("diemmi.nguyenthi@concentrix.com.vn"); // Add thêm email của chị Mi vào notification low stock
+            ccList.add("diemmi.nguyenthi@concentrix.com"); // Add thêm email của chị Mi vào notification low stock
 
             emailService.sendEmail(ownerEmail, subject, body, ccList, List.of(alertSystemEmail));
             log.info("[SCHEDULER] Email sent to {} and cc {}", ownerEmail, ccList);
