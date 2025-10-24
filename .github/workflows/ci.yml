@@ -79,4 +79,4 @@ jobs:
           push: true
           tags: |
             ${{ github.ref_name == 'main' && format('{0}/ams:backend', secrets.DOCKERHUB_USERNAME) || format('{0}/ams:backend-test', secrets.DOCKERHUB_USERNAME) }}
-            ${{ github.ref_name == 'main' && format('{0}/ams:backend-{1}', secrets.DOCKERHUB_USERNAME, github.sha[0:7]) || '' }}
+            ${{ github.ref_name == 'main' && format('{0}/ams:backend-{1}', secrets.DOCKERHUB_USERNAME, github.sha) || '' }}
