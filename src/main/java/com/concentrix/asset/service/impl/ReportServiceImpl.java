@@ -57,7 +57,10 @@ public class ReportServiceImpl implements ReportService {
 
                 case REPAIR -> transactionDetailRepository.sumAllRepair()
                         - transactionDetailRepository.sumAllReturnFromRepair();
-                case ASSIGNED -> deviceUserRepository.sumDeviceAssigned();
+                case ASSIGNED -> deviceUserRepository.sumDeviceAssignedAccessories();
+                case WAH -> deviceUserRepository.sumDeviceWAHAccessories();
+
+                default -> 0;
 
             };
             Map<String, Integer> statusMap = new HashMap<>();
@@ -97,6 +100,7 @@ public class ReportServiceImpl implements ReportService {
                                 case E_WASTE -> quantity = transactionDetailRepository
                                         .sumEWasteBySite_Type_Model(site.getSiteId(), t, model.getModelId());
 
+                                default -> quantity = 0;
                             }
                             if (quantity > 0) {
                                 DeviceWithoutSerialSummaryResponse.ModelQuantity mq = new DeviceWithoutSerialSummaryResponse.ModelQuantity();
@@ -137,7 +141,9 @@ public class ReportServiceImpl implements ReportService {
                         int quantity = 0;
                         switch (status) {
                             case ASSIGNED -> quantity = deviceUserRepository
-                                    .sumDeviceAssignedByType_Model(t, model.getModelId());
+                                    .sumDeviceAssignedAccessoriesByType_Model(t, model.getModelId());
+                            case WAH -> quantity = deviceUserRepository
+                                    .sumDeviceWAHAccessoriesByType_Model(t, model.getModelId());
                             case ON_THE_MOVE -> quantity = transactionDetailRepository
                                     .sumOnTheMove(t, model.getModelId());
                             case DISPOSED -> quantity = transactionDetailRepository
@@ -149,6 +155,7 @@ public class ReportServiceImpl implements ReportService {
                                         .sumRepair(t, model.getModelId());
                                 quantity = repairOut - repairIn;
                             }
+                            default -> quantity = 0;
                         }
                         if (quantity > 0) {
                             DeviceWithoutSerialSummaryResponse.ModelQuantity mq = new DeviceWithoutSerialSummaryResponse.ModelQuantity();
@@ -444,6 +451,7 @@ public class ReportServiceImpl implements ReportService {
 
         boolean isGlobalStatus = status == DeviceStatus.DISPOSED ||
                 status == DeviceStatus.ASSIGNED ||
+                status == DeviceStatus.WAH ||
                 status == DeviceStatus.REPAIR ||
                 status == DeviceStatus.ON_THE_MOVE;
 
@@ -515,7 +523,8 @@ public class ReportServiceImpl implements ReportService {
     private int getDeviceCountByStatus(DeviceStatus status, DeviceType type, Integer siteId) {
         return switch (status) {
             case DISPOSED -> transactionDetailRepository.sumDisposedByType_Model(type, null);
-            case ASSIGNED -> deviceUserRepository.sumDeviceAssignedByType_Model(type, null);
+            case ASSIGNED -> deviceUserRepository.sumDeviceAssignedAccessoriesByType_Model(type, null);
+            case WAH -> deviceUserRepository.sumDeviceWAHAccessoriesByType_Model(type, null);
             case REPAIR -> {
                 int repairIn = transactionDetailRepository.sumReturnFromRepair(type, null);
                 int repairOut = transactionDetailRepository.sumRepair(type, null);
@@ -525,6 +534,8 @@ public class ReportServiceImpl implements ReportService {
             case IN_STOCK -> deviceWarehouseRepository.sumStockBySite_Type_Model(siteId, type, null);
             case IN_FLOOR -> deviceFloorRepository.sumDeviceBySite_Type_Model(siteId, type, null);
             case E_WASTE -> transactionDetailRepository.sumEWasteBySite_Type_Model(siteId, type, null);
+
+            default -> 0;
         };
     }
 
