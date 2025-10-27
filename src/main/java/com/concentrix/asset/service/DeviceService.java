@@ -20,7 +20,7 @@ public interface DeviceService {
     DeviceResponse updateDevice(UpdateDeviceRequest request);
 
     Page<DeviceResponse> filterDevices(String search, DeviceType type, Integer modelId, DeviceStatus status,
-                                       Pageable pageable);
+            Pageable pageable);
 
     List<DeviceMovementHistoryResponse> getDeviceMovementHistoryBySerial(String serialNumber);
 
@@ -39,5 +39,7 @@ public interface DeviceService {
     void updateSeatNumber(List<UpdateSeatNumberRequest> request);
 
     Page<DeviceResponse> filterDevicesNonSeatNumber(String search, Integer siteId, Integer floorId,
-                                                    Pageable pageable);
+            Pageable pageable);
+
+    void deleteDevice(Integer deviceId);
 }

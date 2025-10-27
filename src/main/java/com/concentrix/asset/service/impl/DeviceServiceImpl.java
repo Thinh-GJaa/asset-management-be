@@ -19,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,12 @@ public class DeviceServiceImpl implements DeviceService {
     TransactionDetailRepository transactionDetailRepository;
     PODetailRepository poDetailRepository;
     DeviceUserRepository deviceUserRepository;
+    DeviceWarehouseRepository deviceWarehouseRepository;
+    DeviceFloorRepository deviceFloorRepository;
+    BigfixDataRepository bigfixDataRepository;
+    CortexDataRepository cortexDataRepository;
+    CrowdstrikeDataRepository crowdstrikeDataRepository;
+    SnapshotDeviceRepository snapshotDeviceRepository;
 
     @Override
     public DeviceResponse getDeviceById(Integer deviceId) {
@@ -370,6 +377,82 @@ public class DeviceServiceImpl implements DeviceService {
             hostName.append(serialNumber);
         }
         return hostName.toString();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteDevice(Integer deviceId) {
+
+        // Kiểm tra device có tồn tại không
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND, deviceId));
+
+        // Xóa các bản ghi liên quan theo thứ tự
+        // 1. Xóa BigfixData
+        bigfixDataRepository.findByDevice(device).ifPresent(bigfixData -> {
+            log.info("Deleting BigfixData for device ID: {}", deviceId);
+            bigfixDataRepository.delete(bigfixData);
+        });
+
+        // 2. Xóa CortexData
+        cortexDataRepository.findByDevice(device).ifPresent(cortexData -> {
+            log.info("Deleting CortexData for device ID: {}", deviceId);
+            cortexDataRepository.delete(cortexData);
+        });
+
+        // 3. Xóa CrowdstrikeData
+        crowdstrikeDataRepository.findByDevice(device).ifPresent(crowdstrikeData -> {
+            log.info("Deleting CrowdstrikeData for device ID: {}", deviceId);
+            crowdstrikeDataRepository.delete(crowdstrikeData);
+        });
+
+        // 4. Xóa DeviceUser records
+        List<DeviceUser> deviceUsers = device.getDeviceUsers();
+        if (deviceUsers != null && !deviceUsers.isEmpty()) {
+            log.info("Deleting {} DeviceUser records for device ID: {}", deviceUsers.size(), deviceId);
+            deviceUserRepository.deleteAll(deviceUsers);
+        }
+
+        // 5. Xóa DeviceWarehouse records
+        List<DeviceWarehouse> deviceWarehouses = device.getDeviceWarehouses();
+        if (deviceWarehouses != null && !deviceWarehouses.isEmpty()) {
+            log.info("Deleting {} DeviceWarehouse records for device ID: {}", deviceWarehouses.size(), deviceId);
+            deviceWarehouseRepository.deleteAll(deviceWarehouses);
+        }
+
+        // 6. Xóa DeviceFloor records
+        List<DeviceFloor> deviceFloors = device.getDeviceFloors();
+        if (deviceFloors != null && !deviceFloors.isEmpty()) {
+            log.info("Deleting {} DeviceFloor records for device ID: {}", deviceFloors.size(), deviceId);
+            deviceFloorRepository.deleteAll(deviceFloors);
+        }
+
+        // 7. Xóa TransactionDetail records
+        List<TransactionDetail> transactionDetails = transactionDetailRepository
+                .findAllByDevice_DeviceIdOrderByTransaction_TransactionIdAsc(deviceId);
+        if (!transactionDetails.isEmpty()) {
+            log.info("Deleting {} TransactionDetail records for device ID: {}", transactionDetails.size(), deviceId);
+            transactionDetailRepository.deleteAll(transactionDetails);
+        }
+
+        // 8. Xóa PODetail records
+        List<PODetail> poDetails = device.getPoDetails();
+        if (poDetails != null && !poDetails.isEmpty()) {
+            log.info("Deleting {} PODetail records for device ID: {}", poDetails.size(), deviceId);
+            poDetailRepository.deleteAll(poDetails);
+        }
+
+        // 9. Xóa SnapshotDevice records
+        List<SnapshotDevice> snapshotDevices = snapshotDeviceRepository.findAllByDevice(device);
+        if (!snapshotDevices.isEmpty()) {
+            log.info("Deleting {} SnapshotDevice records for device ID: {}", snapshotDevices.size(), deviceId);
+            snapshotDeviceRepository.deleteAll(snapshotDevices);
+        }
+
+        // 10. Cuối cùng, xóa Device
+        log.info("Deleting device with ID: {}", deviceId);
+        deviceRepository.delete(device);
+        log.info("Successfully deleted device with ID: {}", deviceId);
     }
 
     private String buildTransactionDescription(AssetTransaction tx) {

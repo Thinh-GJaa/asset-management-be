@@ -26,94 +26,103 @@ import java.util.List;
 @RequestMapping("/device")
 public class DeviceController {
 
-    DeviceService deviceService;
+        DeviceService deviceService;
 
-    @GetMapping("/{deviceId}")
-    public ResponseEntity<ApiResponse<DeviceResponse>> getDeviceById(@PathVariable Integer deviceId) {
-        ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
-                .message("Get device successfully")
-                .data(deviceService.getDeviceById(deviceId))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/{deviceId}")
+        public ResponseEntity<ApiResponse<DeviceResponse>> getDeviceById(@PathVariable Integer deviceId) {
+                ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
+                                .message("Get device successfully")
+                                .data(deviceService.getDeviceById(deviceId))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDevice(
-            @PageableDefault(size = 10, page = 0, sort = "deviceName", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestParam(value = "modelId", required = false) Integer modelId,
-            @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "status", required = false) DeviceStatus status,
-            @RequestParam(value = "type", required = false) DeviceType type) {
-        ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
-                .message("Filter device successfully")
-                .data(deviceService.filterDevices(search, type, modelId, status, pageable))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/filter")
+        public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDevice(
+                        @PageableDefault(size = 10, page = 0, sort = "deviceName", direction = Sort.Direction.DESC) Pageable pageable,
+                        @RequestParam(value = "modelId", required = false) Integer modelId,
+                        @RequestParam(value = "search", required = false) String search,
+                        @RequestParam(value = "status", required = false) DeviceStatus status,
+                        @RequestParam(value = "type", required = false) DeviceType type) {
+                ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
+                                .message("Filter device successfully")
+                                .data(deviceService.filterDevices(search, type, modelId, status, pageable))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/types")
-    public ResponseEntity<ApiResponse<List<String>>> getDeviceTypes() {
-        List<String> types = deviceService.getAllDeviceTypes();
-        ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
-                .message("Get device types successfully")
-                .data(types)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/types")
+        public ResponseEntity<ApiResponse<List<String>>> getDeviceTypes() {
+                List<String> types = deviceService.getAllDeviceTypes();
+                ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
+                                .message("Get device types successfully")
+                                .data(types)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/status")
-    public ResponseEntity<ApiResponse<List<String>>> getDeviceStatuses() {
-        List<String> status = deviceService.getDeviceStatuses();
-        ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
-                .message("Get device statuses successfully")
-                .data(status)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/status")
+        public ResponseEntity<ApiResponse<List<String>>> getDeviceStatuses() {
+                List<String> status = deviceService.getDeviceStatuses();
+                ApiResponse<List<String>> response = ApiResponse.<List<String>>builder()
+                                .message("Get device statuses successfully")
+                                .data(status)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/{serialNumber}/history")
-    public ResponseEntity<ApiResponse<List<DeviceMovementHistoryResponse>>> getDeviceMovementHistory(
-            @PathVariable String serialNumber) {
-        ApiResponse<List<DeviceMovementHistoryResponse>> response = ApiResponse
-                .<List<DeviceMovementHistoryResponse>>builder()
-                .message("Get device movement history successfully")
-                .data(deviceService.getDeviceMovementHistoryBySerial(serialNumber))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/{serialNumber}/history")
+        public ResponseEntity<ApiResponse<List<DeviceMovementHistoryResponse>>> getDeviceMovementHistory(
+                        @PathVariable String serialNumber) {
+                ApiResponse<List<DeviceMovementHistoryResponse>> response = ApiResponse
+                                .<List<DeviceMovementHistoryResponse>>builder()
+                                .message("Get device movement history successfully")
+                                .data(deviceService.getDeviceMovementHistoryBySerial(serialNumber))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @PatchMapping
-    public ResponseEntity<ApiResponse<DeviceResponse>> updateDevice(
-            @Valid @RequestBody UpdateDeviceRequest request) {
-        ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
-                .message("Update device successfully")
-                .data(deviceService.updateDevice(request))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @PatchMapping
+        public ResponseEntity<ApiResponse<DeviceResponse>> updateDevice(
+                        @Valid @RequestBody UpdateDeviceRequest request) {
+                ApiResponse<DeviceResponse> response = ApiResponse.<DeviceResponse>builder()
+                                .message("Update device successfully")
+                                .data(deviceService.updateDevice(request))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @PatchMapping("/seat-number")
-    public ResponseEntity<ApiResponse<Void>> updateSeatNumber(
-            @Valid @RequestBody List<UpdateSeatNumberRequest> request) {
+        @PatchMapping("/seat-number")
+        public ResponseEntity<ApiResponse<Void>> updateSeatNumber(
+                        @Valid @RequestBody List<UpdateSeatNumberRequest> request) {
 
-        deviceService.updateSeatNumber(request);
+                deviceService.updateSeatNumber(request);
 
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .message("Update seat number successfully")
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                                .message("Update seat number successfully")
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/filter/non-seat-number")
-    public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDeviceNonSeatNumber(
-            @PageableDefault(size = 10, page = 0, sort = "serialNumber", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestParam(value = "siteId", required = false) Integer siteId,
-            @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "floorId", required = false) Integer floorId) {
-        ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
-                .message("Filter device successfully")
-                .data(deviceService.filterDevicesNonSeatNumber(search, siteId, floorId, pageable))
-                .build();
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/filter/non-seat-number")
+        public ResponseEntity<ApiResponse<Page<DeviceResponse>>> filterDeviceNonSeatNumber(
+                        @PageableDefault(size = 10, page = 0, sort = "serialNumber", direction = Sort.Direction.DESC) Pageable pageable,
+                        @RequestParam(value = "siteId", required = false) Integer siteId,
+                        @RequestParam(value = "search", required = false) String search,
+                        @RequestParam(value = "floorId", required = false) Integer floorId) {
+                ApiResponse<Page<DeviceResponse>> response = ApiResponse.<Page<DeviceResponse>>builder()
+                                .message("Filter device successfully")
+                                .data(deviceService.filterDevicesNonSeatNumber(search, siteId, floorId, pageable))
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @DeleteMapping("/{deviceId}")
+        public ResponseEntity<ApiResponse<Void>> deleteDevice(@PathVariable Integer deviceId) {
+                deviceService.deleteDevice(deviceId);
+                ApiResponse<Void> response = ApiResponse.<Void>builder()
+                                .message("Delete device successfully")
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 }
