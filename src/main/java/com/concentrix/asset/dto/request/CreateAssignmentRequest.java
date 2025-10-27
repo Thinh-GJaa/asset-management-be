@@ -24,9 +24,10 @@ public class CreateAssignmentRequest {
 
     String note;
 
+    Boolean isWAH = false; // Flag to indicate Work At Home assignment
+
     @Valid
     @NotEmpty(message = "Items cannot be empty")
     List<TransactionItem> items;
-
 
 }

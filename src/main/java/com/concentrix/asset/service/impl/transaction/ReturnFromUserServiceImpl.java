@@ -107,8 +107,8 @@ public class ReturnFromUserServiceImpl implements ReturnFromUserService {
 
                     boolean hasSerial = device.getSerialNumber() != null && !device.getSerialNumber().isEmpty();
                     if (hasSerial) {
-                        // Serial: chỉ cho phép trả nếu đang ASSIGNED cho đúng user
-                        if (device.getStatus() != DeviceStatus.ASSIGNED) {
+                        // Serial: chỉ cho phép trả nếu đang ASSIGNED hoặc WAH cho đúng user
+                        if (device.getStatus() != DeviceStatus.ASSIGNED && device.getStatus() != DeviceStatus.WAH) {
                             serialInvalid.add(device.getSerialNumber());
                             return null;
                         }

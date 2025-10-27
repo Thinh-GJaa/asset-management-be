@@ -24,6 +24,10 @@ public class DeviceUser {
     Device device;
 
     @Column
+    @Builder.Default
+    Boolean isWAH = false; // Flag để phân biệt accessories WAH và thường
+
+    @Column
     Integer quantity;
 
 }

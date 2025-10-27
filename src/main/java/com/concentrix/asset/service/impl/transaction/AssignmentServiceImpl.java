@@ -60,7 +60,6 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Value("${app.path.upload.handover}")
     String handoverImageFolder;
 
-
     @NonFinal
     @Value("${app.notification.security-email}")
     String securityEmailsString;
@@ -189,8 +188,6 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     }
 
-
-
     @Override
     public void uploadImage(Integer assignmentId, List<MultipartFile> images) {
         AssetTransaction transaction = transactionRepository.findById(assignmentId)
@@ -285,12 +282,12 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public void requestLaptopBadge(LaptopBadgeRequest request) throws MessagingException {
 
-        //Kiểm tra transactionId có tồn tại hay không
+        // Kiểm tra transactionId có tồn tại hay không
         AssetTransaction transaction = transactionRepository.findById(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND, request.getTransactionId()));
 
-        //Kiểm tra transaction type có hợp lệ hay không
-        if(!transaction.getTransactionType().equals(TransactionType.ASSIGNMENT))
+        // Kiểm tra transaction type có hợp lệ hay không
+        if (!transaction.getTransactionType().equals(TransactionType.ASSIGNMENT))
             throw new CustomException(ErrorCode.TRANSACTION_TYPE_INVALID);
 
         // Lấy danh sách serial hiện có trong transaction details
@@ -313,10 +310,10 @@ public class AssignmentServiceImpl implements AssignmentService {
             devices.add(device);
         }
 
-        //Email user and email Local IT team
+        // Email user and email Local IT team
         List<String> ccList = Arrays.asList(transaction.getUserUse().getEmail(), localITEmail);
 
-        String subject = "Laptop Badge request for "+ transaction.getUserUse().getEmail();
+        String subject = "Laptop Badge request for " + transaction.getUserUse().getEmail();
 
         String html = buildLaptopBadgeHtmlTemplate(transaction, devices);
 
@@ -356,7 +353,8 @@ public class AssignmentServiceImpl implements AssignmentService {
             return; // Nếu invalid thì không update
         }
 
-        device.setStatus(DeviceStatus.ASSIGNED);
+        device.setStatus(
+                transaction.getIsWAH() != null && transaction.getIsWAH() ? DeviceStatus.WAH : DeviceStatus.ASSIGNED);
         device.setCurrentUser(transaction.getUserUse());
         device.setCurrentWarehouse(null);
         device.setCurrentFloor(null);
@@ -382,16 +380,20 @@ public class AssignmentServiceImpl implements AssignmentService {
         fromStock.setQuantity(fromStock.getQuantity() - qty);
         deviceWarehouseRepository.save(fromStock);
 
-        // Cập nhật DeviceUser
+        // Cập nhật DeviceUser với isWAH flag
+        Boolean isWAH = transaction.getIsWAH() != null && transaction.getIsWAH();
         DeviceUser deviceUser = deviceUserRepository
                 .findByDevice_DeviceIdAndUser_Eid(deviceId, transaction.getUserUse().getEid())
                 .orElseGet(() -> DeviceUser.builder()
                         .device(device)
                         .user(transaction.getUserUse())
                         .quantity(0)
+                        .isWAH(isWAH)
                         .build());
 
+        // Cập nhật quantity và isWAH flag (update theo transaction hiện tại)
         deviceUser.setQuantity(deviceUser.getQuantity() + qty);
+        deviceUser.setIsWAH(isWAH); // Update isWAH flag
         deviceUserRepository.save(deviceUser);
     }
 
@@ -458,7 +460,6 @@ public class AssignmentServiceImpl implements AssignmentService {
                 .append("<p>To create laptop badge, please provide a photo of yourself ")
                 .append("to the security team for further processing.</p>");
 
-
         html.append("</div></body></html>");
 
         return html.toString();
@@ -466,14 +467,13 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     /** Escape HTML để tránh lỗi khi có ký tự đặc biệt */
     private String escapeHtml(String input) {
-        if (input == null) return "";
+        if (input == null)
+            return "";
         return input.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
     }
-
-
 
 }
