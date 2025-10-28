@@ -11,5 +11,7 @@ public enum TransactionType {
 
     RETURN_FROM_USER,         // trả về sau khi sử dụng
     RETURN_FROM_REPAIR,      // trả về sau bảo hành/sửa chữa
-    RETURN_FROM_FLOOR        // trả về từ sàn làm việc
+    RETURN_FROM_FLOOR,        // trả về từ sàn làm việc
+    
+    CHANGE_STATUS            // thay đổi trạng thái thiết bị
 }

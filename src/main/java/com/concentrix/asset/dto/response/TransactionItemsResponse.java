@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

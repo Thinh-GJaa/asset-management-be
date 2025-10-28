@@ -1,5 +1,6 @@
 package com.concentrix.asset.entity;
 
+import com.concentrix.asset.enums.DeviceStatus;
 import com.concentrix.asset.enums.TransactionStatus;
 import com.concentrix.asset.enums.TransactionType;
 import jakarta.persistence.*;
@@ -67,6 +68,9 @@ public class AssetTransaction {
     @ManyToOne
     @JoinColumn(name = "confirmed_by")
     User confirmedBy;
+
+    @Column
+    DeviceStatus newStatus;
 
     @Column
     String note;
