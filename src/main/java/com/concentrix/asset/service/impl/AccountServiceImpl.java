@@ -15,6 +15,8 @@ import com.concentrix.asset.repository.DeviceRepository;
 import com.concentrix.asset.service.AccountService;
 import com.concentrix.asset.service.DeviceService;
 import com.concentrix.asset.service.UserService;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -107,27 +109,33 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return accountMapper.toAccountResponse(account);
-
     }
 
     @Override
     public Page<AccountResponse> filterAccount(String search, Pageable pageable) {
         return accountRepository.findAll((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search.trim().toLowerCase() + "%";
+
+                // 👇 LEFT JOIN để không loại bỏ record có owner hoặc createdBy null
+                Join<Object, Object> ownerJoin = root.join("owner", JoinType.LEFT);
+                Join<Object, Object> createdByJoin = root.join("createdBy", JoinType.LEFT);
+
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("accountName")), like),
                         cb.like(cb.lower(root.get("accountCode")), like),
-                        cb.like(cb.lower(root.get("owner").get("fullName")), like),
-                        cb.like(cb.lower(root.get("owner").get("eid")), like),
-                        cb.like(cb.lower(root.get("createdBy").get("fullName")), like)
+                        cb.like(cb.lower(ownerJoin.get("fullName")), like),
+                        cb.like(cb.lower(ownerJoin.get("eid")), like),
+                        cb.like(cb.lower(createdByJoin.get("fullName")), like)
                 ));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         }, pageable).map(accountMapper::toAccountResponse);
     }
+
 
     @Override
     public List<UserResponse> getOwners() {
