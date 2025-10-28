@@ -74,6 +74,9 @@ public class AssetTransaction {
     @Column
     LocalDate returnDate;
 
+    @Column
+    Boolean isWAH = false; // Flag to indicate Work At Home assignment
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TransactionDetail> details;
 
