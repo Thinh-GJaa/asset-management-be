@@ -212,7 +212,7 @@ public class AssignmentServiceImpl implements AssignmentService {
 
         String transactionType = transaction.getTransactionType().name();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        String dateTime = LocalDateTime.now().format(formatter);
+        String dateTime = transaction.getCreatedAt().format(formatter);
 
         String serialOrType = "unknown";
 
